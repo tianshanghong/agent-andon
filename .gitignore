@@ -4,3 +4,7 @@ build/
 *.andon-backup
 *.log
 .DS_Store
+
+# personal design doc — review artifact, not version-controlled
+docs/DESIGN.md
+docs/DESIGN.pdf

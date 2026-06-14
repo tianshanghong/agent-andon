@@ -75,14 +75,9 @@ function installClaude(dryRun: boolean): number {
     }
   }
 
-  // statusLine presence heartbeat — lets the board pick up sessions that were
-  // already running when it started. Only set it if absent: never clobber a
-  // custom statusLine (it's a single command, so we can't merge non-destructively).
-  let statusLine: "added" | "kept" = "kept";
-  if (settings.statusLine == null) {
-    settings.statusLine = { type: "command", command: andonCommand("statusline"), padding: 0 };
-    statusLine = "added";
-  }
+  // NOTE: we intentionally do NOT touch the statusLine. (An earlier "presence
+  // heartbeat" lived there but was removed — it added a network call every
+  // status render and risked corrupting the terminal's status redraw.)
 
   if (dryRun) {
     console.log(`[dry-run] would write ${file}:\n`);
@@ -90,7 +85,7 @@ function installClaude(dryRun: boolean): number {
     return 0;
   }
 
-  if (added === 0 && statusLine === "kept") {
+  if (added === 0) {
     console.log("✓ Claude Code is already wired to Andon. Nothing to do.");
     return 0;
   }
@@ -99,15 +94,7 @@ function installClaude(dryRun: boolean): number {
   const bak = backup(file);
   fs.writeFileSync(file, JSON.stringify(settings, null, 2) + "\n");
 
-  if (added > 0) console.log(`✓ Wired ${added} Claude Code event(s) into ${file}`);
-  if (statusLine === "added") {
-    console.log("✓ Set the statusLine heartbeat (board picks up already-running sessions)");
-  } else {
-    console.log(
-      "ℹ Kept your existing statusLine. To also heartbeat, append a quiet ping:\n" +
-        `    ${andonCommand("statusline")} -q   (reads the same stdin)`,
-    );
-  }
+  console.log(`✓ Wired ${added} Claude Code event(s) into ${file}`);
   if (bak) console.log(`  backup: ${bak}`);
   console.log("\n  → Start a new Claude Code session and it lights up the board.");
   return 0;

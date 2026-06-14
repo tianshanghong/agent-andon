@@ -25,13 +25,6 @@ export interface AndonEvent {
    * the agent finishing a *turn* (Stop) never falsely reads as "all done".
    */
   sub?: number;
-  /**
-   * Presence heartbeat (from the statusLine). Surfaces an already-running
-   * session when the board starts late, and keeps it alive — but NEVER changes
-   * an existing tile's state, so it can't clobber waiting/error/done. A session
-   * first seen via presence shows up as `idle` until a real event refines it.
-   */
-  presence?: boolean;
 }
 
 /** A normalized, stored session — one tile on the board. */

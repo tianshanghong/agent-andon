@@ -8,8 +8,8 @@ delete process.env.ANDON_SESSION;
 
 import { mapClaudeEvent } from "../src/commands/hook";
 import { mapCodexHookEvent } from "../src/commands/codexhook";
-import { mapStatusline } from "../src/commands/statusline";
 import { menubarText } from "../src/menubar";
+import { alertState } from "../src/alerts";
 import { stripAndonFromSettings } from "../src/commands/uninstall";
 
 test("claude: UserPromptSubmit -> working, title from cwd, id from session", () => {
@@ -52,6 +52,17 @@ test("claude: Notification -> waiting, carries message", () => {
   const ev = mapClaudeEvent({ hook_event_name: "Notification", message: "need perms" });
   assert.equal(ev?.state, "waiting");
   assert.equal(ev?.message, "need perms");
+});
+
+test("claude: a permission Notification -> waiting; an idle one is ignored", () => {
+  // a real permission prompt still turns the tile amber
+  assert.equal(
+    mapClaudeEvent({ hook_event_name: "Notification", notification_type: "permission_prompt", message: "x" })?.state,
+    "waiting",
+  );
+  // the ~60s idle reminder must NOT flip a finished (green) tile to amber
+  assert.equal(mapClaudeEvent({ hook_event_name: "Notification", notification_type: "idle_prompt" }), null);
+  assert.equal(mapClaudeEvent({ hook_event_name: "Notification", notification_type: "auth_success" }), null);
 });
 
 test("claude: SessionEnd -> gone", () => {
@@ -97,6 +108,15 @@ test("uninstall: strips only Andon hooks + statusLine, keeps the user's own", ()
   assert.equal(ups[0].hooks[0].command, "my-own-logger.sh");
 });
 
+test("alerts: a done session with pending background tasks never fires a 'ready' banner", () => {
+  const sess = (state: string, pending: number) =>
+    ({ id: "a", agent: "claude", state, title: "x", message: "", pending, updated_at: 0 }) as any;
+  assert.equal(alertState(sess("done", 0)), "done"); // truly finished → ready banner ok
+  assert.equal(alertState(sess("done", 2)), "working"); // still draining → NOT done
+  assert.equal(alertState(sess("waiting", 0)), "waiting");
+  assert.equal(alertState(sess("error", 1)), "error"); // pending only masks done
+});
+
 test("menubar: summarises the most urgent state for a status bar", () => {
   const snap = {
     server_time: 0,
@@ -115,19 +135,6 @@ test("claude: unknown / missing event -> null", () => {
   assert.equal(mapClaudeEvent({}), null);
 });
 
-test("statusline: parses session_id + cwd into a presence event", () => {
-  const ev = mapStatusline(JSON.stringify({ session_id: "s9", cwd: "/x/checkout-api" }));
-  assert.equal(ev.presence, true);
-  assert.equal(ev.agent, "claude");
-  assert.equal(ev.id, "s9");
-  assert.equal(ev.title, "checkout-api");
-});
-
-test("statusline: falls back to workspace.current_dir, tolerates junk", () => {
-  const ev = mapStatusline(JSON.stringify({ session_id: "s9", workspace: { current_dir: "/x/site" } }));
-  assert.equal(ev.title, "site");
-  assert.equal(mapStatusline("not json").presence, true); // never throws
-});
 
 test("codex hooks: lifecycle events map to states, incl. amber needs-you", () => {
   assert.equal(mapCodexHookEvent({ hook_event_name: "SessionStart", session_id: "c1", cwd: "/x/api" })?.state, "idle");

@@ -52,6 +52,20 @@ function readStdin(): Promise<string> {
   });
 }
 
+/**
+ * `Notification` subtypes that are NOT a call to action: an idle "still waiting
+ * for input" reminder (~60s after a turn ends), auth success, etc. These must
+ * NOT turn the tile amber — in particular an idle reminder must not flip a
+ * finished (green) tile to "needs you". Only real prompts (permission /
+ * elicitation / unknown-for-safety) become amber.
+ */
+const NOTIFICATION_IGNORE = new Set([
+  "idle_prompt",
+  "auth_success",
+  "elicitation_complete",
+  "elicitation_response",
+]);
+
 const shorten = (t: unknown, n = 140): string =>
   String(t ?? "").split(/\s+/).join(" ").trim().slice(0, n);
 
@@ -80,6 +94,12 @@ export function mapClaudeEvent(data: Record<string, unknown>): AndonEvent | null
   const evName = String(data.hook_event_name ?? "");
   const state = EVENT_TO_STATE[evName];
   if (!state) return null; // unknown event: quietly do nothing
+
+  // an idle/non-actionable Notification shouldn't change the tile (esp. not
+  // flip a finished green tile to amber after 60s of you not responding).
+  if (evName === "Notification" && NOTIFICATION_IGNORE.has(String(data.notification_type ?? ""))) {
+    return null;
+  }
 
   const cwd = String(data.cwd ?? process.cwd());
   const id = String(data.session_id ?? "claude");

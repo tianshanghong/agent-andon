@@ -18,9 +18,10 @@ export function parseServeArgs(argv: string[]): ServeArgs {
     host: process.env.ANDON_HOST || "0.0.0.0",
     demo: false,
     token: process.env.ANDON_TOKEN || undefined,
-    notify: false,
+    notify: true, // native desktop alerts ON by default (--no-notify to disable)
     say: false,
   };
+  let notifyExplicit = false; // did the user pick notify on/off themselves?
   // Consume the value after a flag, erroring if it's missing or is itself a flag.
   const takeValue = (argv: string[], i: number, flag: string): string => {
     const v = argv[i + 1];
@@ -33,8 +34,9 @@ export function parseServeArgs(argv: string[]): ServeArgs {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--demo") args.demo = true;
-    else if (a === "--notify") args.notify = true;
-    else if (a === "--say") { args.say = true; args.notify = true; }
+    else if (a === "--notify") { args.notify = true; notifyExplicit = true; }
+    else if (a === "--no-notify") { args.notify = false; notifyExplicit = true; }
+    else if (a === "--say") { args.say = true; args.notify = true; notifyExplicit = true; }
     else if (a === "--port") args.port = Number(takeValue(argv, i++, "--port"));
     else if (a === "--host") args.host = takeValue(argv, i++, "--host");
     else if (a === "--token") args.token = takeValue(argv, i++, "--token");
@@ -42,6 +44,8 @@ export function parseServeArgs(argv: string[]): ServeArgs {
     else if (a?.startsWith("--token=")) args.token = a.split("=")[1];
     else if (a?.startsWith("--host=")) args.host = a.split("=")[1]!;
   }
+  // demo cycles fake agents every 3s — don't spam banners unless asked explicitly
+  if (args.demo && !notifyExplicit) args.notify = false;
   return args;
 }
 
@@ -90,7 +94,7 @@ export function serve(argv: string[]): void {
     console.log(`  iPad:       ${url}${tokenSuffix}`);
     console.log("              (iPad must be on the same Wi-Fi)");
     if (args.token) console.log("  🔒 token auth enabled");
-    if (args.notify) console.log(`  🔔 native alerts on${args.say ? " + speech" : ""} (needs-you / stuck)`);
+    if (args.notify) console.log(`  🔔 desktop alerts on${args.say ? " + speech" : ""} — needs-you · stuck · done  (--no-notify to disable)`);
     if (args.demo) console.log("  [demo] injecting fake agents, cycling every 3s");
     console.log("  Ctrl-C to stop\n");
   });

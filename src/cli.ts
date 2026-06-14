@@ -26,8 +26,10 @@ const HELP = `
   🚦 Agent Andon — a traffic-light board for your AI coding agents
 
   Usage:
-    andon serve [--demo] [--port N] [--host H] [--token T]
+    andon serve [--demo] [--port N] [--host H] [--token T] [--no-notify] [--say]
         Run the status board. Open the printed URL on your iPad.
+        Desktop alerts are ON by default (needs-you · stuck · done);
+        --no-notify disables them, --say also speaks them aloud.
         --demo   inject fake agents so you can verify the board first.
 
     andon install claude        Wire Claude Code hooks (timestamped backup)

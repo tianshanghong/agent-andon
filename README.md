@@ -94,14 +94,14 @@ Restart your Claude Code session and it lights up the board automatically. That'
 
 | Command | What it does |
 |---|---|
-| `andon serve [--demo] [--port N] [--token T] [--notify] [--say]` | Run the board server; `--notify`/`--say` add native desktop alerts |
+| `andon serve [--demo] [--port N] [--token T] [--no-notify] [--say]` | Run the board server; desktop alerts on by default (`--no-notify` off, `--say` adds speech) |
 | `andon install claude` | Wire Claude Code status hooks (timestamped backup) |
 | `andon install codex` | Wire Codex lifecycle hooks (run `/hooks` to trust) |
 | `andon uninstall <claude\|codex>` | Remove only what Andon added; leaves the rest of your config intact |
 | `andon doctor` | Health check + what's wired + iPad URL |
 | `andon post <state> <agent> [title] [msg]` | Push a status by hand |
 | `andon sub <+n\|-n> [id]` | Bump a process's background-task count |
-| `andon hook` / `andon codexhook` / `andon statusline` | *(internal — invoked by the hooks / statusLine)* |
+| `andon hook` / `andon codexhook` | *(internal — invoked by the hooks)* |
 
 `andon install --dry-run claude` prints the change without writing.
 
@@ -118,13 +118,9 @@ Restart your Claude Code session and it lights up the board automatically. That'
 | `SessionEnd` | *removed* | session ended; tile disappears |
 
 Multiple sessions each get their own tile (keyed by `session_id`). One process =
-one tile; its sub-agents roll up into it rather than spawning their own.
-
-`andon install claude` also sets a **statusLine heartbeat** (`andon statusline`),
-so the board picks up sessions that were *already running* when it started — the
-heartbeat surfaces them (as `idle`) and keeps them alive, but never overrides a
-real state. It costs zero tokens (statusLine output never reaches the model) and,
-being a statusLine, only runs while that terminal is focused.
+one tile; its sub-agents roll up into it rather than spawning their own. A session
+that was *already running* before the board started appears on its next event
+(prompt, tool, turn end) — Andon stays out of your statusLine entirely.
 
 ### Background work: keep a card honest past "done"
 
@@ -165,9 +161,8 @@ andon install codex      # wires lifecycle hooks → ~/.codex/hooks.json
 > --dangerously-bypass-hook-trust`). `andon uninstall codex` cleanly removes the
 > hooks again, with a timestamped backup.
 
-Residual caveats: no statusLine-style heartbeat for *already-running* sessions
-(new ones appear via `SessionStart`), and red "stuck" stays staleness-based (no
-dedicated failed-turn hook).
+Residual caveat: red "stuck" stays staleness-based (no dedicated failed-turn
+hook). (Already-running sessions appear on their next event, same as Claude.)
 
 ---
 
@@ -178,15 +173,23 @@ agent needs you or gets blocked — and otherwise stay quiet. The board is the
 universal channel (works on any device); these add more, each degrading
 gracefully across macOS / Linux / Windows.
 
-**Native desktop alerts** — a banner (and optional speech) the moment a session
-needs you, on the machine running the server:
+**Native desktop alerts** — a banner on the machine running the server, **on by
+default**. Loud for the states that need you, quiet for completion:
+
+- **needs-you (amber)** / **stuck (red)** → banner + sound (immediate).
+- **done (green)** → one *quiet* banner (no sound), debounced 4s so a transient
+  green never fires a false "ready".
 
 ```bash
-andon serve --notify        # desktop banner on needs-you / stuck
-andon serve --say           # + speak it out loud
+andon serve                 # alerts on by default
+andon serve --say           # also speak needs-you / stuck aloud
+andon serve --no-notify     # turn alerts off
 ```
 Uses `osascript`/`say` (macOS), `notify-send`/`spd-say` (Linux), PowerShell
-toast/`System.Speech` (Windows). Missing tool → silently skipped.
+toast/`System.Speech` (Windows). Missing tool → silently skipped. (Auto-off
+under `--demo` so the cycling fake agents don't spam you.) Alerts are
+**throttled** (per-session cooldown + a global token bucket) so a busy — or
+malicious — LAN client posting to `/event` can't drive a process-spawn flood.
 
 **Menu / status bar** — a one-glance summary without a separate iPad:
 

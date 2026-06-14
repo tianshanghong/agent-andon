@@ -95,28 +95,6 @@ test("`sub` for an unknown session is ignored", () => {
   assert.equal(s.size, 0);
 });
 
-test("presence surfaces an unknown session as idle", () => {
-  const s = storeAt({ v: 1 });
-  const r = s.apply({ agent: "claude", id: "live", title: "api", presence: true });
-  assert.deepEqual(r, { ok: true }); // not silent — a new tile appeared
-  const snap = s.snapshot().sessions[0]!;
-  assert.equal(snap.state, "idle");
-  assert.equal(snap.title, "api");
-});
-
-test("presence never clobbers a real state, and is silent on refresh", () => {
-  const clock = { v: 1 };
-  const s = storeAt(clock);
-  s.apply({ agent: "claude", id: "a", state: "waiting", message: "need perms" });
-  clock.v = 5;
-  const r = s.apply({ agent: "claude", id: "a", presence: true });
-  assert.deepEqual(r, { ok: true, silent: true });
-  const snap = s.snapshot().sessions[0]!;
-  assert.equal(snap.state, "waiting");      // state preserved
-  assert.equal(snap.message, "need perms"); // message preserved
-  assert.equal(snap.updated_at, 5);         // liveness refreshed
-});
-
 test("enforces the session cap", () => {
   const s = new SessionStore(() => 1, 2); // max 2
   assert.equal(s.apply({ id: "a", state: "working" }).ok, true);

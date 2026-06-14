@@ -32,7 +32,7 @@ export interface ServerOptions {
   host: string;
   /** When set, /state and /event require ?token=… or an x-andon-token header. */
   token?: string;
-  /** Native desktop alerts on the machine running the server (opt-in). */
+  /** Native desktop alerts on the machine running the server (on by default; throttled). */
   alert?: AlertConfig;
   /** Inject a store (tests); a fresh one is created otherwise. */
   store?: SessionStore;
@@ -77,7 +77,8 @@ export function createServer(opts: ServerOptions): AndonServer {
   }, 30_000);
   sweeper.unref?.();
 
-  // Native desktop alerts (opt-in): fire on a transition into a needs-you state.
+  // Native desktop alerts: fire on a transition into an alerting state; the
+  // alerter throttles spawns so a LAN client can't flood them via /event.
   const alerter =
     opts.alert && (opts.alert.notify || opts.alert.say) ? makeAlerter(opts.alert) : null;
 
@@ -206,9 +207,7 @@ export function createServer(opts: ServerOptions): AndonServer {
           return send(400, JSON.stringify({ error: "bad json" }));
         }
         const r = store.apply(ev);
-        // push to every open board immediately — except a silent presence
-        // refresh, where only liveness moved and the board already shows it.
-        if (r.ok && !r.silent) broadcast();
+        if (r.ok) broadcast(); // push the change to every open board immediately
         if (r.ok && alerter) alerter(store.snapshot().sessions);
         send(r.ok ? 200 : 400, JSON.stringify(r));
       });
