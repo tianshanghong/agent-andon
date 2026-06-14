@@ -13,9 +13,9 @@ export function labelFor(cwd: string, fallback: string): string {
 }
 
 /**
- * Session id rules, shared by `post` and `notify` so the same project shows as
+ * Session id rules for the manual `post` command, so the same project shows as
  * ONE tile across "working/done/gone":
- *   ANDON_SESSION (injected by the codex wrapper, unique per launch)  ->
+ *   ANDON_SESSION (if set, e.g. for a background job)  ->
  *   else codex falls back to cwd, other agents to the agent name.
  */
 export function sessionId(agent: string, cwd: string): string {

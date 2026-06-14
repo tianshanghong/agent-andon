@@ -8,6 +8,8 @@ export interface ServeArgs {
   host: string;
   demo: boolean;
   token?: string;
+  notify: boolean; // native desktop banner on needs-you/stuck
+  say: boolean; // spoken alert on needs-you/stuck
 }
 
 export function parseServeArgs(argv: string[]): ServeArgs {
@@ -16,6 +18,8 @@ export function parseServeArgs(argv: string[]): ServeArgs {
     host: process.env.ANDON_HOST || "0.0.0.0",
     demo: false,
     token: process.env.ANDON_TOKEN || undefined,
+    notify: false,
+    say: false,
   };
   // Consume the value after a flag, erroring if it's missing or is itself a flag.
   const takeValue = (argv: string[], i: number, flag: string): string => {
@@ -29,6 +33,8 @@ export function parseServeArgs(argv: string[]): ServeArgs {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--demo") args.demo = true;
+    else if (a === "--notify") args.notify = true;
+    else if (a === "--say") { args.say = true; args.notify = true; }
     else if (a === "--port") args.port = Number(takeValue(argv, i++, "--port"));
     else if (a === "--host") args.host = takeValue(argv, i++, "--host");
     else if (a === "--token") args.token = takeValue(argv, i++, "--token");
@@ -57,6 +63,7 @@ export function serve(argv: string[]): void {
     port: args.port,
     host: args.host,
     token: args.token,
+    alert: { notify: args.notify, say: args.say },
   });
 
   if (args.demo) startDemo(store);
@@ -83,6 +90,7 @@ export function serve(argv: string[]): void {
     console.log(`  iPad:       ${url}${tokenSuffix}`);
     console.log("              (iPad must be on the same Wi-Fi)");
     if (args.token) console.log("  🔒 token auth enabled");
+    if (args.notify) console.log(`  🔔 native alerts on${args.say ? " + speech" : ""} (needs-you / stuck)`);
     if (args.demo) console.log("  [demo] injecting fake agents, cycling every 3s");
     console.log("  Ctrl-C to stop\n");
   });

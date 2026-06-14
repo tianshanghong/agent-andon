@@ -58,18 +58,18 @@ export async function doctor(): Promise<number> {
     console.log("  ○ no ~/.claude/settings.json — run:  andon install claude");
   }
 
-  // 3. codex wired?
-  const codexCfg = path.join(os.homedir(), ".codex", "config.toml");
-  if (fs.existsSync(codexCfg)) {
-    const txt = fs.readFileSync(codexCfg, "utf8");
-    const wired = /notify\s*=.*cli\.js/.test(txt);
+  // 3. codex wired? (lifecycle hooks live in ~/.codex/hooks.json)
+  const codexHooks = path.join(os.homedir(), ".codex", "hooks.json");
+  if (fs.existsSync(codexHooks)) {
+    const txt = fs.readFileSync(codexHooks, "utf8");
+    const wired = txt.includes("cli.js") && txt.includes("codexhook");
     console.log(
       wired
-        ? "  ✓ Codex notify wired"
-        : "  ○ Codex notify not wired — run:  andon install codex",
+        ? "  ✓ Codex hooks wired  (run /hooks in Codex to trust them)"
+        : "  ○ Codex not wired — run:  andon install codex",
     );
   } else {
-    console.log("  ○ no ~/.codex/config.toml — run:  andon install codex (if you use Codex)");
+    console.log("  ○ Codex not wired — run:  andon install codex (if you use Codex)");
   }
 
   console.log("");

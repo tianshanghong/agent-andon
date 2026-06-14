@@ -1,8 +1,9 @@
 /**
- * `andon post <state> <agent> [title] [message]` — manual / wrapper pusher.
+ * `andon post <state> <agent> [title] [message]` — manual status pusher (for
+ * scripts and board testing).
  *
- *   andon post working codex                 # codex wrapper: on launch
- *   andon post gone    codex                 # codex wrapper: on exit
+ *   andon post working codex "api"            # mark a tile working
+ *   andon post gone    codex "api"            # remove a tile
  *   andon post done    claude "api" "shipped" # manual board test
  */
 import { postEvent } from "../client";

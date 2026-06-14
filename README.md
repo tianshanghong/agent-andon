@@ -94,12 +94,14 @@ Restart your Claude Code session and it lights up the board automatically. That'
 
 | Command | What it does |
 |---|---|
-| `andon serve [--demo] [--port N] [--token T]` | Run the board server |
-| `andon install claude` | Auto-wire Claude Code hooks (with backup) |
-| `andon install codex` | Auto-wire the Codex notify hook (with backup) |
+| `andon serve [--demo] [--port N] [--token T] [--notify] [--say]` | Run the board server; `--notify`/`--say` add native desktop alerts |
+| `andon install claude` | Wire Claude Code status hooks (timestamped backup) |
+| `andon install codex` | Wire Codex lifecycle hooks (run `/hooks` to trust) |
+| `andon uninstall <claude\|codex>` | Remove only what Andon added; leaves the rest of your config intact |
 | `andon doctor` | Health check + what's wired + iPad URL |
 | `andon post <state> <agent> [title] [msg]` | Push a status by hand |
-| `andon hook` / `andon notify` | *(internal — invoked by the hooks)* |
+| `andon sub <+n\|-n> [id]` | Bump a process's background-task count |
+| `andon hook` / `andon codexhook` / `andon statusline` | *(internal — invoked by the hooks / statusLine)* |
 
 `andon install --dry-run claude` prints the change without writing.
 
@@ -107,30 +109,109 @@ Restart your Claude Code session and it lights up the board automatically. That'
 
 | Claude Code event | Board state | When |
 |---|---|---|
+| `SessionStart` | idle (slate) | session launched — the tile appears right away |
 | `UserPromptSubmit` | working (blue) | you just submitted a prompt |
+| `PostToolUse` | working (blue) | a tool just ran — clears amber the moment you approve |
 | `Notification` | needs-you (amber, pulses) | waiting on permission / your input |
-| `Stop` | done (green) | the turn finished |
+| `Stop` | **ready** (green) | turn handed back to you — your move, *not* "all done" |
 | `StopFailure` | stuck (red, pulses) | the turn failed (newer Claude Code only) |
 | `SessionEnd` | *removed* | session ended; tile disappears |
 
-Multiple sessions each get their own tile (keyed by `session_id`).
+Multiple sessions each get their own tile (keyed by `session_id`). One process =
+one tile; its sub-agents roll up into it rather than spawning their own.
+
+`andon install claude` also sets a **statusLine heartbeat** (`andon statusline`),
+so the board picks up sessions that were *already running* when it started — the
+heartbeat surfaces them (as `idle`) and keeps them alive, but never overrides a
+real state. It costs zero tokens (statusLine output never reaches the model) and,
+being a statusLine, only runs while that terminal is focused.
+
+### Background work: keep a card honest past "done"
+
+`Stop` means the foreground agent handed the turn back — it does **not** mean
+background work finished. If a process kicks off background workflows, have them
+report so the card stays "running" (blue) until they drain instead of falsely
+going green:
+
+```bash
+export ANDON_SESSION="<this process's tile id>"   # the session_id of the parent tile
+andon sub +1     # a background task started
+#   ...do the work...
+andon sub -1     # it finished
+```
+
+While the count is `> 0` the card reads `WORKING ⋯N background` and only turns
+green once every task has reported `-1`.
 
 ### Codex
 
-`andon install codex` adds the `notify` hook → you get the green **done** signal each turn.
-For the blue **working** signal too, source the shipped wrapper from your `~/.zshrc`:
+Modern Codex (≈ 0.117+) has a full Claude-compatible **hooks** system, so Andon
+gets the same lifecycle as Claude Code — including amber **needs-you**:
 
 ```bash
-source /path/to/agent-andon/examples/codex-wrapper.sh
+andon install codex      # wires lifecycle hooks → ~/.codex/hooks.json
 ```
 
-Now `codex` turns blue on launch, clears on exit, and goes green each turn.
+| Codex hook event | Board state |
+|---|---|
+| `SessionStart` | idle (tile appears at launch) |
+| `UserPromptSubmit` / `PostToolUse` | working (blue) |
+| `PermissionRequest` | **needs-you (amber)** |
+| `Stop` | ready (green) |
+| `SessionEnd` | *removed* |
 
-> **Known Codex limits:** Codex doesn't push approval requests to `notify`, so it can't
-> show amber "needs-you" — that prompt stays in the Codex terminal. The red "stuck"
-> signal is the least reliable across both tools; don't read "not red" as "no error."
+> **One extra step Codex requires:** new hooks must be **trusted** before they
+> run — run `/hooks` inside Codex once (or launch `codex
+> --dangerously-bypass-hook-trust`). `andon uninstall codex` cleanly removes the
+> hooks again, with a timestamped backup.
+
+Residual caveats: no statusLine-style heartbeat for *already-running* sessions
+(new ones appear via `SessionStart`), and red "stuck" stays staleness-based (no
+dedicated failed-turn hook).
 
 ---
+
+## Get pulled back: desktop alerts & menu bar
+
+Andon's whole job is to **grab your attention at the right moment** — when an
+agent needs you or gets blocked — and otherwise stay quiet. The board is the
+universal channel (works on any device); these add more, each degrading
+gracefully across macOS / Linux / Windows.
+
+**Native desktop alerts** — a banner (and optional speech) the moment a session
+needs you, on the machine running the server:
+
+```bash
+andon serve --notify        # desktop banner on needs-you / stuck
+andon serve --say           # + speak it out loud
+```
+Uses `osascript`/`say` (macOS), `notify-send`/`spd-say` (Linux), PowerShell
+toast/`System.Speech` (Windows). Missing tool → silently skipped.
+
+**Menu / status bar** — a one-glance summary without a separate iPad:
+
+```bash
+curl -s http://127.0.0.1:8787/menubar     # plain-text summary endpoint
+```
+Wire it to SwiftBar/xbar (macOS) or Waybar/polybar (Linux); see
+`examples/andon-menubar.5s.sh`.
+
+### Fewer interruptions? Configure approvals yourself
+
+Andon **never touches your permission/approval settings** — that's yours to own.
+If amber "needs you" fires more than you'd like, pre-approve safe operations in
+your agent's own config (Andon will then only light up for the rest):
+
+- **Claude Code** — add read-only patterns to `permissions.allow` in
+  `~/.claude/settings.json`, e.g. `"Read"`, `"Bash(git status:*)"`,
+  `"Bash(npm test:*)"`. Your `deny`/`ask` rules always take precedence, and the
+  Bash matcher is shell-operator-aware (so `Bash(git status:*)` won't approve
+  `git status && rm -rf`). See `/permissions`.
+- **Codex** — set `approval_policy` (e.g. `"untrusted"` auto-runs trusted
+  read-only commands) and/or `sandbox_mode` in `~/.codex/config.toml`.
+
+Keeping this in *your* hands means Andon can never weaken your safety rules —
+and the board stays a faithful mirror of when you're genuinely needed.
 
 ## Naming a tile
 
@@ -185,7 +266,7 @@ never code or full logs. Event bodies are capped at 64 KB.
 | `ANDON_TOKEN` | *(none)* | shared token required by `/state` and `/event` when set |
 | `ANDON_PORT` / `ANDON_HOST` | `8787` / `0.0.0.0` | server bind |
 | `ANDON_LABEL` | folder name | tile title (per terminal) |
-| `ANDON_SESSION` | — | per-launch session id (set by the codex wrapper) |
+| `ANDON_SESSION` | — | override a tile's session id (e.g. for a background job) |
 
 ---
 
@@ -210,7 +291,8 @@ self-contained board.
   (it's printed at startup, and `andon doctor` reprints it)?
 - **Claude hook does nothing** — run `claude --debug` once and watch for hook errors;
   re-run `andon install claude`; `andon doctor` to confirm.
-- **Codex stays green, never blue** — that's expected without the wrapper (see Codex above).
+- **Codex tiles never appear / never change** — run `/hooks` inside Codex once to
+  trust the hooks (Codex skips untrusted hooks); `andon doctor` confirms wiring.
 - **A "working" tile is stuck** — a process likely died before sending its end event.
   It auto-clears after 6h; for Codex, `andon post gone codex` from that project dir clears it now.
 

@@ -18,6 +18,20 @@ export interface AndonEvent {
   state?: string;
   title?: string;
   message?: string;
+  /**
+   * Signed delta to a session's background-task count. Sent on its own (no
+   * `state`) by a background workflow: +1 when it starts, -1 when it finishes.
+   * Lets a card stay "running" until its background work actually drains, so
+   * the agent finishing a *turn* (Stop) never falsely reads as "all done".
+   */
+  sub?: number;
+  /**
+   * Presence heartbeat (from the statusLine). Surfaces an already-running
+   * session when the board starts late, and keeps it alive — but NEVER changes
+   * an existing tile's state, so it can't clobber waiting/error/done. A session
+   * first seen via presence shows up as `idle` until a real event refines it.
+   */
+  presence?: boolean;
 }
 
 /** A normalized, stored session — one tile on the board. */
@@ -27,6 +41,8 @@ export interface Session {
   state: State;
   title: string;
   message: string;
+  /** In-flight background tasks under this process. >0 ⇒ not really done. */
+  pending: number;
   /** epoch seconds */
   updated_at: number;
 }

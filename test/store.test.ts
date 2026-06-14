@@ -67,6 +67,56 @@ test("sweep drops sessions past the TTL", () => {
   assert.deepEqual(s.snapshot().sessions.map((x) => x.id), ["fresh"]);
 });
 
+test("`sub` adjusts the background-task count without touching state", () => {
+  const s = storeAt({ v: 1 });
+  s.apply({ agent: "claude", id: "a", state: "done", message: "turn done" });
+  s.apply({ id: "a", sub: 2 });            // two background tasks started
+  let snap = s.snapshot().sessions[0]!;
+  assert.equal(snap.pending, 2);
+  assert.equal(snap.state, "done");        // base state untouched
+  assert.equal(snap.message, "turn done"); // other fields untouched
+  s.apply({ id: "a", sub: -1 });
+  assert.equal(s.snapshot().sessions[0]!.pending, 1);
+});
+
+test("`sub` clamps at zero and survives state changes", () => {
+  const s = storeAt({ v: 1 });
+  s.apply({ agent: "claude", id: "a", state: "working" });
+  s.apply({ id: "a", sub: 1 });
+  s.apply({ agent: "claude", id: "a", state: "done" }); // a state change keeps pending
+  assert.equal(s.snapshot().sessions[0]!.pending, 1);
+  s.apply({ id: "a", sub: -5 });                        // can't go negative
+  assert.equal(s.snapshot().sessions[0]!.pending, 0);
+});
+
+test("`sub` for an unknown session is ignored", () => {
+  const s = storeAt({ v: 1 });
+  assert.deepEqual(s.apply({ id: "ghost", sub: 1 }), { ok: true });
+  assert.equal(s.size, 0);
+});
+
+test("presence surfaces an unknown session as idle", () => {
+  const s = storeAt({ v: 1 });
+  const r = s.apply({ agent: "claude", id: "live", title: "api", presence: true });
+  assert.deepEqual(r, { ok: true }); // not silent — a new tile appeared
+  const snap = s.snapshot().sessions[0]!;
+  assert.equal(snap.state, "idle");
+  assert.equal(snap.title, "api");
+});
+
+test("presence never clobbers a real state, and is silent on refresh", () => {
+  const clock = { v: 1 };
+  const s = storeAt(clock);
+  s.apply({ agent: "claude", id: "a", state: "waiting", message: "need perms" });
+  clock.v = 5;
+  const r = s.apply({ agent: "claude", id: "a", presence: true });
+  assert.deepEqual(r, { ok: true, silent: true });
+  const snap = s.snapshot().sessions[0]!;
+  assert.equal(snap.state, "waiting");      // state preserved
+  assert.equal(snap.message, "need perms"); // message preserved
+  assert.equal(snap.updated_at, 5);         // liveness refreshed
+});
+
 test("enforces the session cap", () => {
   const s = new SessionStore(() => 1, 2); // max 2
   assert.equal(s.apply({ id: "a", state: "working" }).ok, true);

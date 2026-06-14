@@ -8,8 +8,8 @@ export const MANIFEST = {
   start_url: "/",
   display: "fullscreen",
   orientation: "any",
-  background_color: "#0a0c10",
-  theme_color: "#0a0c10",
+  background_color: "#0c0d10",
+  theme_color: "#0c0d10",
   icons: [
     {
       src: "/favicon.svg",
@@ -22,8 +22,8 @@ export const MANIFEST = {
 
 /** A tiny self-contained "andon lamp" SVG icon — three stacked signal dots. */
 export const FAVICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#0a0c10"/>
-  <circle cx="32" cy="17" r="7" fill="#ff5d5d"/>
-  <circle cx="32" cy="32" r="7" fill="#f6a623"/>
-  <circle cx="32" cy="47" r="7" fill="#2fd47a"/>
+  <rect width="64" height="64" rx="12" fill="#0c0d10"/>
+  <rect x="25" y="11" width="14" height="14" rx="2" fill="#d8453d"/>
+  <rect x="25" y="25" width="14" height="14" rx="2" fill="#e0a032"/>
+  <rect x="25" y="39" width="14" height="14" rx="2" fill="#3aa86b"/>
 </svg>`;

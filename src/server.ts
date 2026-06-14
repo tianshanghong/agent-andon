@@ -2,7 +2,8 @@
  * The Agent Andon board server.
  *
  *   GET  /                    full-screen dashboard (served from assets/)
- *   GET  /state               JSON snapshot the iPad polls every second
+ *   GET  /state               JSON snapshot (poll fallback)
+ *   GET  /events              Server-Sent Events stream; pushed on every change
  *   GET  /healthz             liveness + session count
  *   GET  /manifest.webmanifest, /favicon.svg   PWA polish
  *   POST /event               a hook / the CLI pushes one status event
@@ -16,6 +17,8 @@ import * as fs from "fs";
 import * as path from "path";
 import { SessionStore } from "./store";
 import { MANIFEST, FAVICON_SVG } from "./assets";
+import { makeAlerter, type AlertConfig } from "./alerts";
+import { menubarText } from "./menubar";
 import type { AndonEvent } from "./types";
 
 /** Reject event bodies larger than this (plenty for a status line). */
@@ -29,6 +32,8 @@ export interface ServerOptions {
   host: string;
   /** When set, /state and /event require ?token=… or an x-andon-token header. */
   token?: string;
+  /** Native desktop alerts on the machine running the server (opt-in). */
+  alert?: AlertConfig;
   /** Inject a store (tests); a fresh one is created otherwise. */
   store?: SessionStore;
 }
@@ -41,8 +46,40 @@ export interface AndonServer {
 export function createServer(opts: ServerOptions): AndonServer {
   const store = opts.store ?? new SessionStore();
 
-  const sweeper = setInterval(() => store.sweep(), 30_000);
+  // SSE push: every open board holds a /events stream and we send the snapshot
+  // on any change, so the iPad reflects a state change in well under a second
+  // instead of waiting for its next poll. /state polling stays as a fallback.
+  const clients = new Set<http.ServerResponse>();
+  const broadcast = (): void => {
+    const frame = `data: ${JSON.stringify(store.snapshot())}\n\n`;
+    for (const c of clients) {
+      try {
+        c.write(frame);
+      } catch {
+        clients.delete(c);
+      }
+    }
+  };
+  // A comment heartbeat keeps Safari / proxies from dropping an idle stream.
+  const heartbeat = setInterval(() => {
+    for (const c of clients) {
+      try {
+        c.write(": ping\n\n");
+      } catch {
+        clients.delete(c);
+      }
+    }
+  }, 25_000);
+  heartbeat.unref?.();
+
+  const sweeper = setInterval(() => {
+    if (store.sweep() > 0) broadcast();
+  }, 30_000);
   sweeper.unref?.();
+
+  // Native desktop alerts (opt-in): fire on a transition into a needs-you state.
+  const alerter =
+    opts.alert && (opts.alert.notify || opts.alert.say) ? makeAlerter(opts.alert) : null;
 
   let dashboard: Buffer | null = null;
   try {
@@ -114,6 +151,24 @@ export function createServer(opts: ServerOptions): AndonServer {
       } else if (p === "/state") {
         if (!authorized(url, req)) return send(401, JSON.stringify({ error: "unauthorized" }));
         send(200, JSON.stringify(store.snapshot()));
+      } else if (p === "/events") {
+        // Server-Sent Events: hold the connection open and push on every change.
+        if (!authorized(url, req)) return send(401, JSON.stringify({ error: "unauthorized" }));
+        res.writeHead(200, {
+          "Content-Type": "text/event-stream; charset=utf-8",
+          "Cache-Control": "no-store",
+          Connection: "keep-alive",
+          "X-Accel-Buffering": "no",
+        });
+        res.write("retry: 2000\n\n");
+        res.write(`data: ${JSON.stringify(store.snapshot())}\n\n`);
+        clients.add(res);
+        req.on("close", () => clients.delete(res));
+      } else if (p === "/menubar") {
+        // Plain-text one-glance summary for a desktop status bar (SwiftBar /
+        // xbar / Waybar / polybar). Platform-neutral; the consumer differs.
+        if (!authorized(url, req)) return send(401, "unauthorized", "text/plain; charset=utf-8");
+        send(200, menubarText(store.snapshot(), opts.port), "text/plain; charset=utf-8");
       } else if (p === "/healthz") {
         send(200, JSON.stringify({ ok: true, sessions: store.size }));
       } else if (p === "/manifest.webmanifest") {
@@ -151,6 +206,10 @@ export function createServer(opts: ServerOptions): AndonServer {
           return send(400, JSON.stringify({ error: "bad json" }));
         }
         const r = store.apply(ev);
+        // push to every open board immediately — except a silent presence
+        // refresh, where only liveness moved and the board already shows it.
+        if (r.ok && !r.silent) broadcast();
+        if (r.ok && alerter) alerter(store.snapshot().sessions);
         send(r.ok ? 200 : 400, JSON.stringify(r));
       });
       req.on("error", () => {
@@ -162,7 +221,18 @@ export function createServer(opts: ServerOptions): AndonServer {
     send(404, JSON.stringify({ error: "not found" }));
   });
 
-  server.on("close", () => clearInterval(sweeper));
+  server.on("close", () => {
+    clearInterval(sweeper);
+    clearInterval(heartbeat);
+    for (const c of clients) {
+      try {
+        c.end();
+      } catch {
+        /* ignore */
+      }
+    }
+    clients.clear();
+  });
 
   return { server, store };
 }

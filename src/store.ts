@@ -23,6 +23,8 @@ export interface ApplyResult {
   ok: boolean;
   error?: string;
   removed?: boolean;
+  /** Nothing visible changed (a presence refresh) — callers can skip a push. */
+  silent?: boolean;
 }
 
 export class SessionStore {
@@ -38,6 +40,51 @@ export class SessionStore {
   apply(ev: AndonEvent): ApplyResult {
     const sid = String(ev.id ?? ev.agent ?? "agent").trim();
     if (!sid) return { ok: false, error: "missing id" };
+
+    // Presence heartbeat: keep a session alive / surface an already-running one
+    // WITHOUT touching its real state — so a 300ms statusLine ping can never
+    // clobber a waiting/error/done tile. First sighting shows up as idle.
+    if (ev.presence) {
+      const cur = this.sessions.get(sid);
+      if (cur) {
+        this.sessions.set(sid, {
+          ...cur,
+          agent: ev.agent || cur.agent,
+          title: ev.title || cur.title,
+          updated_at: this.now(),
+        });
+        return { ok: true, silent: true }; // only liveness moved; don't wake every board
+      }
+      if (this.sessions.size >= this.maxSessions) {
+        return { ok: false, error: "session limit reached" };
+      }
+      this.sessions.set(sid, {
+        id: sid,
+        agent: ev.agent || "agent",
+        state: "idle",
+        title: ev.title || ev.agent || "agent",
+        message: "",
+        pending: 0,
+        updated_at: this.now(),
+      });
+      return { ok: true }; // a new tile appeared → worth a push
+    }
+
+    // Background-task delta: adjust the pending count, leave the base state
+    // alone. Touches updated_at so a process whose foreground has stopped but
+    // whose background is still running doesn't get swept as idle.
+    if (ev.sub != null && ev.state == null) {
+      const delta = Math.trunc(Number(ev.sub));
+      if (!Number.isFinite(delta)) return { ok: false, error: "invalid sub delta" };
+      const cur = this.sessions.get(sid);
+      if (!cur) return { ok: true }; // nothing to attach to; ignore quietly
+      this.sessions.set(sid, {
+        ...cur,
+        pending: Math.max(0, cur.pending + delta),
+        updated_at: this.now(),
+      });
+      return { ok: true };
+    }
 
     const state = (ev.state ?? "").trim();
 
@@ -62,6 +109,7 @@ export class SessionStore {
       state: state as State,
       title: ev.title || prev?.title || agent,
       message: ev.message != null ? String(ev.message) : prev?.message ?? "",
+      pending: prev?.pending ?? 0, // a state change never resets background work
       updated_at: this.now(),
     });
     return { ok: true };
