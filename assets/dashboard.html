@@ -102,15 +102,18 @@
   /* ── the board: one process = one card, fixed slot, never reordered.
         a card appears when its process starts and is removed only when the
         process ends (SessionEnd) or times out. nothing here is dismissable. ── */
-  .board{flex:1;min-height:0;margin-top:24px;display:grid;gap:18px;align-content:start;overflow:auto;
-    grid-template-columns:repeat(auto-fill,minmax(min(100%,430px),1fr))}
-  .board[data-count="1"]{grid-template-columns:1fr;align-content:center}
-  .board[data-count="2"]{grid-template-columns:repeat(2,1fr);align-content:center}
+  /* one full-width row per process, stacked top→bottom; the page scrolls when
+     there are many. render() floats the alerting tiers (stuck, needs-you) to the
+     top, so what needs you is always on the first screen — no scrolling to find it. */
+  .board{flex:1;min-height:0;margin-top:20px;display:flex;flex-direction:column;
+    gap:12px;overflow-y:auto;overflow-x:hidden}
 
-  .card{position:relative;border:1px solid var(--hairline);border-radius:8px;
+  /* flex:0 0 auto = each row is exactly its content height: never squeezed, so
+     the message line can never clip (the bug we kept hitting) */
+  .card{position:relative;flex:0 0 auto;border:1px solid var(--hairline);border-radius:8px;
     background:var(--surface);background:color-mix(in srgb,var(--tc) 9%,var(--surface));
-    padding:22px 26px;display:flex;flex-direction:column;gap:14px;overflow:hidden;
-    min-height:min(30vh,220px);box-shadow:0 22px 48px -34px rgba(0,0,0,.9);
+    padding:18px 26px;display:flex;flex-direction:column;gap:9px;overflow:hidden;
+    box-shadow:0 18px 40px -34px rgba(0,0,0,.9);
     transition:background-color .4s var(--ease),border-color .4s var(--ease)}
   .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:7px;background:var(--tc);
     transition:background-color .4s var(--ease)}
@@ -179,10 +182,10 @@
   .subs{font-family:var(--mono);font-size:12px;letter-spacing:.05em;color:var(--faint);flex:none}
   .action{font-family:var(--mono);font-size:clamp(.92rem,1.6vw,1.15rem);color:var(--text);
     background:rgba(255,255,255,.035);border-left:2px solid var(--tc);padding:10px 14px;
-    border-radius:0 6px 6px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:auto}
+    border-radius:0 6px 6px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
   /* ── totally idle — no processes at all ── */
-  .idle-hero{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;
+  .idle-hero{margin:auto 0;display:flex;flex-direction:column;align-items:center;
     justify-content:center;gap:14px;min-height:50vh}
   .idle-hero .big{font-family:var(--sans);font-weight:700;color:var(--c-idle);
     font-size:clamp(3rem,11vw,7.5rem);line-height:.9}
@@ -213,7 +216,7 @@
       <span class="clock" id="clock">--:--</span>
       <button class="btn" id="soundBtn">Enable alerts</button>
     </div>
-    <div class="board" id="board" data-count="1"></div>
+    <div class="board" id="board"></div>
   </div>
 
 <script>
@@ -379,7 +382,6 @@ function render(){
 
   if (list.length === 0){
     order = [];
-    board.dataset.count = "1";
     board.innerHTML =
       '<div class="idle-hero"><div class="big">IDLE</div>' +
       '<div class="cn">没有进程在跑</div>' +
@@ -389,15 +391,21 @@ function render(){
   const hero = board.querySelector(".idle-hero");
   if (hero) hero.remove();
 
-  board.dataset.count = String(Math.min(list.length, 3));
   const byId = new Map(list.map(s => [s.id, s]));
-  for (const id of reorder(list)){
+  // stable launch order, then float the alerting tiers to the top so whatever
+  // needs you is always on the first screen: stuck first, needs-you next, the
+  // rest in their original slot. A tile only jumps when it crosses the
+  // urgent⇄calm line — no constant reshuffling while you read.
+  const tier = id => { const s = byId.get(id); const vs = s ? dispState(s) : "idle";
+    return vs === "error" ? 0 : vs === "waiting" ? 1 : 2; };
+  const ordered = reorder(list).slice().sort((a, b) => tier(a) - tier(b)); // stable sort keeps slots within a tier
+  for (const id of ordered){
     const s = byId.get(id);
     if (!s) continue;
     let el = cards.get(id);
     if (!el){ el = makeCard(); cards.set(id, el); }
     updateCard(el, s, t);
-    board.appendChild(el);            // enforce the stable order; no-op if already placed
+    board.appendChild(el);            // re-seat in tier order; no-op if already in place
   }
 
   // SSE won't push during a grace wait — re-render when the soonest one matures,
@@ -413,6 +421,9 @@ function render(){
   if (soonest !== Infinity) graceTimer = setTimeout(render, Math.max(250, soonest + 50));
 
   if (chime) playChime(chime);
+  // a fresh stuck/needs-you just floated to the top — bring it into view so the
+  // user never has to scroll to find what's calling them.
+  if (chime === "error" || chime === "waiting") board.scrollTo({top:0, behavior:"smooth"});
 }
 
 /* live "ago" without touching structure, so nothing resets */
