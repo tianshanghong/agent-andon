@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["20", "22", "24"]
+    name: build & test (Node ${{ matrix.node }})
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      # The test runner relies on Node's TS type-stripping (>= 22.6); on 20 we
+      # still prove the project builds and the CLI starts.
+      - name: Test
+        if: matrix.node != '20'
+        run: npm test
+      - name: Smoke (CLI help)
+        run: node dist/cli.js help

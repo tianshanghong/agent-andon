@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Launch the Agent Andon server at login (optional).
+
+  1. Find your paths:    which node   &&   which andon
+  2. Replace the two REPLACE_ME paths below.
+     (`andon` is a JS shim; point ProgramArguments at node + the real cli.js,
+      or simply at the `andon` bin — both work. Using node + cli.js is safest.)
+  3. Install:
+       cp examples/com.agentandon.server.plist ~/Library/LaunchAgents/
+       launchctl load ~/Library/LaunchAgents/com.agentandon.server.plist
+  4. Logs land in /tmp/agent-andon.log
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.agentandon.server</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>REPLACE_ME/node</string>
+    <string>REPLACE_ME/agent-andon/dist/cli.js</string>
+    <string>serve</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/tmp/agent-andon.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/agent-andon.log</string>
+</dict>
+</plist>

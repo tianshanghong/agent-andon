@@ -1,0 +1,55 @@
+{
+  "name": "agent-andon",
+  "version": "0.1.0",
+  "description": "A traffic-light status board for your AI coding agents. Stand an old iPad on your desk and glance over to know if Claude Code / Codex is working, needs you, done, or stuck.",
+  "type": "commonjs",
+  "bin": {
+    "andon": "dist/cli.js"
+  },
+  "main": "dist/server.js",
+  "files": [
+    "dist",
+    "assets",
+    "examples",
+    "docs",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/cli.js serve",
+    "demo": "node dist/cli.js serve --demo",
+    "test": "tsc -p tsconfig.test.json && node --test \"build/test/**/*.test.js\"",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "claude-code",
+    "codex",
+    "ai-agent",
+    "agent-status",
+    "dashboard",
+    "andon",
+    "traffic-light",
+    "hooks",
+    "ipad",
+    "ambient"
+  ],
+  "author": "wwang <me@wwang.tech>",
+  "license": "MIT",
+  "homepage": "https://github.com/tianshanghong/agent-andon#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tianshanghong/agent-andon.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tianshanghong/agent-andon/issues"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0"
+  }
+}

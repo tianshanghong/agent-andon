@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Andon">
+<meta name="theme-color" content="#0a0c10">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="apple-touch-icon" href="/favicon.svg">
+<title>Agent Andon</title>
+<style>
+  /* ───────── tokens ─────────
+     signal palette = the content. green/amber/red/blue ARE the message.
+     deliberately NOT the "dark bg + one acid accent" default: every state
+     owns a colour, and the whole iPad edge glows the dominant one. */
+  :root{
+    --bg:#0a0c10;
+    --surface:#12151c;
+    --hairline:#222732;
+    --text:#e8edf4;
+    --muted:#7b8696;
+    --faint:#4a5260;
+
+    --c-working:#5b8cff;   /* periwinkle — calm, "leave it alone"      */
+    --c-waiting:#f6a623;   /* marigold   — "your move"                 */
+    --c-done:#2fd47a;      /* emerald    — finished cleanly            */
+    --c-error:#ff5d5d;     /* signal red — blocked / stuck             */
+    --c-idle:#48515f;      /* slate      — nothing running             */
+    --c-offline:#7a4a4a;   /* board lost the Mac                       */
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg);color:var(--text);
+    font-family:-apple-system,"SF Pro Display",system-ui,"PingFang SC",sans-serif;
+    -webkit-font-smoothing:antialiased;overflow:hidden;
+    transition:background-color .6s ease;
+    /* dominant colour resolver — JS sets data-dominant on <body> */
+    --dom:var(--c-idle); --domsoft:rgba(72,81,95,.35);
+  }
+  body[data-dominant="working"]{--dom:var(--c-working);--domsoft:rgba(91,140,255,.42);background:#0a0e16}
+  body[data-dominant="waiting"]{--dom:var(--c-waiting);--domsoft:rgba(246,166,35,.46);background:#13100a}
+  body[data-dominant="done"]   {--dom:var(--c-done);   --domsoft:rgba(47,212,122,.42);background:#0a130e}
+  body[data-dominant="error"]  {--dom:var(--c-error);  --domsoft:rgba(255,93,93,.48); background:#150b0c}
+  body[data-dominant="idle"]   {--dom:var(--c-idle);   --domsoft:rgba(72,81,95,.30)}
+  body[data-dominant="offline"]{--dom:var(--c-offline);--domsoft:rgba(122,74,74,.38)}
+
+  /* ambient wash from the top edge, tinted to the dominant state */
+  .ambient{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.8;
+    background:radial-gradient(130% 80% at 50% -10%,var(--domsoft),transparent 62%);
+    transition:background .6s ease}
+
+  /* SIGNATURE: the perimeter glow = the tower light.
+     thick luminous border + inward bleed. readable from across the room. */
+  .signal-frame{position:fixed;inset:9px;z-index:5;pointer-events:none;
+    border:14px solid var(--dom);border-radius:26px;opacity:.85;
+    box-shadow:inset 0 0 90px -22px var(--dom),0 0 46px -8px var(--domsoft);
+    transition:border-color .6s ease,opacity .6s ease,box-shadow .6s ease}
+  body[data-dominant="working"] .signal-frame{opacity:.46}  /* calm when fine   */
+  body[data-dominant="idle"]    .signal-frame{opacity:.24}  /* nearly dark      */
+  body[data-dominant="offline"] .signal-frame{opacity:.40}
+  body[data-dominant="waiting"] .signal-frame{animation:framePulse 1.7s ease-in-out infinite}
+  body[data-dominant="error"]   .signal-frame{animation:framePulse .9s  ease-in-out infinite}
+  @keyframes framePulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+  /* ───────── layout ───────── */
+  .app{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;
+    padding:34px 44px 32px}
+  .head{display:flex;align-items:center;gap:16px;
+    font-family:ui-monospace,"SF Mono",Menlo,monospace;
+    font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+  .brand{color:var(--text);font-weight:600;letter-spacing:.34em}
+  .head .spacer{flex:1}
+  .conn{display:flex;align-items:center;gap:8px}
+  .conn .led{width:8px;height:8px;border-radius:50%;background:var(--c-done);
+    box-shadow:0 0 11px var(--c-done);transition:background .3s,box-shadow .3s}
+  .conn.off .led{background:var(--c-error);box-shadow:0 0 11px var(--c-error)}
+  .clock{font-variant-numeric:tabular-nums;color:var(--text)}
+  .btn{font:inherit;color:var(--muted);background:transparent;border:1px solid var(--hairline);
+    border-radius:999px;padding:7px 15px;letter-spacing:.12em;cursor:pointer;
+    -webkit-tap-highlight-color:transparent;transition:color .3s,border-color .3s}
+  .btn.on{color:var(--c-done);border-color:rgba(47,212,122,.4)}
+
+  .board{flex:1;min-height:0;display:grid;gap:22px;align-content:center;overflow:auto;
+    margin-top:28px;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr))}
+  .board[data-count="1"]{grid-template-columns:1fr}
+
+  /* ───────── tile ───────── */
+  .tile{position:relative;background:var(--surface);border:1px solid var(--hairline);
+    border-radius:18px;padding:30px 34px;display:flex;flex-direction:column;overflow:hidden;
+    min-height:min(46vh,360px);transition:border-color .45s ease}
+  .tile::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--tc);
+    box-shadow:0 0 28px -2px var(--tc)}                 /* state bar down the left edge */
+  .tile[data-state="working"]{--tc:var(--c-working);border-color:rgba(91,140,255,.24)}
+  .tile[data-state="waiting"]{--tc:var(--c-waiting);border-color:rgba(246,166,35,.30)}
+  .tile[data-state="done"]   {--tc:var(--c-done);   border-color:rgba(47,212,122,.30)}
+  .tile[data-state="error"]  {--tc:var(--c-error);  border-color:rgba(255,93,93,.34)}
+
+  .tile-top{display:flex;align-items:center;gap:12px;min-width:0;
+    font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:15px;letter-spacing:.1em}
+  .dot{width:11px;height:11px;border-radius:50%;background:var(--tc);
+    box-shadow:0 0 15px var(--tc);flex:none}
+  .agent{color:var(--text);font-weight:600;flex:none}
+  .proj{color:var(--faint);text-transform:none;letter-spacing:.01em;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .clear-hint{margin-left:auto;font-size:11px;letter-spacing:.14em;color:var(--faint);
+    opacity:0;transition:opacity .3s;flex:none}
+  .tile.clearable{cursor:pointer}
+  .tile.clearable .clear-hint{opacity:.55}
+
+  .tile-mid{flex:1;display:flex;flex-direction:column;justify-content:center;gap:7px;padding:16px 0}
+  .word{font-weight:800;line-height:.94;letter-spacing:-.015em;text-transform:uppercase;
+    color:var(--tc);font-size:clamp(2.4rem,7vw,6rem);text-shadow:0 0 44px var(--domsoft)}
+  .gloss{font-size:clamp(1rem,2.3vw,1.7rem);color:var(--muted);font-weight:500;letter-spacing:.05em}
+
+  .tile-bot{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;
+    font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:13px;color:var(--muted)}
+  .msg{color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%}
+  .ago{flex:none;font-variant-numeric:tabular-nums}
+
+  /* the live "dot" breathes so a tile reads as alive vs settled */
+  .tile[data-state="working"] .dot{animation:breathe 2.4s ease-in-out infinite}
+  .tile[data-state="waiting"] .dot{animation:breathe 1.5s ease-in-out infinite}
+  .tile[data-state="error"]   .dot{animation:breathe .9s  ease-in-out infinite}
+  @keyframes breathe{0%,100%{opacity:.5}50%{opacity:1}}
+
+  /* word sizing by how many tiles are on screen */
+  .board[data-count="1"] .word{font-size:clamp(3.6rem,13vw,11rem)}
+  .board[data-count="2"] .word{font-size:clamp(2.7rem,8vw,7.5rem)}
+
+  /* ───────── idle / empty ───────── */
+  .idle-card{grid-column:1/-1;justify-self:center;text-align:center;
+    display:flex;flex-direction:column;align-items:center;gap:12px}
+  .idle-card .word{color:var(--c-idle);text-shadow:none;font-size:clamp(3rem,11vw,8rem)}
+  .idle-card .gloss{color:var(--muted)}
+  .idle-sub{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:13px;
+    letter-spacing:.06em;color:var(--faint)}
+
+  @media (prefers-reduced-motion:reduce){
+    .signal-frame,.dot{animation:none!important}
+  }
+</style>
+</head>
+<body data-dominant="idle">
+  <div class="ambient"></div>
+  <div class="signal-frame"></div>
+
+  <div class="app">
+    <div class="head">
+      <span class="brand">ANDON</span>
+      <span>agent status</span>
+      <span class="spacer"></span>
+      <span class="conn" id="conn"><span class="led"></span><span class="conn-txt">synced</span></span>
+      <span class="clock" id="clock">--:--</span>
+      <button class="btn" id="soundBtn">Enable alerts</button>
+    </div>
+    <div class="board" id="board" data-count="1"></div>
+  </div>
+
+<script>
+"use strict";
+const POLL_MS = 1000;
+const PRI   = {error:0, waiting:1, done:2, working:3, idle:4};
+const WORDS = {
+  working:["WORKING","工作中"],
+  waiting:["NEEDS YOU","该你了"],
+  done   :["DONE","完成"],
+  error  :["STUCK","卡住了"],
+};
+const AGENTS = {claude:"CLAUDE CODE", codex:"CODEX"};
+
+const board  = document.getElementById("board");
+const conn   = document.getElementById("conn");
+const connTxt= conn.querySelector(".conn-txt");
+const clock  = document.getElementById("clock");
+const soundBtn = document.getElementById("soundBtn");
+
+const tiles = new Map();         // id -> tile element
+let prevState = {};              // id -> last state, for transition chimes
+let primed = false;              // suppress chimes on the very first render (page load)
+
+const agentLabel = a => AGENTS[a] || (a || "AGENT").toUpperCase();
+function ago(sec){
+  sec = Math.max(0, Math.round(sec));
+  if (sec < 60) return sec + "s ago";
+  const m = Math.floor(sec/60);
+  if (m < 60) return m + "m ago";
+  const h = Math.floor(m/60);
+  return h + "h " + (m%60) + "m ago";
+}
+
+/* ---------- tiles ---------- */
+function makeTile(){
+  const el = document.createElement("div");
+  el.className = "tile";
+  el.innerHTML =
+    '<div class="tile-top"><span class="dot"></span>' +
+    '<span class="agent"></span><span class="proj"></span>' +
+    '<span class="clear-hint">TAP TO CLEAR</span></div>' +
+    '<div class="tile-mid"><div class="word"></div><div class="gloss"></div></div>' +
+    '<div class="tile-bot"><span class="msg"></span><span class="ago"></span></div>';
+  el.addEventListener("click", () => {
+    if (el.dataset.state === "done" || el.dataset.state === "error"){
+      post({id: el.dataset.id, agent: el.dataset.agent, state: "gone"});
+      el.remove(); tiles.delete(el.dataset.id);
+    }
+  });
+  return el;
+}
+function updateTile(el, s, serverTime){
+  el.dataset.id = s.id; el.dataset.agent = s.agent; el.dataset.state = s.state;
+  el.classList.toggle("clearable", s.state === "done" || s.state === "error");
+  el.querySelector(".agent").textContent = agentLabel(s.agent);
+  el.querySelector(".proj").textContent  = s.title || "";
+  const w = WORDS[s.state] || [s.state.toUpperCase(), ""];
+  el.querySelector(".word").textContent  = w[0];
+  el.querySelector(".gloss").textContent = w[1];
+  const msg = el.querySelector(".msg");
+  msg.textContent = s.message || "";
+  msg.style.display = s.message ? "" : "none";
+  el.querySelector(".ago").textContent = ago(serverTime - s.updated_at);
+}
+
+function ensureIdle(){
+  if (board.querySelector(".idle-card")) return;
+  board.dataset.count = "1";
+  const d = document.createElement("div");
+  d.className = "idle-card";
+  d.innerHTML = '<div class="word">IDLE</div><div class="gloss">没有 agent 在跑</div>' +
+    '<div class="idle-sub">start a run in Claude Code or Codex — it lights up here</div>';
+  board.appendChild(d);
+}
+function removeIdle(){ const d = board.querySelector(".idle-card"); if (d) d.remove(); }
+
+/* ---------- render ---------- */
+function render(data){
+  const list = data.sessions || [];
+  const serverTime = data.server_time || (Date.now()/1000);
+
+  // dominant state -> perimeter glow colour
+  let dom = "idle";
+  for (const s of list) if (PRI[s.state] < PRI[dom]) dom = s.state;
+  document.body.dataset.dominant = dom;
+  board.dataset.count = String(list.length === 0 ? 1 : Math.min(list.length, 3));
+
+  // detect transitions into an attention state -> queue one chime (most urgent wins).
+  // skip on the first render after load, so reopening the page doesn't re-chime
+  // tiles that were already in that state.
+  let chime = null;
+  if (primed){
+    for (const s of list){
+      if (prevState[s.id] !== s.state &&
+          (s.state === "waiting" || s.state === "error" || s.state === "done")){
+        if (chime === null || PRI[s.state] < PRI[chime]) chime = s.state;
+      }
+    }
+  }
+  prevState = {};
+  for (const s of list) prevState[s.id] = s.state;
+  primed = true;
+
+  if (list.length === 0){
+    for (const [,el] of tiles) el.remove();
+    tiles.clear();
+    ensureIdle();
+  } else {
+    removeIdle();
+    const ids = new Set(list.map(s => s.id));
+    for (const [id, el] of [...tiles]) if (!ids.has(id)){ el.remove(); tiles.delete(id); }
+    for (const s of list){
+      let el = tiles.get(s.id);
+      if (!el){ el = makeTile(); tiles.set(s.id, el); }
+      updateTile(el, s, serverTime);
+      board.appendChild(el);            // reorder by priority (keeps animations)
+    }
+  }
+  if (chime) playChime(chime);
+}
+
+/* ---------- polling ---------- */
+// If the board is opened with ?token=… (token-protected server), carry it
+// through to /state and /event — otherwise the server answers 401 and the
+// board can never sync.
+const TOKEN = new URLSearchParams(location.search).get("token");
+const withToken = (path) => TOKEN ? path + (path.includes("?") ? "&" : "?") + "token=" + encodeURIComponent(TOKEN) : path;
+
+async function poll(){
+  try{
+    const r = await fetch(withToken("/state"), {cache:"no-store"});
+    if (!r.ok) throw new Error("bad status");
+    render(await r.json());
+    conn.classList.remove("off");
+    connTxt.textContent = "synced";
+  } catch (e){
+    conn.classList.add("off");
+    connTxt.textContent = "reconnecting…";
+    document.body.dataset.dominant = "offline";   // edge dims to red-grey
+  } finally {
+    setTimeout(poll, POLL_MS);
+  }
+}
+async function post(body){
+  try{
+    await fetch(withToken("/event"), {method:"POST",
+      headers:{"Content-Type":"application/json"}, body: JSON.stringify(body)});
+  } catch (e){ /* ignore */ }
+}
+
+/* ---------- sound (WebAudio, no files) ---------- */
+let actx = null, soundOn = false;
+function tone(freq, start, dur, peak){
+  if (!actx) return;
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = "sine"; o.frequency.value = freq;
+  o.connect(g); g.connect(actx.destination);
+  const t = actx.currentTime + start;
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(peak, t + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.start(t); o.stop(t + dur + 0.03);
+}
+function playChime(kind){
+  if (!soundOn || !actx) return;
+  if (actx.state === "suspended") actx.resume();
+  if (kind === "done"){ tone(660,0,.18,.18); tone(990,.16,.30,.15); }
+  else if (kind === "waiting"){ tone(560,0,.24,.16); }
+  else if (kind === "error"){ tone(320,0,.18,.20); tone(250,.20,.34,.20); }
+}
+soundBtn.addEventListener("click", () => {
+  if (!actx){
+    try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e){}
+  }
+  if (actx && actx.state === "suspended") actx.resume();
+  soundOn = !soundOn;
+  soundBtn.classList.toggle("on", soundOn);
+  soundBtn.textContent = soundOn ? "Alerts on" : "Enable alerts";
+  if (soundOn) tone(880, 0, .12, .10);            // tiny confirm beep
+});
+
+/* ---------- keep the iPad awake (iPadOS 16.4+) ---------- */
+let wakeLock = null;
+async function reqWake(){
+  try { if ("wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen"); }
+  catch (e){ /* if unsupported: set Auto-Lock → Never in iPad settings */ }
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") reqWake();
+});
+
+/* ---------- boot ---------- */
+function tick(){ clock.textContent = new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"}); }
+ensureIdle();
+tick(); setInterval(tick, 1000);
+reqWake();
+poll();
+</script>
+</body>
+</html>

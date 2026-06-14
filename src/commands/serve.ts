@@ -1,0 +1,97 @@
+/** `andon serve [--demo] [--port N] [--host H] [--token T]` */
+import { createServer } from "../server";
+import { startDemo } from "../demo";
+import { lanIp } from "../net";
+
+export interface ServeArgs {
+  port: number;
+  host: string;
+  demo: boolean;
+  token?: string;
+}
+
+export function parseServeArgs(argv: string[]): ServeArgs {
+  const args: ServeArgs = {
+    port: Number(process.env.ANDON_PORT) || 8787,
+    host: process.env.ANDON_HOST || "0.0.0.0",
+    demo: false,
+    token: process.env.ANDON_TOKEN || undefined,
+  };
+  // Consume the value after a flag, erroring if it's missing or is itself a flag.
+  const takeValue = (argv: string[], i: number, flag: string): string => {
+    const v = argv[i + 1];
+    if (v === undefined || v.startsWith("-")) {
+      throw new Error(`${flag} needs a value`);
+    }
+    return v;
+  };
+
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === "--demo") args.demo = true;
+    else if (a === "--port") args.port = Number(takeValue(argv, i++, "--port"));
+    else if (a === "--host") args.host = takeValue(argv, i++, "--host");
+    else if (a === "--token") args.token = takeValue(argv, i++, "--token");
+    else if (a?.startsWith("--port=")) args.port = Number(a.split("=")[1]);
+    else if (a?.startsWith("--token=")) args.token = a.split("=")[1];
+    else if (a?.startsWith("--host=")) args.host = a.split("=")[1]!;
+  }
+  return args;
+}
+
+export function serve(argv: string[]): void {
+  let args: ServeArgs;
+  try {
+    args = parseServeArgs(argv);
+  } catch (e) {
+    console.error(`✗ ${(e as Error).message}`);
+    process.exit(2);
+    return;
+  }
+  if (!Number.isFinite(args.port) || args.port <= 0) {
+    console.error(`✗ invalid port: ${args.port}`);
+    process.exit(1);
+  }
+
+  const { server, store } = createServer({
+    port: args.port,
+    host: args.host,
+    token: args.token,
+  });
+
+  if (args.demo) startDemo(store);
+
+  server.on("error", (err: NodeJS.ErrnoException) => {
+    if (err.code === "EADDRINUSE") {
+      console.error(
+        `\n  ✗ Port ${args.port} is already in use.\n` +
+          `    Another Andon server may be running, or pick a free port:\n` +
+          `      andon serve --port 8788\n`,
+      );
+    } else {
+      console.error(`\n  ✗ Server error: ${err.message}\n`);
+    }
+    process.exit(1);
+  });
+
+  server.listen(args.port, args.host, () => {
+    const url = `http://${lanIp()}:${args.port}`;
+    const tokenSuffix = args.token ? `?token=${args.token}` : "";
+    console.log("\n  🚦 Agent Andon is live");
+    console.log("  ──────────────────────────────────────────");
+    console.log(`  This Mac:   http://127.0.0.1:${args.port}${tokenSuffix}`);
+    console.log(`  iPad:       ${url}${tokenSuffix}`);
+    console.log("              (iPad must be on the same Wi-Fi)");
+    if (args.token) console.log("  🔒 token auth enabled");
+    if (args.demo) console.log("  [demo] injecting fake agents, cycling every 3s");
+    console.log("  Ctrl-C to stop\n");
+  });
+
+  const shutdown = () => {
+    console.log("\n  stopped.");
+    server.close(() => process.exit(0));
+    setTimeout(() => process.exit(0), 500).unref();
+  };
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
+}
