@@ -475,6 +475,7 @@ function startPoll(){ pollOnce(); setInterval(pollOnce, 1000); }
 
 /* ---------- sound (WebAudio, no files) ---------- */
 let actx = null, soundOn = false;
+try { soundOn = localStorage.getItem("andon.alerts") === "on"; } catch (e){} // remember across reloads
 function tone(freq, start, dur, peak){
   if (!actx) return;
   const o = actx.createOscillator(), g = actx.createGain();
@@ -493,16 +494,32 @@ function playChime(kind){
   else if (kind === "waiting"){ tone(560,0,.24,.16); }
   else if (kind === "error"){ tone(320,0,.18,.20); tone(250,.20,.34,.20); }
 }
-soundBtn.addEventListener("click", () => {
-  if (!actx){
-    try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e){}
-  }
+function armAudio(){ // create + resume the WebAudio context — only works inside a user gesture
+  if (!actx){ try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e){} }
   if (actx && actx.state === "suspended") actx.resume();
-  soundOn = !soundOn;
+}
+function reflectSound(){
   soundBtn.classList.toggle("on", soundOn);
   soundBtn.textContent = soundOn ? "Alerts on" : "Enable alerts";
-  if (soundOn) tone(880, 0, .12, .10);
+}
+soundBtn.addEventListener("click", () => {
+  soundOn = !soundOn;
+  try { localStorage.setItem("andon.alerts", soundOn ? "on" : "off"); } catch (e){}
+  if (soundOn){ armAudio(); tone(880, 0, .12, .10); }
+  reflectSound();
 });
+
+// honor a remembered "on": browsers mute audio until a gesture, so a freshly
+// loaded page can't ring on its own. Show the saved state and re-arm WebAudio on
+// the first incidental touch/keypress — so after the one-time setup tap, the
+// chime survives every reload without hunting for the button again.
+reflectSound();
+if (soundOn){
+  const rearm = () => { armAudio();
+    window.removeEventListener("pointerdown", rearm); window.removeEventListener("keydown", rearm); };
+  window.addEventListener("pointerdown", rearm);
+  window.addEventListener("keydown", rearm);
+}
 
 /* ---------- keep the iPad awake (iPadOS 16.4+) ---------- */
 let wakeLock = null;
