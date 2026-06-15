@@ -5,7 +5,6 @@
  * prototype no lock is needed. Each HTTP callback runs to completion.
  */
 import {
-  PRIORITY,
   VALID_STATES,
   type AndonEvent,
   type Session,
@@ -84,14 +83,15 @@ export class SessionStore {
     return { ok: true };
   }
 
-  /** Snapshot, sorted by priority then most-recent — exactly what the board renders. */
+  /**
+   * Snapshot in stable arrival order (Map preserves first-insertion order, and
+   * updating a session never moves it). Display ordering is the BOARD's job — it
+   * pins the alerting tiers to the top and keeps everything else in this stable
+   * slot. Keeping one source of truth here means a card's position no longer
+   * depends on whether you were watching when it started.
+   */
   snapshot(): Snapshot {
     const items = [...this.sessions.values()].map((s) => ({ ...s }));
-    items.sort(
-      (a, b) =>
-        (PRIORITY[a.state] ?? 9) - (PRIORITY[b.state] ?? 9) ||
-        b.updated_at - a.updated_at,
-    );
     return { server_time: this.now(), sessions: items };
   }
 

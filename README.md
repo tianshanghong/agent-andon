@@ -73,7 +73,8 @@ andon serve
 **2. Set up the iPad** (same Wi-Fi as the Mac):
 
 - Safari → open the printed URL. **It's `http://`, not `https://`.**
-- Tap **"Enable alerts"** once to unlock the chime (Safari mutes audio until you tap).
+- Tap **"Enable sound"** once to unlock the chime (Safari mutes audio until you tap;
+  this is the board's in-browser sound, separate from the default-on desktop alerts).
   The choice is remembered across reloads — you won't need to tap it again.
 - Share → **Add to Home Screen** → launch from the icon for a full-screen, address-bar-free board.
 - Belt-and-suspenders against sleep: **Settings → Display & Brightness → Auto-Lock → Never.**

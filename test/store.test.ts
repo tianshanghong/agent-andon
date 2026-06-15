@@ -45,15 +45,15 @@ test("message persists across updates unless replaced", () => {
   assert.equal(s.snapshot().sessions[0]!.message, "need perms");
 });
 
-test("snapshot sorts by priority then recency", () => {
+test("snapshot keeps stable arrival order (display ordering is the board's job)", () => {
   const clock = { v: 0 };
   const s = storeAt(clock);
   clock.v = 10; s.apply({ agent: "claude", id: "work", state: "working" });
   clock.v = 20; s.apply({ agent: "codex", id: "err", state: "error" });
   clock.v = 30; s.apply({ agent: "claude", id: "wait", state: "waiting" });
-  const ids = s.snapshot().sessions.map((x) => x.id);
-  // error(0) < waiting(1) < working(3)
-  assert.deepEqual(ids, ["err", "wait", "work"]);
+  // arrival order, regardless of state — and an in-place update must NOT reorder
+  clock.v = 40; s.apply({ agent: "claude", id: "work", state: "done" });
+  assert.deepEqual(s.snapshot().sessions.map((x) => x.id), ["work", "err", "wait"]);
 });
 
 test("sweep drops sessions past the TTL", () => {

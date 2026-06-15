@@ -102,19 +102,26 @@
   /* ── the board: one process = one card, fixed slot, never reordered.
         a card appears when its process starts and is removed only when the
         process ends (SessionEnd) or times out. nothing here is dismissable. ── */
-  /* one full-width row per process, stacked top→bottom; the page scrolls when
+  /* one full-width row per process, stacked top→bottom; the board scrolls when
      there are many. render() floats the alerting tiers (stuck, needs-you) to the
      top, so what needs you is always on the first screen — no scrolling to find it. */
   .board{flex:1;min-height:0;margin-top:20px;display:flex;flex-direction:column;
-    gap:12px;overflow-y:auto;overflow-x:hidden}
+    gap:10px;overflow-y:auto;overflow-x:hidden;
+    scrollbar-width:thin;scrollbar-color:var(--hairline) transparent}
+  .board::-webkit-scrollbar{width:10px}
+  .board::-webkit-scrollbar-thumb{background:var(--hairline);border-radius:8px;
+    border:3px solid transparent;background-clip:content-box}
+  .board::-webkit-scrollbar-track{background:transparent}
 
-  /* flex:0 0 auto = each row is exactly its content height: never squeezed, so
-     the message line can never clip (the bug we kept hitting) */
+  /* SIZE BY URGENCY: calm rows (working/done/idle) are compact so the whole floor
+     fits a glance; the few that NEED YOU grow and show their full message (below).
+     flex:0 0 auto = each row is exactly its content height — never squeezed, so a
+     message can't clip. */
   .card{position:relative;flex:0 0 auto;border:1px solid var(--hairline);border-radius:8px;
     background:var(--surface);background:color-mix(in srgb,var(--tc) 9%,var(--surface));
-    padding:18px 26px;display:flex;flex-direction:column;gap:9px;overflow:hidden;
-    box-shadow:0 18px 40px -34px rgba(0,0,0,.9);
-    transition:background-color .4s var(--ease),border-color .4s var(--ease)}
+    padding:11px 24px;display:flex;flex-direction:column;gap:4px;overflow:hidden;
+    box-shadow:0 16px 36px -34px rgba(0,0,0,.9);
+    transition:background-color .4s var(--ease),border-color .4s var(--ease),padding .3s var(--ease)}
   .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:7px;background:var(--tc);
     transition:background-color .4s var(--ease)}
   .card[data-state="working"]{--tc:var(--c-working)}
@@ -127,7 +134,7 @@
      silhouette at distance even when the hue is hard to resolve */
   .glyph{position:absolute;top:50%;right:24px;transform:translateY(-50%);
     font-family:var(--sans);font-weight:700;line-height:1;
-    font-size:clamp(2.6rem,6vw,4.2rem);color:var(--tc);opacity:.20;pointer-events:none}
+    font-size:clamp(1.7rem,3.4vw,2.5rem);color:var(--tc);opacity:.20;pointer-events:none}
 
   /* ── ACROSS-THE-ROOM: calm states stay quiet; the two that NEED YOU go LOUD.
      loudness (luminance + area + motion), not hue, carries across a room and
@@ -139,12 +146,24 @@
   .card[data-state="error"]::before{ opacity:0 }            /* edge bar redundant once flooded */
   .card[data-state="waiting"]{
     background:var(--c-waiting); --ink:#1b1304; --ink-soft:rgba(27,19,4,.66);
-    animation:cardBeat 1.6s ease-in-out infinite;
   }
   .card[data-state="error"]{
     background:var(--c-error); --ink:#fff4f3; --ink-soft:rgba(255,244,243,.74);
-    animation:cardBeat .9s ease-in-out infinite;
   }
+  /* only the single most-urgent card pulses — many pulsing blocks read as noise.
+     render() tags it .lead; the others stay flooded-bright but still. */
+  .card.lead[data-state="waiting"]{ animation:cardBeat 1.6s ease-in-out infinite }
+  .card.lead[data-state="error"]{ animation:cardBeat .9s ease-in-out infinite }
+
+  /* the urgent tiers grow back up: bigger title + glyph, and the message wraps to
+     its FULL text (calm rows truncate to one line; an alert never should). */
+  .card[data-state="waiting"],.card[data-state="error"]{ padding:20px 26px;gap:11px }
+  .card[data-state="waiting"] .title,.card[data-state="error"] .title{ font-size:clamp(1.7rem,4.4vw,2.9rem) }
+  .card[data-state="waiting"] .glyph,.card[data-state="error"] .glyph{ font-size:clamp(2.8rem,6vw,4.4rem) }
+  .card[data-state="waiting"] .action,.card[data-state="error"] .action{
+    white-space:normal;overflow:visible;text-overflow:clip;color:var(--ink);
+    background:rgba(0,0,0,.12);border-left:3px solid var(--ink);border-radius:0 6px 6px 0;
+    font-size:clamp(1rem,1.7vw,1.25rem);line-height:1.4;padding:12px 16px }
   .card[data-state="waiting"] .chip, .card[data-state="error"] .chip,
   .card[data-state="waiting"] .title, .card[data-state="error"] .title,
   .card[data-state="waiting"] .glyph, .card[data-state="error"] .glyph{ color:var(--ink) }
@@ -155,8 +174,6 @@
   .card[data-state="waiting"] .subs, .card[data-state="error"] .subs{ color:var(--ink-soft) }
   .card[data-state="waiting"] .badge, .card[data-state="error"] .badge{
     color:var(--ink); border-color:var(--ink-soft) }
-  .card[data-state="waiting"] .action, .card[data-state="error"] .action{
-    color:var(--ink); background:rgba(0,0,0,.12); border-left-color:var(--ink) }
   @keyframes cardBeat{ 0%,100%{ filter:brightness(1) } 50%{ filter:brightness(1.13) } }
 
   .card-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -177,12 +194,13 @@
   .badge{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
     color:var(--muted);border:1px solid var(--hairline);border-radius:4px;padding:3px 8px;flex:none}
   .title{font-family:var(--sans);font-weight:700;letter-spacing:-.01em;color:var(--text);
-    font-size:clamp(1.7rem,4vw,2.7rem);line-height:1.02;min-width:0;
+    font-size:clamp(1.05rem,2.1vw,1.5rem);line-height:1.04;min-width:0;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .subs{font-family:var(--mono);font-size:12px;letter-spacing:.05em;color:var(--faint);flex:none}
-  .action{font-family:var(--mono);font-size:clamp(.92rem,1.6vw,1.15rem);color:var(--text);
-    background:rgba(255,255,255,.035);border-left:2px solid var(--tc);padding:10px 14px;
-    border-radius:0 6px 6px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* calm message: a thin dim line (no box) so a running row stays low — see the
+     alerting override below, where it grows into a boxed, full-text panel. */
+  .action{font-family:var(--mono);font-size:clamp(.8rem,1.25vw,.98rem);color:var(--muted);
+    padding:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
   /* ── totally idle — no processes at all ── */
   .idle-hero{margin:auto 0;display:flex;flex-direction:column;align-items:center;
@@ -214,7 +232,7 @@
       <span class="rule"></span>
       <span class="conn" id="conn"><span class="led"></span><span class="conn-txt">live</span></span>
       <span class="clock" id="clock">--:--</span>
-      <button class="btn" id="soundBtn">Enable alerts</button>
+      <button class="btn" id="soundBtn">Enable sound</button>
     </div>
     <div class="board" id="board"></div>
   </div>
@@ -385,7 +403,7 @@ function render(){
     board.innerHTML =
       '<div class="idle-hero"><div class="big">IDLE</div>' +
       '<div class="cn">没有进程在跑</div>' +
-      '<div class="sub">start a run in Claude Code or Codex — it lights up here</div></div>';
+      '<div class="sub">跑个任务就会亮起来 · start a run in Claude Code or Codex</div></div>';
     return;
   }
   const hero = board.querySelector(".idle-hero");
@@ -399,12 +417,14 @@ function render(){
   const tier = id => { const s = byId.get(id); const vs = s ? dispState(s) : "idle";
     return vs === "error" ? 0 : vs === "waiting" ? 1 : 2; };
   const ordered = reorder(list).slice().sort((a, b) => tier(a) - tier(b)); // stable sort keeps slots within a tier
+  const leadId = ordered.find(id => tier(id) < 2) || null; // the one alerting card that pulses
   for (const id of ordered){
     const s = byId.get(id);
     if (!s) continue;
     let el = cards.get(id);
     if (!el){ el = makeCard(); cards.set(id, el); }
     updateCard(el, s, t);
+    el.classList.toggle("lead", id === leadId);
     board.appendChild(el);            // re-seat in tier order; no-op if already in place
   }
 
@@ -500,7 +520,7 @@ function armAudio(){ // create + resume the WebAudio context — only works insi
 }
 function reflectSound(){
   soundBtn.classList.toggle("on", soundOn);
-  soundBtn.textContent = soundOn ? "Alerts on" : "Enable alerts";
+  soundBtn.textContent = soundOn ? "Sound on" : "Enable sound";
 }
 soundBtn.addEventListener("click", () => {
   soundOn = !soundOn;

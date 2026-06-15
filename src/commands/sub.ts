@@ -14,9 +14,11 @@
  * server must never break the workflow that called it.
  */
 import { postEvent } from "../client";
+import { serverBase } from "../net";
 
 export async function sub(args: string[]): Promise<number> {
   const verbose = args.includes("--verbose") || args.includes("-v");
+  const show = verbose || Boolean(process.stdout.isTTY); // confirm interactively, quiet when scripted
   // keep positionals, but treat a leading-minus integer (e.g. "-1") as a value
   const pos = args.filter((a) => !a.startsWith("-") || /^-\d+$/.test(a));
   const [deltaRaw, idArg] = pos;
@@ -35,8 +37,13 @@ export async function sub(args: string[]): Promise<number> {
 
   const r = await postEvent({ id, sub: delta });
   if (!r.ok) {
-    if (verbose) console.error(`✗ could not reach the andon server (${r.error ?? "unknown"})`);
-    return 1; // non-zero for scripts, but quiet
+    if (show)
+      console.error(
+        `✗ andon server unreachable at ${serverBase()} — start it with: andon serve` +
+          (verbose ? `  (${r.error ?? "unknown"})` : ""),
+      );
+    return 1; // non-zero for scripts, but quiet unless interactive / -v
   }
+  if (show) console.log(`✓ ${id}: ${delta > 0 ? "+" : ""}${delta} background`);
   return 0;
 }

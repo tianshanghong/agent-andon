@@ -5,7 +5,7 @@
  *
  * A consumer is a one-liner: `curl -s http://127.0.0.1:8787/menubar`.
  */
-import type { Snapshot, State } from "./types";
+import { PRIORITY, type Snapshot, type State } from "./types";
 
 const EMOJI: Record<string, string> = {
   working: "🔵",
@@ -35,7 +35,11 @@ export function menubarText(snap: Snapshot, port: number): string {
   if (list.length === 0) {
     lines.push("no agents running");
   } else {
-    for (const s of list) {
+    // the store keeps arrival order; the dropdown wants most-urgent first
+    const ranked = [...list].sort(
+      (a, b) => (PRIORITY[a.state] ?? 9) - (PRIORITY[b.state] ?? 9) || b.updated_at - a.updated_at,
+    );
+    for (const s of ranked) {
       const msg = s.message ? " — " + s.message : "";
       lines.push(clean(`${EMOJI[s.state] ?? "•"} ${s.agent} · ${s.title}${msg}`));
     }

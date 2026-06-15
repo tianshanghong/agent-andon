@@ -61,6 +61,36 @@ const HELP = `
     andon install claude        # wire it up, restart your Claude session
 `;
 
+const COMMANDS = ["serve", "install", "uninstall", "doctor", "post", "sub", "hook", "codexhook", "help"];
+
+/** Levenshtein distance — for "did you mean?" on a typo'd verb. */
+function editDistance(a: string, b: string): number {
+  const dp = Array.from({ length: a.length + 1 }, (_, i) => i);
+  for (let j = 1; j <= b.length; j++) {
+    let prev = dp[0];
+    dp[0] = j;
+    for (let i = 1; i <= a.length; i++) {
+      const tmp = dp[i];
+      dp[i] = a[i - 1] === b[j - 1] ? prev : 1 + Math.min(prev, dp[i], dp[i - 1]);
+      prev = tmp;
+    }
+  }
+  return dp[a.length];
+}
+
+function suggest(cmd: string): string {
+  let best = "";
+  let bestD = Infinity;
+  for (const c of COMMANDS) {
+    const d = editDistance(cmd, c);
+    if (d < bestD) {
+      bestD = d;
+      best = c;
+    }
+  }
+  return bestD <= 3 ? `  did you mean:  andon ${best} ?\n` : "";
+}
+
 async function main(): Promise<void> {
   const [cmd, ...rest] = process.argv.slice(2);
 
@@ -128,7 +158,7 @@ async function main(): Promise<void> {
       return;
 
     default:
-      console.error(`unknown command: ${cmd}\n${HELP}`);
+      console.error(`unknown command: ${cmd}\n${suggest(cmd)}${HELP}`);
       process.exit(2);
   }
 }
