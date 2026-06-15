@@ -1,10 +1,19 @@
-# 🚦 Agent Andon
+# 🚦 Agent Andon — a status board & notifier for Claude Code and Codex
 
-**A traffic-light status board for your AI coding agents.**
+**Glance at an iPad — or get a desktop alert — the moment your AI coding agent is working, needs you, done, or stuck.**
 
-Stand an old iPad on your desk. Submit a task to Claude Code or Codex, then go do
-something else. One glance at the iPad tells you whether your agent is **working,
-needs you, done, or stuck** — no babysitting the terminal, no forgetting to come back.
+[![MIT License](https://img.shields.io/badge/license-MIT-3aa86b)](LICENSE)
+[![Node ≥ 18](https://img.shields.io/badge/node-%E2%89%A5%2018-5478c4)](https://nodejs.org)
+![runtime dependencies: 0](https://img.shields.io/badge/runtime%20deps-0-3aa86b)
+![platforms: macOS · Linux · Windows](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-23262e)
+
+Stand an old iPad on your desk. Submit a task to **Claude Code** or **OpenAI Codex**, then go do
+something else — one glance tells you whether the agent is **working, needs you, done, or stuck**.
+No babysitting the terminal, no forgetting to come back.
+
+It's a lightweight, self-hosted way to **monitor several AI coding agents at once** and **get
+notified the instant one needs your approval, finishes its turn, or gets blocked** — across an
+iPad/phone/browser, a desktop banner, or your menu bar. No app, no account, zero dependencies.
 
 ![Agent Andon board: one full-width row per agent — STUCK and NEEDS YOU floated to the top showing their full message, calm WORKING/READY rows compact below, and a signal bar across the top in the most-urgent colour](docs/board.png)
 
@@ -19,6 +28,10 @@ needs you, done, or stuck** — no babysitting the terminal, no forgetting to co
 - **Just an iPad + Safari** — no app, no hardware, no account.
 
 <sub>中文用户：把闲置 iPad 立在桌边，变成 Claude Code / Codex 的"安灯"状态看板。提交任务后放心去干别的，一瞥就知道 agent 在跑 / 该你了 / 完成了 / 卡住了。</sub>
+
+---
+
+**Contents** · [How it works](#how-it-works) · [Install](#install) · [Quickstart](#quickstart-60-seconds) · [Commands](#commands) · [Notifications](#notifications-desktop-alerts-and-menu-bar) · [Security](#security) · [Configuration](#configuration) · [Develop](#develop) · [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -63,7 +76,7 @@ npm install -g agent-andon      # or: npx agent-andon serve --demo
 From source:
 
 ```bash
-git clone <your-repo> agent-andon && cd agent-andon
+git clone https://github.com/tianshanghong/agent-andon && cd agent-andon
 npm install && npm run build
 node dist/cli.js serve --demo
 ```
@@ -185,7 +198,7 @@ hook). (Already-running sessions appear on their next event, same as Claude.)
 
 ---
 
-## Get pulled back: desktop alerts & menu bar
+## Notifications: desktop alerts and menu bar
 
 Andon's whole job is to **grab your attention at the right moment** — when an
 agent needs you or gets blocked — and otherwise stay quiet. The board is the
@@ -320,6 +333,28 @@ self-contained board.
 
 ---
 
+## FAQ
+
+**How do I get notified when Claude Code finishes or needs approval?**
+Run `andon serve` (desktop alerts are on by default) and `andon install claude`. You get a desktop
+banner the instant a session needs you or finishes, plus the live board on any device.
+
+**Can I monitor multiple Claude Code / Codex sessions at once?**
+Yes — that's the point. Every session is its own row, and whatever needs you floats to the top.
+
+**Does it work with OpenAI Codex?**
+Yes. `andon install codex` wires Codex's lifecycle hooks (run `/hooks` once to trust them).
+
+**Do I actually need an iPad?**
+No. The board is a plain web page — open it on any phone, tablet, or browser. A spare iPad just
+makes a nice always-on wall display. You also get desktop banners and a menu-bar summary.
+
+**Is my code or data sent anywhere?**
+No. It's fully self-hosted on your own machine/LAN, with zero dependencies and no account. The
+board only ever shows high-level status (state, project name, a one-line message) — never code or logs.
+
+---
+
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).
