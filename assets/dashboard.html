@@ -418,6 +418,7 @@ function render(){
     return vs === "error" ? 0 : vs === "waiting" ? 1 : 2; };
   const ordered = reorder(list).slice().sort((a, b) => tier(a) - tier(b)); // stable sort keeps slots within a tier
   const leadId = ordered.find(id => tier(id) < 2) || null; // the one alerting card that pulses
+  let prevEl = null;
   for (const id of ordered){
     const s = byId.get(id);
     if (!s) continue;
@@ -425,7 +426,13 @@ function render(){
     if (!el){ el = makeCard(); cards.set(id, el); }
     updateCard(el, s, t);
     el.classList.toggle("lead", id === leadId);
-    board.appendChild(el);            // re-seat in tier order; no-op if already in place
+    // Move in the DOM ONLY when the slot actually changed. Re-inserting a node
+    // restarts its CSS animations, so an unconditional appendChild would stutter
+    // the breathing dot / lead pulse on every SSE push from any agent. This
+    // insertBefore is a true no-op when el is already in its target slot.
+    const ref = prevEl ? prevEl.nextSibling : board.firstChild;
+    if (el !== ref) board.insertBefore(el, ref);
+    prevEl = el;
   }
 
   // SSE won't push during a grace wait — re-render when the soonest one matures,

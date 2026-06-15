@@ -68,10 +68,15 @@ export function mapCodexHookEvent(data: Record<string, unknown>): AndonEvent | n
   const id = process.env.ANDON_SESSION || String(data.session_id ?? "codex");
 
   let message = "";
-  if (ev === "permissionrequest" || ev === "notification") {
+  if (ev === "permissionrequest") {
     const ti = (data.tool_input ?? {}) as Record<string, unknown>;
-    const arg = String(ti.command ?? ti.file_path ?? ti.path ?? "");
-    message = shorten(`needs approval: ${data.tool_name ?? ""}${arg ? `(${arg})` : ""}`.trim());
+    const tool = String(data.tool_name ?? "");
+    const arg = String(ti.command ?? ti.file_path ?? ti.path ?? ti.url ?? "");
+    // only claim a specific approval when we actually know the tool
+    message = shorten(tool ? `needs approval: ${tool}${arg ? `(${arg})` : ""}` : "needs your approval");
+  } else if (ev === "notification") {
+    // a bare notification isn't necessarily an approval prompt — don't invent one
+    message = shorten(data.message ?? "waiting for your input");
   } else if (ev === "stop") {
     message = shorten(data.last_assistant_message);
   }
