@@ -221,6 +221,21 @@
   @media (prefers-reduced-motion:reduce){
     .andon-dot,.chip .dot,.andon,.card{animation:none!important}
   }
+
+  /* ── narrow screens (phone portrait) ──────────────────────────────────────
+     The board is built for a wide wall iPad; on a phone the header and signal
+     bar must shrink/wrap rather than overflow off the right edge. */
+  @media (max-width:600px){
+    .app{padding:58px 14px 18px}
+    .andon{padding:0 14px;gap:10px}
+    .andon-cn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .andon-tally{display:none}            /* the overflow culprit, and redundant with the cards */
+    .head{flex-wrap:wrap;gap:10px 12px}
+    .head .rule{display:none}
+    #headLabel, .clock{display:none}      /* brand + LIVE + language + sound fit; these don't */
+    .langsel{padding:6px 26px 6px 10px;font-size:12px}
+    .btn{padding:6px 10px;font-size:11px}
+  }
 </style>
 </head>
 <body data-dominant="idle">
@@ -273,7 +288,7 @@ function agoFr(s){ if(s<60)return "il y a "+s+" s"; const m=(s/60)|0; if(m<60)re
 const STR = {
   en: {
     chip:{working:"WORKING",waiting:"NEEDS YOU",done:"READY",error:"STUCK",idle:"IDLE"},
-    bar:{ error:n=>[n+" NEED YOU","something is stuck"], waiting:n=>[n+" NEED"+(n>1?"":"S")+" YOU","your move"],
+    bar:{ error:n=>[n+" NEED YOU","something is stuck"], waiting:n=>[n+" NEED"+(n>1?"":"S")+" YOU","waiting on you"],
           working:()=>["RUNNING","all running · relax"], done:()=>["YOUR MOVE","all ready · take a look"], idle:()=>["IDLE","nothing running"] },
     tally:{error:"stuck",waiting:"needs you",done:"ready",working:"working",idle:"idle"}, none:"no agents running",
     bg:n=>"⋯ "+n+" background",
@@ -282,10 +297,10 @@ const STR = {
     sound:"Enable sound", soundOn:"Sound on", ago:agoEn,
   },
   zh: {
-    chip:{working:"进行中",waiting:"该你了",done:"该你看了",error:"卡住了",idle:"空闲"},
-    bar:{ error:n=>[n+" 个卡住","有任务卡住了"], waiting:n=>[n+" 个待你","该你出手"],
+    chip:{working:"进行中",waiting:"需要你",done:"该你看了",error:"卡住了",idle:"空闲"},
+    bar:{ error:n=>[n+" 个卡住","有任务卡住了"], waiting:n=>[n+" 个需要你","等你处理"],
           working:()=>["运行中","都在跑 · 放心忙别的"], done:()=>["该你看了","都就绪 · 看一眼"], idle:()=>["空闲","没有进程在跑"] },
-    tally:{error:"卡住",waiting:"待你",done:"就绪",working:"运行",idle:"空闲"}, none:"没有进程在跑",
+    tally:{error:"卡住",waiting:"待处理",done:"就绪",working:"运行",idle:"空闲"}, none:"没有进程在跑",
     bg:n=>"⋯ "+n+" 个后台运行",
     empty:{big:"空闲",sub:"在 Claude Code 或 Codex 跑个任务，这里就会亮起"},
     head:"状态看板", live:"在线", recon:"重连中…", off:"已离线", offCn:"与 Mac 失联", offTally:"重连中…",
