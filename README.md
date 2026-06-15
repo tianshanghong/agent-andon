@@ -15,6 +15,7 @@ needs you, done, or stuck** — no babysitting the terminal, no forgetting to co
 - **Zero runtime dependencies** — pure Node.js standard library.
 - **One command to wire up** — `andon install claude` edits your hooks for you (with a backup).
 - **Multi-agent native** — one full-width row per session; whatever needs you floats to the top and a signal bar across the top shows the most-urgent state.
+- **Speaks your language** — the board auto-detects **English / 中文 / 日本語** (plus a 双语 EN+中文 mode); tap the language chip to switch, or `?lang=` to force one.
 - **Just an iPad + Safari** — no app, no hardware, no account.
 
 <sub>中文用户：把闲置 iPad 立在桌边，变成 Claude Code / Codex 的"安灯"状态看板。提交任务后放心去干别的，一瞥就知道 agent 在跑 / 该你了 / 完成了 / 卡住了。</sub>
@@ -45,6 +46,10 @@ State priority (the top bar — and the row order — take the most urgent one):
   screen is always the things waiting on you.
 - **Calm by default** — only the single most-urgent row pulses; everything else stays still.
   Tap **Enable sound** once on the iPad for the chime (remembered across reloads).
+- **Your language** — the board picks **English / 中文 / 日本語** from the browser (or a `双语`
+  EN+中文 mode). Tap the language chip in the header to switch (remembered per device), or open
+  with `?lang=en|zh|ja|bi` to force one. Agent messages (commands, file paths) stay verbatim, and
+  adding a language is a single block in `assets/dashboard.html`.
 
 ---
 

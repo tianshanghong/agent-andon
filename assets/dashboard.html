@@ -98,6 +98,8 @@
     transition:color .3s,border-color .3s}
   .btn:hover{color:var(--text);border-color:var(--faint)}
   .btn.on{color:var(--c-done);border-color:rgba(58,168,107,.5)}
+  /* language switcher: fixed width + no uppercasing so 中/日/双语 don't shift the row */
+  .btn.lang{min-width:3.4em;text-align:center;text-transform:none;letter-spacing:.04em}
 
   /* ── the board: one process = one card, fixed slot, never reordered.
         a card appears when its process starts and is removed only when the
@@ -228,10 +230,11 @@
   <div class="app">
     <div class="head">
       <span class="brand">ANDON</span>
-      <span>agent status</span>
+      <span id="headLabel">agent status</span>
       <span class="rule"></span>
       <span class="conn" id="conn"><span class="led"></span><span class="conn-txt">live</span></span>
       <span class="clock" id="clock">--:--</span>
+      <button class="btn lang" id="langBtn" title="Language · 语言 · 言語">EN</button>
       <button class="btn" id="soundBtn">Enable sound</button>
     </div>
     <div class="board" id="board"></div>
@@ -245,13 +248,73 @@
    does, holds a FIXED slot, and only its colour/word change. Nothing is
    dismissable — a card leaves only when the process ends or times out. */
 const PRI   = {error:0, waiting:1, done:2, working:3, idle:4};
-const WORDS = {
-  working:["WORKING","进行中"],
-  waiting:["NEEDS YOU","该你了"],
-  done   :["READY","该你看了"],   // a turn handed back ≠ "all done"; green means "your move"
-  error  :["STUCK","卡住了"],
-  idle   :["IDLE","空闲"],
+
+/* ---------- i18n ----------------------------------------------------------------
+   The board chrome is monolingual per the viewer's locale, with a 双语 (EN+中文)
+   option for bilingual folks. Only CHROME is translated — agent messages
+   (e.g. "needs approval: Bash(git push)", "editing src/server.ts") are code and
+   stay verbatim. Add a language = add one block to STR. Locale resolves as:
+   ?lang=  →  saved choice (localStorage)  →  navigator.language  →  English. */
+function agoEn(s){ if(s<60)return s+"s ago"; const m=(s/60)|0; if(m<60)return m+"m ago"; return ((m/60)|0)+"h "+(m%60)+"m ago"; }
+function agoZh(s){ if(s<60)return s+"秒前"; const m=(s/60)|0; if(m<60)return m+"分钟前"; return ((m/60)|0)+"小时"+(m%60)+"分前"; }
+function agoJa(s){ if(s<60)return s+"秒前"; const m=(s/60)|0; if(m<60)return m+"分前"; return ((m/60)|0)+"時間"+(m%60)+"分前"; }
+
+const STR = {
+  en: {
+    chip:{working:["WORKING",""],waiting:["NEEDS YOU",""],done:["READY",""],error:["STUCK",""],idle:["IDLE",""]},
+    bar:{ error:n=>[n+" NEED YOU","something is stuck"], waiting:n=>[n+" NEED"+(n>1?"":"S")+" YOU","your move"],
+          working:()=>["RUNNING","all running · relax"], done:()=>["YOUR MOVE","all ready · take a look"], idle:()=>["IDLE","nothing running"] },
+    tally:{error:"stuck",waiting:"needs you",done:"ready",working:"working",idle:"idle"}, none:"no agents running",
+    bg:n=>"⋯ "+n+" background",
+    empty:{big:"IDLE",cn:"",sub:"start a run in Claude Code or Codex — it lights up here"},
+    head:"agent status", live:"live", recon:"reconnecting…", off:"OFFLINE", offCn:"lost the Mac", offTally:"reconnecting…",
+    sound:"Enable sound", soundOn:"Sound on", ago:agoEn,
+  },
+  zh: {
+    chip:{working:["进行中",""],waiting:["该你了",""],done:["该你看了",""],error:["卡住了",""],idle:["空闲",""]},
+    bar:{ error:n=>[n+" 个卡住","有任务卡住了"], waiting:n=>[n+" 个待你","该你出手"],
+          working:()=>["运行中","都在跑 · 放心忙别的"], done:()=>["该你看了","都就绪 · 看一眼"], idle:()=>["空闲","没有进程在跑"] },
+    tally:{error:"卡住",waiting:"待你",done:"就绪",working:"运行",idle:"空闲"}, none:"没有进程在跑",
+    bg:n=>"⋯ "+n+" 个后台运行",
+    empty:{big:"空闲",cn:"",sub:"在 Claude Code 或 Codex 跑个任务，这里就会亮起"},
+    head:"状态看板", live:"在线", recon:"重连中…", off:"已离线", offCn:"与 Mac 失联", offTally:"重连中…",
+    sound:"开启提示音", soundOn:"提示音开", ago:agoZh,
+  },
+  ja: {
+    chip:{working:["稼働中",""],waiting:["要対応",""],done:["確認して",""],error:["停止",""],idle:["待機中",""]},
+    bar:{ error:n=>[n+" 件 要対応","タスクが停止"], waiting:n=>[n+" 件 要対応","あなたの番です"],
+          working:()=>["稼働中","実行中 · 別の作業をどうぞ"], done:()=>["確認して","すべて完了 · ご確認を"], idle:()=>["待機中","稼働中のタスクなし"] },
+    tally:{error:"停止",waiting:"要対応",done:"完了",working:"稼働",idle:"待機"}, none:"稼働中のエージェントなし",
+    bg:n=>"⋯ "+n+" 件 バックグラウンド",
+    empty:{big:"待機中",cn:"",sub:"Claude Code か Codex でタスクを開始すると、ここに表示されます"},
+    head:"エージェント状態", live:"接続中", recon:"再接続中…", off:"オフライン", offCn:"Mac と切断", offTally:"再接続中…",
+    sound:"サウンドを有効化", soundOn:"サウンド ON", ago:agoJa,
+  },
+  bi: { /* 双语 — the original EN + 中文 look */
+    chip:{working:["WORKING","进行中"],waiting:["NEEDS YOU","该你了"],done:["READY","该你看了"],error:["STUCK","卡住了"],idle:["IDLE","空闲"]},
+    bar:{ error:n=>[n+" NEED YOU","有任务卡住"], waiting:n=>[n+" NEED"+(n>1?"":"S")+" YOU","该你出手"],
+          working:()=>["RUNNING","进行中 · 放心忙别的"], done:()=>["YOUR MOVE","都就绪 · 该你看了"], idle:()=>["IDLE","空闲"] },
+    tally:{error:"stuck",waiting:"needs you",done:"ready",working:"working",idle:"idle"}, none:"no agents running",
+    bg:n=>"⋯ "+n+" 后台运行 · background",
+    empty:{big:"IDLE",cn:"没有进程在跑",sub:"跑个任务就会亮起来 · start a run in Claude Code or Codex"},
+    head:"agent status", live:"live", recon:"reconnecting…", off:"OFFLINE", offCn:"失联", offTally:"reconnecting…",
+    sound:"Enable sound", soundOn:"Sound on", ago:agoEn,
+  },
 };
+const LOCALES = ["en","zh","ja","bi"];
+const LANG_LABEL = {en:"EN", zh:"中", ja:"日", bi:"双语"};
+function resolveLang(){
+  const q = new URLSearchParams(location.search).get("lang");
+  if (q && STR[q]) return q;
+  let saved=null; try { saved = localStorage.getItem("andon.lang"); } catch(e){}
+  if (saved && STR[saved]) return saved;
+  const n = (navigator.language || "en").toLowerCase();
+  if (n.indexOf("zh") === 0) return "zh";
+  if (n.indexOf("ja") === 0) return "ja";
+  return "en";
+}
+let LANG = resolveLang();
+const S = () => STR[LANG] || STR.en;
 
 /* A process whose foreground stopped (done) but still has background tasks is
    NOT done — it reads as still running. Attention states are never masked. */
@@ -267,6 +330,8 @@ const conn    = document.getElementById("conn");
 const connTxt = conn.querySelector(".conn-txt");
 const clock   = document.getElementById("clock");
 const soundBtn= document.getElementById("soundBtn");
+const langBtn = document.getElementById("langBtn");
+const headLabel = document.getElementById("headLabel");
 const andonWord  = document.getElementById("andonWord");
 const andonCn    = document.getElementById("andonCn");
 const andonTally = document.getElementById("andonTally");
@@ -277,6 +342,7 @@ let order = [];                    // stable card order (first-seen wins; never 
 const cards = new Map();           // id -> card element (reused in place)
 let prevState = {};
 let primed = false;
+let connOk = true;                 // last connection state, for re-rendering on language change
 
 const DONE_GRACE_MS = 4000;   // a "done" must persist this long before it goes green
 const doneSince = new Map();  // id -> serverTime(ms) it first read done (debounce)
@@ -285,14 +351,7 @@ let graceTimer = null;
 const nowSec = () => Date.now()/1000;
 const serverNow = () => nowSec() + skew;
 const agentLabel = a => AGENTS[a] || (a || "AGENT").toUpperCase();
-function ago(sec){
-  sec = Math.max(0, Math.round(sec));
-  if (sec < 60) return sec + "s ago";
-  const m = Math.floor(sec/60);
-  if (m < 60) return m + "m ago";
-  const h = Math.floor(m/60);
-  return h + "h " + (m%60) + "m ago";
-}
+function ago(sec){ return S().ago(Math.max(0, Math.round(sec))); }
 
 /* debounced display state: a transient "done" (a turn briefly ends, or hook
    events arrive slightly out of order) is held as "working" until it stays done
@@ -313,24 +372,26 @@ function counts(list){
   return c;
 }
 function tally(c){
+  const T = S().tally;
   const parts = [];
   for (const k of ["error","waiting","done","working","idle"])
-    if (c[k]) parts.push(c[k] + " " + (k === "done" ? "ready" : k));
+    if (c[k]) parts.push(c[k] + " " + T[k]);
   return parts.join("   ·   ");
 }
 function setBar(list){
   const c = counts(list);
   const need = (c.error || 0) + (c.waiting || 0);
-  let dom, word, cn;
-  if (c.error)        { dom="error";   word=need+" NEED YOU"; cn="有任务卡住"; }
-  else if (c.waiting) { dom="waiting"; word=need+" NEED"+(need>1?"":"S")+" YOU"; cn="该你出手"; }
-  else if (c.working) { dom="working"; word="RUNNING"; cn="进行中 · 放心忙别的"; }
-  else if (c.done)    { dom="done";    word="YOUR MOVE"; cn="都就绪 · 该你看了"; }
-  else                { dom="idle";    word="IDLE"; cn="空闲"; }
+  const B = S().bar;
+  let dom, pair;
+  if (c.error)        { dom="error";   pair=B.error(need); }
+  else if (c.waiting) { dom="waiting"; pair=B.waiting(need); }
+  else if (c.working) { dom="working"; pair=B.working(); }
+  else if (c.done)    { dom="done";    pair=B.done(); }
+  else                { dom="idle";    pair=B.idle(); }
   document.body.dataset.dominant = dom;
-  andonWord.textContent  = word;
-  andonCn.textContent    = cn;
-  andonTally.textContent = list.length ? tally(c) : "no agents running";
+  andonWord.textContent  = pair[0];
+  andonCn.textContent    = pair[1];
+  andonTally.textContent = list.length ? tally(c) : S().none;
 }
 
 /* ---------- cards (created once per process, then updated in place) ---------- */
@@ -348,7 +409,7 @@ function makeCard(){
 function updateCard(el, s, t){
   const vs = dispState(s);
   if (el.dataset.state !== vs) el.dataset.state = vs;   // only this restarts the blink
-  const w = WORDS[vs] || [vs.toUpperCase(), ""];
+  const w = S().chip[vs] || [vs.toUpperCase(), ""];
   el.querySelector(".cw").textContent      = w[0];
   el.querySelector(".chip-cn").textContent = w[1];
   el.querySelector(".glyph").textContent   = GLYPH[vs] || "";
@@ -356,7 +417,7 @@ function updateCard(el, s, t){
   el.querySelector(".title").textContent   = s.title || "—";
   const subs = el.querySelector(".subs");
   const n = s.pending | 0;
-  subs.textContent = n > 0 ? ("⋯ " + n + " 后台运行 · background") : "";
+  subs.textContent = n > 0 ? S().bg(n) : "";
   subs.style.display = n > 0 ? "" : "none";
   const act = el.querySelector(".action");
   act.textContent = s.message || "";
@@ -400,10 +461,11 @@ function render(){
 
   if (list.length === 0){
     order = [];
+    const e = S().empty;
     board.innerHTML =
-      '<div class="idle-hero"><div class="big">IDLE</div>' +
-      '<div class="cn">没有进程在跑</div>' +
-      '<div class="sub">跑个任务就会亮起来 · start a run in Claude Code or Codex</div></div>';
+      '<div class="idle-hero"><div class="big">' + e.big + '</div>' +
+      (e.cn ? '<div class="cn">' + e.cn + '</div>' : '') +
+      '<div class="sub">' + e.sub + '</div></div>';
     return;
   }
   const hero = board.querySelector(".idle-hero");
@@ -473,13 +535,14 @@ const TOKEN = new URLSearchParams(location.search).get("token");
 const withToken = (path) => TOKEN ? path + (path.includes("?") ? "&" : "?") + "token=" + encodeURIComponent(TOKEN) : path;
 
 function setConn(ok){
+  connOk = ok;
   conn.classList.toggle("off", !ok);
-  connTxt.textContent = ok ? "live" : "reconnecting…";
+  connTxt.textContent = ok ? S().live : S().recon;
   if (!ok){
     document.body.dataset.dominant = "offline";
-    andonWord.textContent  = "OFFLINE";
-    andonCn.textContent    = "失联";
-    andonTally.textContent = "reconnecting…";
+    andonWord.textContent  = S().off;
+    andonCn.textContent    = S().offCn;
+    andonTally.textContent = S().offTally;
   }
 }
 function startStream(){
@@ -527,8 +590,25 @@ function armAudio(){ // create + resume the WebAudio context — only works insi
 }
 function reflectSound(){
   soundBtn.classList.toggle("on", soundOn);
-  soundBtn.textContent = soundOn ? "Sound on" : "Enable sound";
+  soundBtn.textContent = soundOn ? S().soundOn : S().sound;
 }
+
+/* apply the current language to all chrome, then re-render. Called at boot and on
+   every switcher click. render() runs before setConn so an offline banner (if any)
+   wins over the live bar. */
+function applyLang(){
+  document.documentElement.lang = (LANG === "bi") ? "zh" : LANG;
+  langBtn.textContent = LANG_LABEL[LANG] || "EN";
+  headLabel.textContent = S().head;
+  reflectSound();
+  render();
+  setConn(connOk);
+}
+langBtn.addEventListener("click", () => {
+  LANG = LOCALES[(LOCALES.indexOf(LANG) + 1) % LOCALES.length];
+  try { localStorage.setItem("andon.lang", LANG); } catch (e){}
+  applyLang();
+});
 soundBtn.addEventListener("click", () => {
   soundOn = !soundOn;
   try { localStorage.setItem("andon.alerts", soundOn ? "on" : "off"); } catch (e){}
@@ -564,7 +644,7 @@ document.addEventListener("visibilitychange", () => {
 
 /* ---------- boot ---------- */
 function tick(){ clock.textContent = new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"}); }
-render();
+applyLang();   // resolve locale, paint chrome in it, and do the first render
 tick(); setInterval(tick, 1000);
 setInterval(tickAgos, 1000);
 reqWake();
