@@ -1,0 +1,68 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=IBM+Plex+Sans:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0c0d10; --surface:#15171c; --hairline:#23262e; --hairline-soft:#1b1e25;
+    --text:#e7eaef; --muted:#878e9b; --faint:#565d69;
+    --c-working:#5478c4; --c-waiting:#ffaa1a; --c-done:#3aa86b; --c-error:#ff463b;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+    --sans:'IBM Plex Sans',-apple-system,system-ui,sans-serif;
+  }
+  *{margin:0;box-sizing:border-box}
+  html,body{width:1280px;height:640px}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden;position:relative}
+  .grid{position:absolute;inset:0;opacity:.5;
+    background-image:linear-gradient(var(--hairline-soft) 1px,transparent 1px),linear-gradient(90deg,var(--hairline-soft) 1px,transparent 1px);
+    background-size:48px 48px;
+    -webkit-mask-image:radial-gradient(135% 105% at 20% -12%,#000,transparent 68%)}
+  .strip{position:absolute;top:0;left:0;right:0;height:9px;display:flex}
+  .strip i{flex:1;display:block}
+  .strip .e{background:var(--c-error)} .strip .w{background:var(--c-waiting)}
+  .strip .d{background:var(--c-done)} .strip .k{background:var(--c-working)}
+  .wrap{position:relative;height:100%;display:flex;align-items:center;gap:56px;padding:0 74px}
+  .left{flex:1;min-width:0}
+  .brand{font-family:var(--mono);font-weight:700;letter-spacing:.34em;font-size:27px}
+  h1{font-size:63px;line-height:1.05;font-weight:700;letter-spacing:-.018em;margin:30px 0 0}
+  h1 b{color:var(--c-waiting)}
+  .sub{font-family:var(--mono);color:var(--muted);font-size:22px;line-height:1.5;margin-top:26px}
+  .dots{display:flex;gap:28px;margin-top:34px;font-family:var(--mono);font-size:16px;letter-spacing:.09em;text-transform:uppercase}
+  .dots span{display:flex;align-items:center;gap:10px;color:var(--faint)}
+  .dots i{width:13px;height:13px;border-radius:2px;display:block;flex:none}
+  .board{width:432px;display:flex;flex-direction:column;gap:13px;flex:none}
+  .card{border:1px solid var(--hairline);border-radius:10px;padding:16px 20px;
+    background:color-mix(in srgb,var(--cc) 9%,var(--surface));position:relative;overflow:hidden}
+  .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--cc)}
+  .card .st{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.13em;color:var(--cc);text-transform:uppercase}
+  .card .nm{font-weight:700;font-size:24px;margin-top:5px;letter-spacing:-.01em}
+  .card.error{--cc:var(--c-error)} .card.wait{--cc:var(--c-waiting)}
+  .card.done{--cc:var(--c-done)} .card.work{--cc:var(--c-working)}
+  .card.error,.card.wait{border-color:transparent}
+  .card.error::before,.card.wait::before{opacity:0}
+  .card.error{background:var(--c-error)} .card.error .st,.card.error .nm{color:#fff4f3}
+  .card.wait{background:var(--c-waiting)} .card.wait .st,.card.wait .nm{color:#1b1304}
+</style></head>
+<body>
+  <div class="grid"></div>
+  <div class="strip"><i class="e"></i><i class="w"></i><i class="d"></i><i class="k"></i></div>
+  <div class="wrap">
+    <div class="left">
+      <div class="brand">🚦 ANDON</div>
+      <h1>Status board &amp; alerts<br>for your <b>AI coding agents</b></h1>
+      <div class="sub">Claude Code · Codex — one glance shows<br>working · needs you · done · stuck</div>
+      <div class="dots">
+        <span><i style="background:var(--c-working)"></i>working</span>
+        <span><i style="background:var(--c-waiting)"></i>needs you</span>
+        <span><i style="background:var(--c-done)"></i>done</span>
+        <span><i style="background:var(--c-error)"></i>stuck</span>
+      </div>
+    </div>
+    <div class="board">
+      <div class="card error"><div class="st">✕ Stuck</div><div class="nm">data-pipeline</div></div>
+      <div class="card wait"><div class="st">! Needs you</div><div class="nm">ledger-data</div></div>
+      <div class="card done"><div class="st">✓ Ready</div><div class="nm">payments-svc</div></div>
+      <div class="card work"><div class="st">↻ Working</div><div class="nm">checkout-api</div></div>
+    </div>
+  </div>
+</body></html>
