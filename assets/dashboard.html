@@ -725,16 +725,22 @@ soundBtn.addEventListener("click", () => {
   reflectSound();
 });
 
-// honor a remembered "on": browsers mute audio until a gesture, so a freshly
-// loaded page can't ring on its own. Show the saved state and re-arm WebAudio on
-// the first incidental touch/keypress — so after the one-time setup tap, the
-// chime survives every reload without hunting for the button again.
+// honor a remembered "on": browsers LOCK WebAudio on every fresh load until a
+// user gesture — a saved preference can't bypass that, so a reloaded page can't
+// ring on its own. We show the saved state and re-arm WebAudio on the first
+// interaction of ANY kind, and keep listening until the context is actually
+// running (one Safari pointerdown doesn't always unlock it) — so after the
+// one-time setup tap, the chime survives every reload, and the very first touch
+// anywhere brings it back without hunting for the button.
 reflectSound();
 if (soundOn){
-  const rearm = () => { armAudio();
-    window.removeEventListener("pointerdown", rearm); window.removeEventListener("keydown", rearm); };
-  window.addEventListener("pointerdown", rearm);
-  window.addEventListener("keydown", rearm);
+  const GEST = ["pointerdown", "touchend", "click", "keydown"];
+  const rearm = () => {
+    armAudio();
+    if (actx && actx.state === "running")
+      for (const ev of GEST) window.removeEventListener(ev, rearm);
+  };
+  for (const ev of GEST) window.addEventListener(ev, rearm);
 }
 
 /* ---------- keep the iPad awake (iPadOS 16.4+) ---------- */
