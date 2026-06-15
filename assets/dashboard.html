@@ -98,6 +98,11 @@
     transition:color .3s,border-color .3s}
   .btn:hover{color:var(--text);border-color:var(--faint)}
   .btn.on{color:var(--c-done);border-color:rgba(58,168,107,.5)}
+  /* sound toggle: text on the desktop/wall board, a compact icon on phones (so
+     the header is one row in every language). The icon follows currentColor. */
+  .btn.sound{display:inline-flex;align-items:center;gap:7px}
+  .sico{display:none;align-items:center}
+  .sico svg{display:block}
   /* language picker: a native <select> (scales to any number of languages — the
      iPad shows a scrollable OS picker). Styled to match the .btn chrome. */
   .langsel{font:inherit;font-family:var(--mono);font-size:13px;color:var(--muted);
@@ -230,11 +235,15 @@
     .andon{padding:0 14px;gap:10px}
     .andon-cn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .andon-tally{display:none}            /* the overflow culprit, and redundant with the cards */
-    .head{flex-wrap:wrap;gap:10px 12px}
+    .head{flex-wrap:nowrap;gap:11px;min-width:0}      /* one row, always */
     .head .rule{display:none}
-    #headLabel, .clock{display:none}      /* brand + LIVE + language + sound fit; these don't */
-    .langsel{padding:6px 26px 6px 10px;font-size:12px}
+    #headLabel, .clock, .conn .conn-txt{display:none} /* keep only the dot + lang + sound */
+    .brand{letter-spacing:.18em;flex:none}
+    .langsel{padding:6px 24px 6px 10px;font-size:12px;min-width:0}
     .btn{padding:6px 10px;font-size:11px}
+    .btn.sound{padding:6px 9px;flex:none}
+    .btn.sound .slbl{display:none}                    /* swap the localized label … */
+    .btn.sound .sico{display:inline-flex}             /* … for a language-neutral icon */
   }
 </style>
 </head>
@@ -256,7 +265,7 @@
       <span class="conn" id="conn"><span class="led"></span><span class="conn-txt">live</span></span>
       <span class="clock" id="clock">--:--</span>
       <select class="langsel" id="langSel" title="Language · 语言 · 言語"></select>
-      <button class="btn" id="soundBtn">Enable sound</button>
+      <button class="btn sound" id="soundBtn"><span class="sico" aria-hidden="true"><svg viewBox="0 0 22 22" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5h3.5L12 5v12L7.5 13.5H4z"/><path d="M15.5 8a4.5 4.5 0 0 1 0 6"/></svg></span><span class="slbl">Enable sound</span></button>
     </div>
     <div class="board" id="board"></div>
   </div>
@@ -648,7 +657,10 @@ function armAudio(){ // create + resume the WebAudio context — only works insi
 }
 function reflectSound(){
   soundBtn.classList.toggle("on", soundOn);
-  soundBtn.textContent = soundOn ? S().soundOn : S().sound;
+  const t = soundOn ? S().soundOn : S().sound;
+  soundBtn.querySelector(".slbl").textContent = t; // text label (desktop)
+  soundBtn.setAttribute("aria-label", t);          // a11y + the icon-only phone view
+  soundBtn.title = t;
 }
 
 /* apply the current language to all chrome, then re-render. Called at boot and on
