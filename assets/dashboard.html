@@ -98,8 +98,16 @@
     transition:color .3s,border-color .3s}
   .btn:hover{color:var(--text);border-color:var(--faint)}
   .btn.on{color:var(--c-done);border-color:rgba(58,168,107,.5)}
-  /* language switcher: fixed width + no uppercasing so 中/日/双语 don't shift the row */
-  .btn.lang{min-width:3.4em;text-align:center;text-transform:none;letter-spacing:.04em}
+  /* language picker: a native <select> (scales to any number of languages — the
+     iPad shows a scrollable OS picker). Styled to match the .btn chrome. */
+  .langsel{font:inherit;font-family:var(--mono);font-size:13px;color:var(--muted);
+    background:transparent;border:1px solid var(--hairline);border-radius:4px;
+    padding:7px 30px 7px 12px;cursor:pointer;letter-spacing:.04em;color-scheme:dark;
+    -webkit-appearance:none;appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%237a818c' stroke-width='1.4'/></svg>");
+    background-repeat:no-repeat;background-position:right 11px center}
+  .langsel:hover{color:var(--text);border-color:var(--faint)}
+  .langsel:focus{outline:none;border-color:var(--faint)}
 
   /* ── the board: one process = one card, fixed slot, never reordered.
         a card appears when its process starts and is removed only when the
@@ -171,7 +179,6 @@
   .card[data-state="waiting"] .glyph, .card[data-state="error"] .glyph{ color:var(--ink) }
   .card[data-state="waiting"] .glyph, .card[data-state="error"] .glyph{ opacity:.92 }
   .card[data-state="waiting"] .chip .dot, .card[data-state="error"] .chip .dot{ background:var(--ink) }
-  .card[data-state="waiting"] .chip-cn, .card[data-state="error"] .chip-cn,
   .card[data-state="waiting"] .ago, .card[data-state="error"] .ago,
   .card[data-state="waiting"] .subs, .card[data-state="error"] .subs{ color:var(--ink-soft) }
   .card[data-state="waiting"] .badge, .card[data-state="error"] .badge{
@@ -183,7 +190,6 @@
   .chip{display:inline-flex;align-items:center;gap:8px;color:var(--tc);font-family:var(--mono);
     font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase}
   .chip .dot{width:9px;height:9px;border-radius:1px;background:var(--tc)}
-  .chip-cn{color:var(--muted);font-family:var(--sans);font-weight:500;letter-spacing:.02em}
   .card[data-state="working"] .chip .dot{animation:breathe 2.4s ease-in-out infinite}
   .card[data-state="waiting"] .chip .dot{animation:blink 1.4s steps(1,end) infinite}
   .card[data-state="error"]   .chip .dot{animation:blink .8s  steps(1,end) infinite}
@@ -234,7 +240,7 @@
       <span class="rule"></span>
       <span class="conn" id="conn"><span class="led"></span><span class="conn-txt">live</span></span>
       <span class="clock" id="clock">--:--</span>
-      <button class="btn lang" id="langBtn" title="Language · 语言 · 言語">EN</button>
+      <select class="langsel" id="langSel" title="Language · 语言 · 言語"></select>
       <button class="btn" id="soundBtn">Enable sound</button>
     </div>
     <div class="board" id="board"></div>
@@ -250,68 +256,101 @@
 const PRI   = {error:0, waiting:1, done:2, working:3, idle:4};
 
 /* ---------- i18n ----------------------------------------------------------------
-   The board chrome is monolingual per the viewer's locale, with a 双语 (EN+中文)
-   option for bilingual folks. Only CHROME is translated — agent messages
-   (e.g. "needs approval: Bash(git push)", "editing src/server.ts") are code and
-   stay verbatim. Add a language = add one block to STR. Locale resolves as:
-   ?lang=  →  saved choice (localStorage)  →  navigator.language  →  English. */
+   One language per screen, chosen by the viewer's locale. Only CHROME is
+   translated — agent messages (e.g. "needs approval: Bash(git push)",
+   "editing src/server.ts") are code and stay verbatim. Locale resolves as:
+   ?lang= → saved choice (localStorage) → navigator.language → English.
+   ADD A LANGUAGE: append one block to STR and one entry to LANG_NAME. The header
+   picker is a native <select>, so it scales to any number of languages. */
 function agoEn(s){ if(s<60)return s+"s ago"; const m=(s/60)|0; if(m<60)return m+"m ago"; return ((m/60)|0)+"h "+(m%60)+"m ago"; }
 function agoZh(s){ if(s<60)return s+"秒前"; const m=(s/60)|0; if(m<60)return m+"分钟前"; return ((m/60)|0)+"小时"+(m%60)+"分前"; }
 function agoJa(s){ if(s<60)return s+"秒前"; const m=(s/60)|0; if(m<60)return m+"分前"; return ((m/60)|0)+"時間"+(m%60)+"分前"; }
+function agoKo(s){ if(s<60)return s+"초 전"; const m=(s/60)|0; if(m<60)return m+"분 전"; return ((m/60)|0)+"시간 "+(m%60)+"분 전"; }
+function agoEs(s){ if(s<60)return "hace "+s+" s"; const m=(s/60)|0; if(m<60)return "hace "+m+" min"; return "hace "+((m/60)|0)+" h "+(m%60)+" min"; }
+function agoDe(s){ if(s<60)return "vor "+s+" s"; const m=(s/60)|0; if(m<60)return "vor "+m+" min"; return "vor "+((m/60)|0)+" h "+(m%60)+" min"; }
+function agoFr(s){ if(s<60)return "il y a "+s+" s"; const m=(s/60)|0; if(m<60)return "il y a "+m+" min"; return "il y a "+((m/60)|0)+" h "+(m%60)+" min"; }
 
 const STR = {
   en: {
-    chip:{working:["WORKING",""],waiting:["NEEDS YOU",""],done:["READY",""],error:["STUCK",""],idle:["IDLE",""]},
+    chip:{working:"WORKING",waiting:"NEEDS YOU",done:"READY",error:"STUCK",idle:"IDLE"},
     bar:{ error:n=>[n+" NEED YOU","something is stuck"], waiting:n=>[n+" NEED"+(n>1?"":"S")+" YOU","your move"],
           working:()=>["RUNNING","all running · relax"], done:()=>["YOUR MOVE","all ready · take a look"], idle:()=>["IDLE","nothing running"] },
     tally:{error:"stuck",waiting:"needs you",done:"ready",working:"working",idle:"idle"}, none:"no agents running",
     bg:n=>"⋯ "+n+" background",
-    empty:{big:"IDLE",cn:"",sub:"start a run in Claude Code or Codex — it lights up here"},
+    empty:{big:"IDLE",sub:"start a run in Claude Code or Codex — it lights up here"},
     head:"agent status", live:"live", recon:"reconnecting…", off:"OFFLINE", offCn:"lost the Mac", offTally:"reconnecting…",
     sound:"Enable sound", soundOn:"Sound on", ago:agoEn,
   },
   zh: {
-    chip:{working:["进行中",""],waiting:["该你了",""],done:["该你看了",""],error:["卡住了",""],idle:["空闲",""]},
+    chip:{working:"进行中",waiting:"该你了",done:"该你看了",error:"卡住了",idle:"空闲"},
     bar:{ error:n=>[n+" 个卡住","有任务卡住了"], waiting:n=>[n+" 个待你","该你出手"],
           working:()=>["运行中","都在跑 · 放心忙别的"], done:()=>["该你看了","都就绪 · 看一眼"], idle:()=>["空闲","没有进程在跑"] },
     tally:{error:"卡住",waiting:"待你",done:"就绪",working:"运行",idle:"空闲"}, none:"没有进程在跑",
     bg:n=>"⋯ "+n+" 个后台运行",
-    empty:{big:"空闲",cn:"",sub:"在 Claude Code 或 Codex 跑个任务，这里就会亮起"},
+    empty:{big:"空闲",sub:"在 Claude Code 或 Codex 跑个任务，这里就会亮起"},
     head:"状态看板", live:"在线", recon:"重连中…", off:"已离线", offCn:"与 Mac 失联", offTally:"重连中…",
     sound:"开启提示音", soundOn:"提示音开", ago:agoZh,
   },
   ja: {
-    chip:{working:["稼働中",""],waiting:["要対応",""],done:["確認して",""],error:["停止",""],idle:["待機中",""]},
+    chip:{working:"稼働中",waiting:"要対応",done:"確認して",error:"停止",idle:"待機中"},
     bar:{ error:n=>[n+" 件 要対応","タスクが停止"], waiting:n=>[n+" 件 要対応","あなたの番です"],
           working:()=>["稼働中","実行中 · 別の作業をどうぞ"], done:()=>["確認して","すべて完了 · ご確認を"], idle:()=>["待機中","稼働中のタスクなし"] },
     tally:{error:"停止",waiting:"要対応",done:"完了",working:"稼働",idle:"待機"}, none:"稼働中のエージェントなし",
     bg:n=>"⋯ "+n+" 件 バックグラウンド",
-    empty:{big:"待機中",cn:"",sub:"Claude Code か Codex でタスクを開始すると、ここに表示されます"},
+    empty:{big:"待機中",sub:"Claude Code か Codex でタスクを開始すると、ここに表示されます"},
     head:"エージェント状態", live:"接続中", recon:"再接続中…", off:"オフライン", offCn:"Mac と切断", offTally:"再接続中…",
     sound:"サウンドを有効化", soundOn:"サウンド ON", ago:agoJa,
   },
-  bi: { /* 双语 — the original EN + 中文 look */
-    chip:{working:["WORKING","进行中"],waiting:["NEEDS YOU","该你了"],done:["READY","该你看了"],error:["STUCK","卡住了"],idle:["IDLE","空闲"]},
-    bar:{ error:n=>[n+" NEED YOU","有任务卡住"], waiting:n=>[n+" NEED"+(n>1?"":"S")+" YOU","该你出手"],
-          working:()=>["RUNNING","进行中 · 放心忙别的"], done:()=>["YOUR MOVE","都就绪 · 该你看了"], idle:()=>["IDLE","空闲"] },
-    tally:{error:"stuck",waiting:"needs you",done:"ready",working:"working",idle:"idle"}, none:"no agents running",
-    bg:n=>"⋯ "+n+" 后台运行 · background",
-    empty:{big:"IDLE",cn:"没有进程在跑",sub:"跑个任务就会亮起来 · start a run in Claude Code or Codex"},
-    head:"agent status", live:"live", recon:"reconnecting…", off:"OFFLINE", offCn:"失联", offTally:"reconnecting…",
-    sound:"Enable sound", soundOn:"Sound on", ago:agoEn,
+  ko: {
+    chip:{working:"작업 중",waiting:"확인 필요",done:"준비됨",error:"멈춤",idle:"대기 중"},
+    bar:{ error:n=>[n+" 건 확인 필요","작업이 멈춤"], waiting:n=>[n+" 건 확인 필요","당신 차례"],
+          working:()=>["작동 중","모두 실행 중 · 안심하세요"], done:()=>["당신 차례","모두 준비됨 · 확인하세요"], idle:()=>["대기 중","실행 중인 작업 없음"] },
+    tally:{error:"멈춤",waiting:"확인",done:"준비",working:"작동",idle:"대기"}, none:"실행 중인 에이전트 없음",
+    bg:n=>"⋯ "+n+" 백그라운드",
+    empty:{big:"대기 중",sub:"Claude Code 또는 Codex에서 작업을 시작하면 여기에 표시됩니다"},
+    head:"에이전트 상태", live:"연결됨", recon:"재연결 중…", off:"오프라인", offCn:"Mac 연결 끊김", offTally:"재연결 중…",
+    sound:"소리 켜기", soundOn:"소리 켜짐", ago:agoKo,
+  },
+  es: {
+    chip:{working:"EN CURSO",waiting:"TE NECESITA",done:"LISTO",error:"ATASCADO",idle:"INACTIVO"},
+    bar:{ error:n=>[n+" TE NECESITA","algo está atascado"], waiting:n=>[n+" TE NECESITA","te toca"],
+          working:()=>["EN MARCHA","todo en marcha · tranquilo"], done:()=>["TE TOCA","todo listo · échale un vistazo"], idle:()=>["INACTIVO","nada en ejecución"] },
+    tally:{error:"atascado",waiting:"te necesita",done:"listo",working:"en curso",idle:"inactivo"}, none:"no hay agentes en ejecución",
+    bg:n=>"⋯ "+n+" en segundo plano",
+    empty:{big:"INACTIVO",sub:"inicia una tarea en Claude Code o Codex — aparecerá aquí"},
+    head:"estado de agentes", live:"en vivo", recon:"reconectando…", off:"SIN CONEXIÓN", offCn:"se perdió el Mac", offTally:"reconectando…",
+    sound:"Activar sonido", soundOn:"Sonido activado", ago:agoEs,
+  },
+  de: {
+    chip:{working:"LÄUFT",waiting:"BRAUCHT DICH",done:"FERTIG",error:"HÄNGT FEST",idle:"INAKTIV"},
+    bar:{ error:n=>[n+" BRAUCHT DICH","etwas hängt fest"], waiting:n=>[n+" BRAUCHT DICH","du bist dran"],
+          working:()=>["LÄUFT","alles läuft · entspann dich"], done:()=>["DU BIST DRAN","alles fertig · sieh nach"], idle:()=>["INAKTIV","nichts läuft"] },
+    tally:{error:"hängt fest",waiting:"braucht dich",done:"fertig",working:"läuft",idle:"inaktiv"}, none:"keine Agenten aktiv",
+    bg:n=>"⋯ "+n+" im Hintergrund",
+    empty:{big:"INAKTIV",sub:"starte einen Lauf in Claude Code oder Codex — er erscheint hier"},
+    head:"Agentenstatus", live:"live", recon:"neu verbinden…", off:"OFFLINE", offCn:"Mac verloren", offTally:"neu verbinden…",
+    sound:"Ton aktivieren", soundOn:"Ton an", ago:agoDe,
+  },
+  fr: {
+    chip:{working:"EN COURS",waiting:"À TOI",done:"PRÊT",error:"BLOQUÉ",idle:"INACTIF"},
+    bar:{ error:n=>[n+" À TOI","quelque chose est bloqué"], waiting:n=>[n+" À TOI","à toi de jouer"],
+          working:()=>["EN COURS","tout tourne · tranquille"], done:()=>["À TOI","tout est prêt · jette un œil"], idle:()=>["INACTIF","rien en cours"] },
+    tally:{error:"bloqué",waiting:"à toi",done:"prêt",working:"en cours",idle:"inactif"}, none:"aucun agent en cours",
+    bg:n=>"⋯ "+n+" en arrière-plan",
+    empty:{big:"INACTIF",sub:"lance une tâche dans Claude Code ou Codex — elle apparaît ici"},
+    head:"état des agents", live:"en direct", recon:"reconnexion…", off:"HORS LIGNE", offCn:"Mac perdu", offTally:"reconnexion…",
+    sound:"Activer le son", soundOn:"Son activé", ago:agoFr,
   },
 };
-const LOCALES = ["en","zh","ja","bi"];
-const LANG_LABEL = {en:"EN", zh:"中", ja:"日", bi:"双语"};
+const LOCALES = ["en","zh","ja","ko","es","de","fr"];
+const LANG_NAME = {en:"English", zh:"中文", ja:"日本語", ko:"한국어", es:"Español", de:"Deutsch", fr:"Français"};
 function resolveLang(){
   const q = new URLSearchParams(location.search).get("lang");
   if (q && STR[q]) return q;
   let saved=null; try { saved = localStorage.getItem("andon.lang"); } catch(e){}
   if (saved && STR[saved]) return saved;
-  const n = (navigator.language || "en").toLowerCase();
-  if (n.indexOf("zh") === 0) return "zh";
-  if (n.indexOf("ja") === 0) return "ja";
-  return "en";
+  const n = (navigator.language || "en").toLowerCase().slice(0, 2);
+  return STR[n] ? n : "en";
 }
 let LANG = resolveLang();
 const S = () => STR[LANG] || STR.en;
@@ -330,8 +369,15 @@ const conn    = document.getElementById("conn");
 const connTxt = conn.querySelector(".conn-txt");
 const clock   = document.getElementById("clock");
 const soundBtn= document.getElementById("soundBtn");
-const langBtn = document.getElementById("langBtn");
+const langSel = document.getElementById("langSel");
 const headLabel = document.getElementById("headLabel");
+// populate the language picker once — a native <select> scales to any number of
+// languages (the OS shows a scrollable picker on the iPad), unlike a cycle button.
+for (const code of LOCALES){
+  const o = document.createElement("option");
+  o.value = code; o.textContent = LANG_NAME[code] || code;
+  langSel.appendChild(o);
+}
 const andonWord  = document.getElementById("andonWord");
 const andonCn    = document.getElementById("andonCn");
 const andonTally = document.getElementById("andonTally");
@@ -401,7 +447,7 @@ function makeCard(){
   el.innerHTML =
     '<span class="glyph"></span>' +
     '<div class="card-top"><span class="chip"><span class="dot"></span>' +
-      '<span class="cw"></span><span class="chip-cn"></span></span><span class="ago"></span></div>' +
+      '<span class="cw"></span></span><span class="ago"></span></div>' +
     '<div class="ident"><span class="badge"></span><span class="title"></span><span class="subs"></span></div>' +
     '<div class="action"></div>';
   return el;
@@ -409,9 +455,7 @@ function makeCard(){
 function updateCard(el, s, t){
   const vs = dispState(s);
   if (el.dataset.state !== vs) el.dataset.state = vs;   // only this restarts the blink
-  const w = S().chip[vs] || [vs.toUpperCase(), ""];
-  el.querySelector(".cw").textContent      = w[0];
-  el.querySelector(".chip-cn").textContent = w[1];
+  el.querySelector(".cw").textContent = S().chip[vs] || vs.toUpperCase();
   el.querySelector(".glyph").textContent   = GLYPH[vs] || "";
   el.querySelector(".badge").textContent   = agentLabel(s.agent);
   el.querySelector(".title").textContent   = s.title || "—";
@@ -464,7 +508,6 @@ function render(){
     const e = S().empty;
     board.innerHTML =
       '<div class="idle-hero"><div class="big">' + e.big + '</div>' +
-      (e.cn ? '<div class="cn">' + e.cn + '</div>' : '') +
       '<div class="sub">' + e.sub + '</div></div>';
     return;
   }
@@ -597,15 +640,15 @@ function reflectSound(){
    every switcher click. render() runs before setConn so an offline banner (if any)
    wins over the live bar. */
 function applyLang(){
-  document.documentElement.lang = (LANG === "bi") ? "zh" : LANG;
-  langBtn.textContent = LANG_LABEL[LANG] || "EN";
+  document.documentElement.lang = LANG;
+  langSel.value = LANG;
   headLabel.textContent = S().head;
   reflectSound();
   render();
   setConn(connOk);
 }
-langBtn.addEventListener("click", () => {
-  LANG = LOCALES[(LOCALES.indexOf(LANG) + 1) % LOCALES.length];
+langSel.addEventListener("change", () => {
+  LANG = STR[langSel.value] ? langSel.value : "en";
   try { localStorage.setItem("andon.lang", LANG); } catch (e){}
   applyLang();
 });
