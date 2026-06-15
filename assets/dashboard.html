@@ -190,6 +190,26 @@
     color:var(--ink); border-color:var(--ink-soft) }
   @keyframes cardBeat{ 0%,100%{ filter:brightness(1) } 50%{ filter:brightness(1.13) } }
 
+  /* ── completion reward ──────────────────────────────────────────────────────
+     When a card transitions to READY (the real Stop/done hook event — the same
+     signal that fires the chime, nothing is clicked), play a one-time "shipped"
+     flourish: the card flashes + gives a tiny physical pop, the ✓ snaps in big
+     then settles, and a light sweep crosses once. ~0.66s, never loops. */
+  .card.celebrate{animation:cardCele .66s var(--ease)}
+  @keyframes cardCele{
+    0%{ transform:scale(.995); filter:brightness(.9) }
+    24%{ transform:scale(1.014); filter:brightness(1.5) }
+    100%{ transform:scale(1); filter:brightness(1) } }
+  .card.celebrate .glyph{animation:checkPop .66s var(--ease)}
+  @keyframes checkPop{
+    0%{ transform:translateY(-50%) scale(.3); opacity:0 }
+    40%{ transform:translateY(-50%) scale(1.55); opacity:1 }
+    100%{ transform:translateY(-50%) scale(1); opacity:.2 } }
+  .card.celebrate::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:8px;
+    background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.42) 50%,transparent 70%);
+    transform:translateX(-120%);animation:cardSweep .64s var(--ease)}
+  @keyframes cardSweep{ to{ transform:translateX(120%) } }
+
   .card-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
   /* state as letters + colour — the traffic-light signal */
   .chip{display:inline-flex;align-items:center;gap:8px;color:var(--tc);font-family:var(--mono);
@@ -224,7 +244,8 @@
   .idle-hero .sub{font-family:var(--mono);font-size:12.5px;letter-spacing:.05em;color:var(--faint)}
 
   @media (prefers-reduced-motion:reduce){
-    .andon-dot,.chip .dot,.andon,.card{animation:none!important}
+    .andon-dot,.chip .dot,.andon,.card,.card .glyph{animation:none!important}
+    .card.celebrate::after{animation:none!important;opacity:0}
   }
 
   /* ── narrow screens (phone portrait) ──────────────────────────────────────
@@ -410,6 +431,7 @@ let last  = {sessions:[], server_time:0};
 let skew  = 0;                     // server_time - local time, for live "ago"
 let order = [];                    // stable card order (first-seen wins; never reshuffled)
 const cards = new Map();           // id -> card element (reused in place)
+const celebrateTimers = new Map(); // id -> pending "remove .celebrate" timeout
 let prevState = {};
 let primed = false;
 let connOk = true;                 // last connection state, for re-rendering on language change
@@ -508,14 +530,17 @@ function render(){
   const t = serverNow();
   setBar(list);
 
-  // chime on a transition into needs-you / stuck / done (skip the first render)
+  // chime on a transition into needs-you / stuck / done (skip the first render);
+  // collect the cards that just turned READY so they get the completion flourish
   let chime = null;
+  const justDone = [];
   if (primed){
     for (const s of list){
       const vs = dispState(s);
       if (prevState[s.id] !== vs &&
           (vs==="waiting" || vs==="error" || vs==="done")){
         if (chime===null || PRI[vs] < PRI[chime]) chime = vs;
+        if (vs==="done") justDone.push(s.id);
       }
     }
   }
@@ -525,7 +550,8 @@ function render(){
 
   // drop cards whose process is gone
   const ids = new Set(list.map(s => s.id));
-  for (const [id, el] of [...cards]) if (!ids.has(id)){ el.remove(); cards.delete(id); doneSince.delete(id); }
+  for (const [id, el] of [...cards]) if (!ids.has(id)){ el.remove(); cards.delete(id); doneSince.delete(id);
+    clearTimeout(celebrateTimers.get(id)); celebrateTimers.delete(id); }
 
   if (list.length === 0){
     order = [];
@@ -562,6 +588,19 @@ function render(){
     const ref = prevEl ? prevEl.nextSibling : board.firstChild;
     if (el !== ref) board.insertBefore(el, ref);
     prevEl = el;
+  }
+
+  // fire the one-time "shipped" flourish on cards that just turned READY. Applied
+  // after placement (so a tier move can't restart it); remove+reflow+add restarts
+  // the animation cleanly if the same card celebrates again later.
+  for (const id of justDone){
+    const el = cards.get(id);
+    if (!el) continue;
+    clearTimeout(celebrateTimers.get(id));   // cancel a still-pending removal so a re-trigger isn't cut short
+    el.classList.remove("celebrate");
+    void el.offsetWidth;
+    el.classList.add("celebrate");
+    celebrateTimers.set(id, setTimeout(() => { el.classList.remove("celebrate"); celebrateTimers.delete(id); }, 700));
   }
 
   // SSE won't push during a grace wait — re-render when the soonest one matures,
