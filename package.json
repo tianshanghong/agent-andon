@@ -1,7 +1,7 @@
 {
   "name": "agent-andon",
   "version": "0.1.0",
-  "description": "A traffic-light status board for your AI coding agents. Stand an old iPad on your desk and glance over to know if Claude Code / Codex is working, needs you, done, or stuck.",
+  "description": "Status board & notifications for Claude Code and Codex — glance at an iPad (or get a desktop alert) when an AI coding agent needs you, finishes, or gets stuck. Self-hosted, zero dependencies.",
   "type": "commonjs",
   "bin": {
     "andon": "dist/cli.js"
@@ -11,7 +11,7 @@
     "dist",
     "assets",
     "examples",
-    "docs",
+    "docs/board.png",
     "README.md",
     "LICENSE"
   ],
@@ -28,15 +28,23 @@
   },
   "keywords": [
     "claude-code",
+    "claude",
+    "anthropic",
     "codex",
-    "ai-agent",
-    "agent-status",
+    "openai-codex",
+    "ai-agents",
+    "coding-agent",
+    "ai-coding-assistant",
+    "agentic",
+    "developer-tools",
     "dashboard",
-    "andon",
-    "traffic-light",
+    "status-board",
+    "notifications",
+    "monitoring",
+    "self-hosted",
     "hooks",
-    "ipad",
-    "ambient"
+    "andon",
+    "ipad"
   ],
   "author": "wwang <me@wwang.tech>",
   "license": "MIT",
