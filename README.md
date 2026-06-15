@@ -6,7 +6,7 @@ Stand an old iPad on your desk. Submit a task to Claude Code or Codex, then go d
 something else. One glance at the iPad tells you whether your agent is **working,
 needs you, done, or stuck** — no babysitting the terminal, no forgetting to come back.
 
-![Agent Andon board: three tiles — NEEDS YOU, DONE, WORKING — with the screen edge glowing the most-urgent colour](docs/board.png)
+![Agent Andon board: one full-width row per agent — STUCK and NEEDS YOU floated to the top showing their full message, calm WORKING/READY rows compact below, and a signal bar across the top in the most-urgent colour](docs/board.png)
 
 > *Andon* (行灯) is the lean-manufacturing signal board: a light that tells the
 > whole floor, at a glance, whether a line is running or needs a human. Same idea,
@@ -14,7 +14,7 @@ needs you, done, or stuck** — no babysitting the terminal, no forgetting to co
 
 - **Zero runtime dependencies** — pure Node.js standard library.
 - **One command to wire up** — `andon install claude` edits your hooks for you (with a backup).
-- **Multi-agent native** — every session is its own tile; the screen edge glows the most-urgent state.
+- **Multi-agent native** — one full-width row per session; whatever needs you floats to the top and a signal bar across the top shows the most-urgent state.
 - **Just an iPad + Safari** — no app, no hardware, no account.
 
 <sub>中文用户：把闲置 iPad 立在桌边，变成 Claude Code / Codex 的"安灯"状态看板。提交任务后放心去干别的，一瞥就知道 agent 在跑 / 该你了 / 完成了 / 卡住了。</sub>
@@ -24,16 +24,27 @@ needs you, done, or stuck** — no babysitting the terminal, no forgetting to co
 ## How it works
 
 ```
-Claude Code / Codex  ──(native hook)──▶  andon server (your Mac)  ◀──(polls 1×/s)──  iPad Safari
+Claude Code / Codex  ──(native hook)──▶  andon server (your Mac)  ◀──(SSE push)──  iPad Safari
 ```
 
 1. **Detect** — each tool's native hook mechanism reports state changes. No change to your workflow.
 2. **Relay** — a tiny HTTP server on your Mac receives the events.
-3. **Display** — the iPad opens the board and polls once a second. The whole border becomes
-   the "tower light," readable from across the room; *needs-you* / *stuck* pulse and chime.
+3. **Display** — the iPad holds an open SSE stream, so a state change shows in well under a
+   second (it falls back to 1 s polling if SSE is unavailable). A signal bar across the top is
+   the "tower light," readable across the room; the single most-urgent row pulses and chimes.
 
-State priority (the border takes the most urgent one):
+State priority (the top bar — and the row order — take the most urgent one):
 `stuck (red) > needs-you (amber) > done (green) > working (blue) > idle`.
+
+### The board
+
+- **One full-width row per process**, stacked top → bottom; the board scrolls when there are many.
+- **Size by urgency** — *stuck* and *needs-you* rows are large and show their **full message**
+  (never truncated); *working* / *ready* / *idle* rows stay compact, so a busy floor still fits a glance.
+- **What needs you floats to the top** and the board auto-scrolls it into view — the first
+  screen is always the things waiting on you.
+- **Calm by default** — only the single most-urgent row pulses; everything else stays still.
+  Tap **Enable sound** once on the iPad for the chime (remembered across reloads).
 
 ---
 
@@ -64,7 +75,7 @@ andon serve --demo
 ```
 
 It prints a `http://<your-mac-ip>:8787` URL. Open it on the iPad — you should see two
-tiles cycling colors. Once it looks right, `Ctrl-C` and run for real:
+rows cycling colors. Once it looks right, `Ctrl-C` and run for real:
 
 ```bash
 andon serve
