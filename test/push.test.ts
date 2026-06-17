@@ -61,7 +61,7 @@ function decrypt(body: Buffer, uaPriv: Buffer, uaPub: Buffer, auth: Buffer): str
   return rec.subarray(0, end).toString("utf8");
 }
 
-const sub = { endpoint: "https://push.example.net/x", keys: { p256dh: RX_PUB, auth: AUTH } };
+const sub = { endpoint: "https://web.push.apple.com/q/abc", keys: { p256dh: RX_PUB, auth: AUTH } };
 
 test("push: decrypts the RFC 8291 §5 gold-standard ciphertext", () => {
   assert.equal(decrypt(RFC_BODY, RX_PRIV, b(RX_PUB), b(AUTH)), PLAINTEXT);
@@ -104,12 +104,17 @@ test("push: VAPID Authorization is a valid ES256 JWT under the public key", () =
   assert.equal(claims.aud, "https://web.push.apple.com"); // origin only, not the path
 });
 
-test("push: isValidSubscription accepts a real subscription, rejects junk", () => {
-  assert.equal(isValidSubscription(sub), true);
+test("push: isValidSubscription accepts real push hosts, rejects junk + SSRF endpoints", () => {
+  assert.equal(isValidSubscription(sub), true); // Apple
+  assert.equal(isValidSubscription({ endpoint: "https://fcm.googleapis.com/fcm/send/abc", keys: { p256dh: RX_PUB, auth: AUTH } }), true); // Google
   assert.equal(isValidSubscription(null), false);
   assert.equal(isValidSubscription({ endpoint: "not a url", keys: { p256dh: RX_PUB, auth: AUTH } }), false);
-  assert.equal(isValidSubscription({ endpoint: "https://x/y", keys: { p256dh: "short", auth: AUTH } }), false);
-  assert.equal(isValidSubscription({ endpoint: "https://x/y" }), false);
+  assert.equal(isValidSubscription({ endpoint: "https://web.push.apple.com/y", keys: { p256dh: "short", auth: AUTH } }), false); // bad key length
+  assert.equal(isValidSubscription({ endpoint: "https://web.push.apple.com/y" }), false); // missing keys
+  // SSRF guard: arbitrary / internal / non-https endpoints are rejected before storage
+  assert.equal(isValidSubscription({ endpoint: "https://evil.example/x", keys: { p256dh: RX_PUB, auth: AUTH } }), false);
+  assert.equal(isValidSubscription({ endpoint: "https://169.254.169.254/latest/meta-data", keys: { p256dh: RX_PUB, auth: AUTH } }), false);
+  assert.equal(isValidSubscription({ endpoint: "http://web.push.apple.com/x", keys: { p256dh: RX_PUB, auth: AUTH } }), false);
 });
 
 const TMP = path.join(os.tmpdir(), "andon-push-test");
@@ -117,7 +122,7 @@ const sess = (id: string, state: Session["state"]): Session => ({ id, agent: "cl
 
 test("push: notifier fires only on needs-you/stuck transitions, never done/working", () => {
   const hub = new PushHub({ dataDir: TMP });
-  hub.add({ endpoint: "https://push.example.net/z", keys: { p256dh: RX_PUB, auth: AUTH } });
+  hub.add({ endpoint: "https://web.push.apple.com/z", keys: { p256dh: RX_PUB, auth: AUTH } });
   const sent: Array<{ title: string; body: string }> = [];
   hub.send = async (s, body) => {
     sent.push({ title: "", body: "" }); // record the call; body is ciphertext
@@ -143,7 +148,7 @@ test("push: the encrypted body never contains the agent's message text", () => {
   // privacy: only the coarse state + title go out, never s.message ("secret code")
   const hub = new PushHub({ dataDir: TMP });
   let captured: Buffer | null = null;
-  hub.add({ endpoint: "https://push.example.net/z", keys: { p256dh: RX_PUB, auth: AUTH } });
+  hub.add({ endpoint: "https://web.push.apple.com/z", keys: { p256dh: RX_PUB, auth: AUTH } });
   hub.send = async (_s, body) => {
     captured = body;
     return { status: 200 };

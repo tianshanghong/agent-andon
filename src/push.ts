@@ -21,7 +21,6 @@
  */
 import * as crypto from "crypto";
 import * as https from "https";
-import * as http from "http";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
@@ -146,7 +145,7 @@ export function sendPush(
   opts?: { ttlSec?: number; urgency?: string; timeoutMs?: number },
 ): Promise<SendResult> {
   const u = new URL(sub.endpoint);
-  const lib = u.protocol === "http:" ? http : https;
+  if (u.protocol !== "https:") return Promise.resolve({ status: 0 }); // defense in depth: never POST to a non-https endpoint
   const headers: Record<string, string | number> = {
     TTL: String(opts?.ttlSec ?? 2592000),
     "Content-Length": body.length,
@@ -155,7 +154,7 @@ export function sendPush(
     Authorization: vapidAuthHeader(sub.endpoint, subject, vapid),
   };
   return new Promise((resolve) => {
-    const req = lib.request(u, { method: "POST", headers, timeout: opts?.timeoutMs ?? 5000 }, (res) => {
+    const req = https.request(u, { method: "POST", headers, timeout: opts?.timeoutMs ?? 5000 }, (res) => {
       res.on("data", () => {});
       res.on("end", () => resolve({ status: res.statusCode ?? 0 }));
     });
@@ -169,7 +168,21 @@ export function sendPush(
   });
 }
 
-/** True for a structurally valid W3C subscription (defensive: it arrives over HTTP). */
+/**
+ * The push services real browsers actually subscribe to. We only ever store (and
+ * later POST to) endpoints on these hosts — an SSRF guard so a submitted endpoint
+ * can't aim the server at an arbitrary/internal URL. (Low-risk in self-host where
+ * /push/subscribe is token-gated to you, but essential once it's internet-facing.)
+ */
+const PUSH_HOSTS: RegExp[] = [
+  /(^|\.)googleapis\.com$/, // Chrome / Edge / Samsung (FCM)
+  /(^|\.)push\.apple\.com$/, // Safari / iOS / macOS
+  /(^|\.)push\.services\.mozilla\.com$/, // Firefox
+  /(^|\.)notify\.windows\.com$/, // Windows (legacy WNS)
+  /(^|\.)push\.microsoft\.com$/, // Edge / Windows
+];
+
+/** True for a structurally valid W3C subscription on a real push host (defensive: it arrives over HTTP). */
 export function isValidSubscription(x: unknown): x is PushSubscription {
   if (!x || typeof x !== "object") return false;
   const s = x as Record<string, unknown>;
@@ -180,7 +193,10 @@ export function isValidSubscription(x: unknown): x is PushSubscription {
   } catch {
     return false;
   }
-  if (u.protocol !== "https:" && u.protocol !== "http:") return false;
+  // Always https (a real push endpoint is) and only on a known push-service host.
+  if (u.protocol !== "https:") return false;
+  const host = u.hostname.toLowerCase().replace(/\.$/, "");
+  if (!PUSH_HOSTS.some((re) => re.test(host))) return false;
   const k = s.keys as Record<string, unknown> | undefined;
   if (!k || typeof k.p256dh !== "string" || typeof k.auth !== "string") return false;
   // sanity: the UA public key is a 65-byte point, auth is 16 bytes

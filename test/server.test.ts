@@ -11,7 +11,7 @@ import { SessionStore } from "../src/store";
 const PUSH_DIR = path.join(os.tmpdir(), "andon-srv-push-test");
 // A structurally valid W3C subscription (RFC 8291 §5 receiver keys).
 const SUB = {
-  endpoint: "https://push.example.net/x",
+  endpoint: "https://web.push.apple.com/q/abc",
   keys: {
     p256dh: "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4",
     auth: "BTBZMqHH6r4Tts7J_aSIgg",
@@ -177,6 +177,13 @@ test("push: sw.js served, VAPID key issued, subscribe validates the body", async
       body: JSON.stringify({ endpoint: "not-a-url", keys: {} }),
     });
     assert.equal(bad.status, 400);
+
+    // SSRF guard: an endpoint that isn't a real push host is rejected, never stored
+    const ssrf = await request(s.port, "POST", "/push/subscribe", {
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ endpoint: "https://169.254.169.254/x", keys: SUB.keys }),
+    });
+    assert.equal(ssrf.status, 400);
   } finally {
     await s.close();
   }
