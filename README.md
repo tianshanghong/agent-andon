@@ -2,7 +2,7 @@
 
 **Glance at an iPad — or get a desktop alert — the moment your AI coding agent is working, needs you, done, or stuck.**
 
-[![MIT License](https://img.shields.io/badge/license-MIT-3aa86b)](LICENSE)
+[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-3aa86b)](LICENSE)
 [![Node ≥ 18](https://img.shields.io/badge/node-%E2%89%A5%2018-5478c4)](https://nodejs.org)
 ![runtime dependencies: 0](https://img.shields.io/badge/runtime%20deps-0-3aa86b)
 ![platforms: macOS · Linux · Windows](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-23262e)
@@ -350,11 +350,26 @@ No. The board is a plain web page — open it on any phone, tablet, or browser. 
 makes a nice always-on wall display. You also get desktop banners and a menu-bar summary.
 
 **Is my code or data sent anywhere?**
-No. It's fully self-hosted on your own machine/LAN, with zero dependencies and no account. The
-board only ever shows high-level status (state, project name, a one-line message) — never code or logs.
+No — by default nothing about your agents leaves your machine. Andon is fully self-hosted: no account, no
+telemetry, no analytics, no "phone home." It only ever holds high-level status (state, project name, a
+one-line message) — never your code, logs, or secrets.
+
+Two honest caveats: (1) the board loads its web fonts from Google Fonts unless you self-host them — that
+request carries no agent data, just your browser's normal font fetch. (2) Optional features (phone push,
+and a possible hosted relay) are **strictly opt-in** and each spells out exactly what leaves your machine
+— a hosted relay would be designed so even *it* can't read your agents' messages. They never change this
+local-first default.
 
 ---
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+[AGPL-3.0-or-later](LICENSE) — © 2026 wwang.
+
+Run, self-host, audit, fork, and modify Andon freely. If you run a **modified** version as a network
+service, AGPL §13 asks you to offer its source to your users; running it unmodified (a wall board talking
+to your own agents) carries no such obligation. The maintainer also offers Andon under separate
+commercial terms for a hosted service — see [CONTRIBUTING](CONTRIBUTING.md) for how that stays possible.
+
+The name **"Andon" / "Agent Andon"** and the logo are reserved marks of the author — the license covers
+the code, not the name (see [TRADEMARK](TRADEMARK.md)). Forks must use a different name.

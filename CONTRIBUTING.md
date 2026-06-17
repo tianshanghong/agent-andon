@@ -33,8 +33,23 @@ npm test           # unit + HTTP integration tests
 - **Keep runtime dependencies at zero.** Node stdlib only. Dev-only deps are fine.
 - **Hooks must never block or crash an agent** — `andon hook` / `andon notify`
   swallow all errors and exit 0. Don't add throwing code to those paths.
-- **Render with `textContent`, never `innerHTML`** in the dashboard (XSS safety).
+- **Render agent-supplied text with `textContent`** in the dashboard; use `innerHTML` only for static,
+  code-controlled templates — never a session title/message/agent string (XSS safety on a shared board).
 - Put new pure logic where it can be unit-tested without a network or stdin.
+
+## Licensing of contributions (DCO)
+
+Agent Andon is licensed **AGPL-3.0-or-later**, and the maintainer also offers it under separate
+commercial terms (e.g. for an optional hosted service). To keep both possible, contributions are accepted
+under the **[Developer Certificate of Origin](https://developercertificate.org/)**:
+
+- **Sign off every commit** — add a `Signed-off-by: Your Name <you@example.com>` line with `git commit -s`.
+  That certifies you wrote the change (or have the right to submit it) under the project's license.
+- By contributing, you grant the maintainer (wwang) a perpetual, irrevocable right to license your
+  contribution under **AGPL-3.0-or-later and other terms (including proprietary/commercial)**, so an
+  official hosted/commercial build remains possible. **You keep the copyright to your contribution.**
+
+There's no separate CLA to sign — the `Signed-off-by` line plus this section is the agreement.
 
 ## Before opening a PR
 

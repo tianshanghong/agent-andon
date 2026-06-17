@@ -47,7 +47,7 @@
     "ipad"
   ],
   "author": "wwang <me@wwang.tech>",
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
   "homepage": "https://github.com/tianshanghong/agent-andon#readme",
   "repository": {
     "type": "git",
