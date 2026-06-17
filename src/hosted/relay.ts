@@ -1,7 +1,7 @@
 /**
  * The hosted relay (T2 "board from anywhere") — multi-tenant, ciphertext-only.
  *
- * It routes + stores SEALED events (see src/e2e.ts) and NEVER holds the key K, so it
+ * It routes + stores SEALED events (see src/hosted/e2e.ts) and NEVER holds the key K, so it
  * cannot read titles/messages/tallies — only coarse routing (board-id, sid, state,
  * seq). The board's freshness guard + the AAD binding are what keep an untrusted
  * relay honest; here we just store the latest sealed blob per session and serve it.
@@ -24,6 +24,8 @@ import * as path from "path";
 import * as os from "os";
 import type { SealedBlob } from "./e2e";
 import { encryptPayload, sendPush, isValidSubscription, type PushSubscription, type VapidKeys, generateVapidKeys } from "../push";
+import { boardHtml, BOARD_CSP, HOSTED_SW } from "./board-assets";
+import { FAVICON_SVG } from "../assets";
 
 /** What the hook POSTs (the relay stamps tsSrv on receipt). */
 export interface RelayEvent {
@@ -308,7 +310,7 @@ export function createRelay(opts: RelayOptions = {}): { server: http.Server; sto
   const pushNotify = async (boardId: string, event: StoredEvent): Promise<void> => {
     const subs = store.subsOf(boardId);
     if (subs.length === 0) return;
-    const payload = Buffer.from(JSON.stringify({ sid: event.sid, state: event.state, seq: event.seq, enc: event.enc }), "utf8");
+    const payload = Buffer.from(JSON.stringify({ boardId, sid: event.sid, state: event.state, seq: event.seq, enc: event.enc }), "utf8");
     const vapid = store.vapid();
     await Promise.allSettled(
       subs.map(async (sub) => {
@@ -345,6 +347,20 @@ export function createRelay(opts: RelayOptions = {}): { server: http.Server; sto
       "Cache-Control": "no-store",
       "X-Content-Type-Options": "nosniff",
       "Referrer-Policy": "no-referrer",
+    });
+    res.end(buf);
+  };
+
+  // Non-JSON assets (the board bundle, the SW, the manifest).
+  const sendRaw = (res: http.ServerResponse, body: string | Buffer, ctype: string, extra?: Record<string, string>): void => {
+    const buf = typeof body === "string" ? Buffer.from(body, "utf8") : body;
+    res.writeHead(200, {
+      "Content-Type": ctype,
+      "Content-Length": buf.length,
+      "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
+      "Referrer-Policy": "no-referrer",
+      ...(extra || {}),
     });
     res.end(buf);
   };
@@ -480,6 +496,28 @@ export function createRelay(opts: RelayOptions = {}): { server: http.Server; sto
           if (set.size === 0) sse.delete(boardId);
         });
         return;
+      }
+
+      // GET /b/<board>   the board bundle (self-detects hosted mode from path + #k)
+      if (req.method === "GET" && parts.length === 2 && parts[0] === "b") {
+        return sendRaw(res, boardHtml(), "text/html; charset=utf-8", { "Content-Security-Policy": BOARD_CSP });
+      }
+
+      // GET /b/<board>/manifest.webmanifest   per-board PWA manifest — start_url MUST be
+      // the board path, so a home-screen launch lands on /b/<board> (not "/", which 404s).
+      if (req.method === "GET" && parts.length === 3 && parts[0] === "b" && parts[2] === "manifest.webmanifest") {
+        const start = "/b/" + encodeURIComponent(decodeURIComponent(parts[1]));
+        return sendRaw(res, JSON.stringify({ name: "Agent Andon", short_name: "Andon", display: "standalone", background_color: "#0b0b0c", theme_color: "#0b0b0c", start_url: start, scope: start, icons: [{ src: "/favicon.svg", type: "image/svg+xml", sizes: "any" }] }), "application/manifest+json");
+      }
+
+      // GET /sw.js   the hosted service worker (decrypts pushes with K)
+      if (req.method === "GET" && parts.length === 1 && parts[0] === "sw.js") {
+        return sendRaw(res, HOSTED_SW, "text/javascript; charset=utf-8");
+      }
+
+      // GET /favicon.svg   so the board + home-screen icon don't 404 (shared with self-host)
+      if (req.method === "GET" && parts.length === 1 && parts[0] === "favicon.svg") {
+        return sendRaw(res, FAVICON_SVG, "image/svg+xml");
       }
 
       // GET /vapid    the relay's VAPID public key (a board subscribes with it)

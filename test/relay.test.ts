@@ -37,10 +37,18 @@ function realSub(): { endpoint: string; keys: { p256dh: string; auth: string } }
 }
 
 async function start(dataDir?: string): Promise<{ store: RelayStore; base: string; close: () => Promise<void> }> {
-  const { server, store } = createRelay({ dataDir });
+  const dir = dataDir ?? TMP(); // NEVER fall back to the real ~/.andon (would pollute it + hit MAX_BOARDS)
+  const { server, store } = createRelay({ dataDir: dir });
   await new Promise<void>((r) => server.listen(0, "127.0.0.1", () => r()));
   const port = (server.address() as { port: number }).port;
-  return { store, base: `http://127.0.0.1:${port}`, close: () => new Promise<void>((r) => server.close(() => r())) };
+  const close = () =>
+    new Promise<void>((r) =>
+      server.close(() => {
+        if (!dataDir) fs.rmSync(dir, { recursive: true, force: true }); // clean the temp dir we made
+        r();
+      }),
+    );
+  return { store, base: `http://127.0.0.1:${port}`, close };
 }
 
 test("relay: provision → ingest → snapshot round-trip; relay stores only ciphertext", async () => {
@@ -231,7 +239,8 @@ test("relay store: a corrupt tenant file is preserved, not silently lost, and do
 
 test("relay: rate-limit window resets after it elapses (not a permanent ban)", async () => {
   let t = 1000;
-  const { server } = createRelay({ now: () => t });
+  const dir = TMP();
+  const { server } = createRelay({ now: () => t, dataDir: dir });
   await new Promise<void>((r) => server.listen(0, "127.0.0.1", () => r()));
   const base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
   try {
@@ -243,6 +252,7 @@ test("relay: rate-limit window resets after it elapses (not a permanent ban)", a
     assert.equal(await prov(), 200); // allowed again
   } finally {
     await new Promise<void>((r) => server.close(() => r()));
+    fs.rmSync(dir, { recursive: true, force: true });
   }
 });
 
@@ -316,6 +326,33 @@ test("relay: one IP cannot hoard SSE streams (per-IP cap); a disconnect frees a 
     assert.equal(await open(), 200); // a slot opened up
   } finally {
     for (const ac of acs) ac.abort();
+    await r.close();
+  }
+});
+
+test("relay: serves the board (CSP), SW, a per-board manifest, favicon; stays disjoint from self-host routes", async () => {
+  const r = await start();
+  try {
+    const b = await fetch(`${r.base}/b/anyboard`);
+    assert.equal(b.status, 200);
+    assert.match(b.headers.get("content-type") || "", /text\/html/);
+    assert.match(b.headers.get("content-security-policy") || "", /frame-ancestors 'none'/);
+    assert.ok((await b.text()).includes("HOSTED")); // the same dashboard, with hosted-mode detection
+
+    const sw = await fetch(`${r.base}/sw.js`);
+    assert.equal(sw.status, 200);
+    assert.match(sw.headers.get("content-type") || "", /javascript/);
+    assert.ok((await sw.text()).includes("push")); // the decrypting service worker
+
+    // per-board manifest: start_url MUST be the board path so a home-screen launch lands on /b/<board>, not "/"
+    const mani = (await (await fetch(`${r.base}/b/anyboard/manifest.webmanifest`)).json()) as { start_url: string };
+    assert.equal(mani.start_url, "/b/anyboard");
+    assert.equal((await fetch(`${r.base}/favicon.svg`)).status, 200);
+
+    // the relay and the self-host server stay disjoint — no "/" or "/state" on the relay
+    assert.equal((await fetch(`${r.base}/`)).status, 404);
+    assert.equal((await fetch(`${r.base}/state`)).status, 404);
+  } finally {
     await r.close();
   }
 });

@@ -146,6 +146,25 @@ test("e2e: unicode title/message round-trips intact", () => {
   assert.equal(got.message, u.message);
 });
 
+test("e2e: a node-sealed blob decrypts via WebCrypto (the browser/SW path) — cross-impl wire format", async () => {
+  // Replicate EXACTLY what the dashboard + service worker do (src/hosted/board-assets.ts
+  // openSealed), proving the NORMATIVE wire format interops byte-for-byte across engines.
+  const k = generateKey();
+  const routing: Routing = { boardId: "board-xyz", sid: "s1", state: "waiting", seq: 7 };
+  const blob = seal(k, { title: "checkout-api", message: "需要审批 🚀", agent: "claude" }, routing, 1_700_000_000_000);
+
+  const b = (s: string) => Buffer.from(s, "base64url");
+  const ckey = await crypto.webcrypto.subtle.importKey("raw", b(k), "AES-GCM", false, ["decrypt"]);
+  const aad = new TextEncoder().encode(JSON.stringify([routing.boardId, routing.sid, routing.state, routing.seq]));
+  const ptBuf = await crypto.webcrypto.subtle.decrypt({ name: "AES-GCM", iv: b(blob.nonce), additionalData: aad, tagLength: 128 }, ckey, b(blob.ct));
+  const pt = new Uint8Array(ptBuf);
+  const len = pt[0] | (pt[1] << 8) | (pt[2] << 16) | (pt[3] << 24);
+  const o = JSON.parse(new TextDecoder().decode(pt.subarray(4, 4 + len)));
+  assert.equal(o.title, "checkout-api");
+  assert.equal(o.message, "需要审批 🚀");
+  assert.equal(o.seq, 7);
+});
+
 test("e2e: a forged oversized length-prefix is rejected by unpad (post-auth bound check)", () => {
   const K = Buffer.from(KEY, "base64url");
   const nonce = crypto.randomBytes(12);
