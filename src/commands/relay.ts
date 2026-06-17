@@ -13,12 +13,14 @@ export function relay(args: string[]): void {
   const dataDir = di >= 0 ? args[di + 1] : process.env.ANDON_DATA_DIR;
   const host = process.env.ANDON_RELAY_HOST || "0.0.0.0";
 
-  const { server } = createRelay({ dataDir });
+  const { server, stop } = createRelay({ dataDir });
   server.listen(port, host, () => {
     console.log(`🛰  Agent Andon relay (zero-knowledge) on ${host}:${port}`);
-    console.log("   POST /provision   POST /i/<board>   GET /s/<board>");
+    console.log("   POST /provision   POST /i/<board>   GET /s,/e/<board>   push: /vapid, /p/<board>/subscribe");
     console.log("   stores ciphertext only — it cannot read your agents' content.");
     console.log("   ⚠ no TLS here — the ingest token + board-id travel cleartext over plain HTTP.");
     console.log("     put it behind HTTPS before exposing it; ANDON_RELAY_HOST=127.0.0.1 keeps it local-only.");
   });
+  // Graceful shutdown so open SSE streams don't hang the exit.
+  for (const sig of ["SIGINT", "SIGTERM"] as const) process.on(sig, () => stop(() => process.exit(0)));
 }

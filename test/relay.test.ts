@@ -26,6 +26,16 @@ function mkEvent(key: string, boardId: string, sid = "s1", state = "waiting", se
   return { sid, state, seq, enc };
 }
 
+/** A structurally real push subscription (a genuine P-256 point so encryptPayload works). */
+function realSub(): { endpoint: string; keys: { p256dh: string; auth: string } } {
+  const ec = crypto.createECDH("prime256v1");
+  ec.generateKeys();
+  return {
+    endpoint: "https://fcm.googleapis.com/fcm/send/" + crypto.randomBytes(6).toString("hex"),
+    keys: { p256dh: ec.getPublicKey().toString("base64url"), auth: crypto.randomBytes(16).toString("base64url") },
+  };
+}
+
 async function start(dataDir?: string): Promise<{ store: RelayStore; base: string; close: () => Promise<void> }> {
   const { server, store } = createRelay({ dataDir });
   await new Promise<void>((r) => server.listen(0, "127.0.0.1", () => r()));
@@ -233,5 +243,135 @@ test("relay: rate-limit window resets after it elapses (not a permanent ban)", a
     assert.equal(await prov(), 200); // allowed again
   } finally {
     await new Promise<void>((r) => server.close(() => r()));
+  }
+});
+
+test("relay store: ingest flags a push ONLY on a transition into needs-you/error", () => {
+  const store = new RelayStore();
+  const { token, tokenHash } = mkToken();
+  const boardId = store.provision(tokenHash);
+  const key = generateKey();
+  const ing = (state: string, seq: number) => store.ingest(boardId, token, mkEvent(key, boardId, "s1", state, seq)).alert;
+  assert.equal(ing("working", 1), false); // calm
+  assert.equal(ing("waiting", 2), true); // calm → needs you: push
+  assert.equal(ing("waiting", 3), false); // still waiting: no repeat buzz
+  assert.equal(ing("error", 4), false); // waiting → error: already alerting, no re-buzz (anti-spam)
+  assert.equal(ing("done", 5), false); // error → done: calm again (the board is the all-clear)
+  assert.equal(ing("error", 6), true); // done → error: calm → needs you, push
+  // a brand-new session whose FIRST event already needs you fires immediately
+  assert.equal(store.ingest(boardId, token, mkEvent(key, boardId, "fresh", "error", 1)).alert, true);
+  assert.equal(ing("idle", 7), false); // idle is calm
+});
+
+test("relay: a calm→needs-you transition encrypts + sends a push; non-transitions don't; 410 prunes", async () => {
+  const dir = TMP();
+  const calls: Buffer[] = [];
+  let nextStatus = 201;
+  const mockSend = async (_sub: unknown, body: Buffer) => {
+    calls.push(body);
+    return { status: nextStatus };
+  };
+  const { server, store } = createRelay({ dataDir: path.join(dir, "relay"), sendPush: mockSend as never });
+  await new Promise<void>((res) => server.listen(0, "127.0.0.1", () => res()));
+  const base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
+  try {
+    const { token, tokenHash } = mkToken();
+    const { boardId } = (await (await fetch(base + "/provision", { method: "POST", body: JSON.stringify({ tokenHash }) })).json()) as { boardId: string };
+    await fetch(`${base}/p/${boardId}/subscribe`, { method: "POST", body: JSON.stringify(realSub()) });
+    const key = generateKey();
+    const ingest = (state: string, seq: number) => fetch(`${base}/i/${boardId}`, { method: "POST", headers: { authorization: "Bearer " + token }, body: JSON.stringify(mkEvent(key, boardId, "s1", state, seq)) });
+
+    await ingest("working", 1); // calm
+    await ingest("waiting", 2); // transition → push
+    await new Promise((r) => setTimeout(r, 60)); // let the fire-and-forget push run
+    assert.equal(calls.length, 1, "exactly one push on the calm→waiting transition");
+    assert.ok(calls[0].length > 0, "an encrypted aes128gcm body");
+
+    nextStatus = 410; // the push service says this subscription is gone
+    await ingest("done", 3);
+    await ingest("waiting", 4); // calm→waiting again → push (now 410)
+    await new Promise((r) => setTimeout(r, 60));
+    assert.equal(store.subsOf(boardId).length, 0, "a 410 prunes the dead subscription");
+  } finally {
+    await new Promise<void>((r) => server.close(() => r()));
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("relay: one IP cannot hoard SSE streams (per-IP cap); a disconnect frees a slot", async () => {
+  const r = await start();
+  const acs: AbortController[] = [];
+  try {
+    const { tokenHash } = mkToken();
+    const { boardId } = (await (await fetch(r.base + "/provision", { method: "POST", body: JSON.stringify({ tokenHash }) })).json()) as { boardId: string };
+    const open = async (): Promise<number> => {
+      const ac = new AbortController();
+      acs.push(ac);
+      return (await fetch(`${r.base}/e/${boardId}`, { signal: ac.signal })).status;
+    };
+    for (let i = 0; i < 8; i++) assert.equal(await open(), 200); // MAX_SSE_PER_IP = 8
+    assert.equal((await fetch(`${r.base}/e/${boardId}`)).status, 503); // 9th from the same IP refused
+    acs[0].abort(); // free one
+    await new Promise((res) => setTimeout(res, 60));
+    assert.equal(await open(), 200); // a slot opened up
+  } finally {
+    for (const ac of acs) ac.abort();
+    await r.close();
+  }
+});
+
+test("relay store: caps push subscriptions per board at MAX_SUBS", () => {
+  const store = new RelayStore();
+  const { tokenHash } = mkToken();
+  const boardId = store.provision(tokenHash);
+  for (let i = 0; i < 20; i++) store.subscribe(boardId, realSub());
+  assert.throws(() => store.subscribe(boardId, realSub()), /too many subscriptions/);
+});
+
+test("relay: VAPID key + subscribe/unsubscribe — validated, persisted, SSRF-guarded", async () => {
+  const dir = TMP();
+  const r = await start(dir);
+  try {
+    const { tokenHash } = mkToken();
+    const { boardId } = (await (await fetch(r.base + "/provision", { method: "POST", body: JSON.stringify({ tokenHash }) })).json()) as { boardId: string };
+    const vk = (await (await fetch(r.base + "/vapid")).json()) as { publicKey: string };
+    assert.equal(Buffer.from(vk.publicKey, "base64url").length, 65); // P-256 public point
+
+    const sub = { endpoint: "https://fcm.googleapis.com/fcm/send/abc", keys: { p256dh: Buffer.alloc(65).toString("base64url"), auth: Buffer.alloc(16).toString("base64url") } };
+    assert.equal((await fetch(`${r.base}/p/${boardId}/subscribe`, { method: "POST", body: JSON.stringify(sub) })).status, 204);
+    // an internal/SSRF endpoint is rejected
+    assert.equal((await fetch(`${r.base}/p/${boardId}/subscribe`, { method: "POST", body: JSON.stringify({ endpoint: "https://169.254.169.254/x", keys: sub.keys }) })).status, 400);
+
+    // it persisted across a restart
+    assert.equal(new RelayStore(Date.now, dir).subsOf(boardId).length, 1);
+    // unsubscribe removes it
+    assert.equal((await fetch(`${r.base}/p/${boardId}/unsubscribe`, { method: "POST", body: JSON.stringify({ endpoint: sub.endpoint }) })).status, 204);
+    assert.equal(new RelayStore(Date.now, dir).subsOf(boardId).length, 0);
+  } finally {
+    await r.close();
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("relay: SSE streams the snapshot frame then live ingested events", async () => {
+  const r = await start();
+  const ac = new AbortController();
+  try {
+    const { token, tokenHash } = mkToken();
+    const { boardId } = (await (await fetch(r.base + "/provision", { method: "POST", body: JSON.stringify({ tokenHash }) })).json()) as { boardId: string };
+    const resp = await fetch(`${r.base}/e/${boardId}`, { signal: ac.signal });
+    const reader = (resp.body as ReadableStream<Uint8Array>).getReader();
+    const dec = new TextDecoder();
+    const first = dec.decode((await reader.read()).value); // first frame is the snapshot
+    assert.ok(first.includes('"snapshot"'));
+
+    await fetch(`${r.base}/i/${boardId}`, { method: "POST", headers: { authorization: "Bearer " + token }, body: JSON.stringify(mkEvent(generateKey(), boardId, "s1", "waiting", 1)) });
+
+    let buf = "";
+    for (let i = 0; i < 20 && !buf.includes('"s1"'); i++) buf += dec.decode((await reader.read()).value); // skip heartbeats, find the event
+    assert.ok(buf.includes('"s1"') && buf.includes("waiting")); // the live event arrived over SSE
+  } finally {
+    ac.abort();
+    await r.close();
   }
 });
