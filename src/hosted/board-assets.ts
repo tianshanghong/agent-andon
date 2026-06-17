@@ -9,6 +9,7 @@
  */
 import * as fs from "fs";
 import * as path from "path";
+import * as crypto from "crypto";
 
 /** Find assets/dashboard.html by walking up from this module — robust to both the
  *  shipped layout (dist/hosted/) and the test build (build/src/hosted/). */
@@ -27,6 +28,38 @@ let cachedBoard: Buffer | null = null;
 export function boardHtml(): Buffer {
   if (!cachedBoard) cachedBoard = fs.readFileSync(dashboardPath());
   return cachedBoard;
+}
+
+// ---- T2 transparency: the served bytes are reproducible from source, so a verifier
+// can hash what the relay serves and compare it to the open-source release. ----
+const sha256 = (b: Buffer | string): string => crypto.createHash("sha256").update(b).digest("hex");
+let _bh: string | null = null;
+let _sh: string | null = null;
+/** SHA-256 (hex) of the served board bundle. */
+export function boardSha(): string {
+  if (!_bh) _bh = sha256(boardHtml());
+  return _bh;
+}
+/** SHA-256 (hex) of the served service worker. */
+export function swSha(): string {
+  if (!_sh) _sh = sha256(HOSTED_SW);
+  return _sh;
+}
+/** The package version these bytes came from (walks up for package.json, like the board). */
+export function bundleVersion(): string {
+  let dir = __dirname;
+  for (let i = 0; i < 6; i++) {
+    const p = path.join(dir, "package.json");
+    if (fs.existsSync(p)) {
+      try {
+        return (JSON.parse(fs.readFileSync(p, "utf8")).version as string) || "?";
+      } catch {
+        return "?";
+      }
+    }
+    dir = path.dirname(dir);
+  }
+  return "?";
 }
 
 /**

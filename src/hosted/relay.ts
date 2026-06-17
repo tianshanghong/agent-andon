@@ -24,7 +24,7 @@ import * as path from "path";
 import * as os from "os";
 import type { SealedBlob } from "./e2e";
 import { encryptPayload, sendPush, isValidSubscription, type PushSubscription, type VapidKeys, generateVapidKeys } from "../push";
-import { boardHtml, BOARD_CSP, HOSTED_SW } from "./board-assets";
+import { boardHtml, BOARD_CSP, HOSTED_SW, boardSha, swSha, bundleVersion } from "./board-assets";
 import { FAVICON_SVG } from "../assets";
 
 /** What the hook POSTs (the relay stamps tsSrv on receipt). */
@@ -518,6 +518,13 @@ export function createRelay(opts: RelayOptions = {}): { server: http.Server; sto
       // GET /favicon.svg   so the board + home-screen icon don't 404 (shared with self-host)
       if (req.method === "GET" && parts.length === 1 && parts[0] === "favicon.svg") {
         return sendRaw(res, FAVICON_SVG, "image/svg+xml");
+      }
+
+      // GET /version   T2 transparency: the SHA-256 of the EXACT board + SW this relay
+      // serves, so anyone can reproduce them from the open-source release and verify
+      // the relay isn't serving backdoored code (`andon verify <url>`).
+      if (req.method === "GET" && parts.length === 1 && parts[0] === "version") {
+        return send(res, 200, { version: bundleVersion(), board_sha256: boardSha(), sw_sha256: swSha() });
       }
 
       // GET /vapid    the relay's VAPID public key (a board subscribes with it)

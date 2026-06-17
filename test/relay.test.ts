@@ -357,6 +357,32 @@ test("relay: serves the board (CSP), SW, a per-board manifest, favicon; stays di
   }
 });
 
+test("relay: /version declares the exact board + SW hashes it serves (transparency)", async () => {
+  const r = await start();
+  try {
+    const v = (await (await fetch(`${r.base}/version`)).json()) as { board_sha256: string; sw_sha256: string };
+    assert.match(v.board_sha256, /^[0-9a-f]{64}$/);
+    assert.match(v.sw_sha256, /^[0-9a-f]{64}$/);
+    const board = Buffer.from(await (await fetch(`${r.base}/b/x`)).arrayBuffer());
+    const sw = Buffer.from(await (await fetch(`${r.base}/sw.js`)).arrayBuffer());
+    // it must not misreport its own bytes
+    assert.equal(crypto.createHash("sha256").update(board).digest("hex"), v.board_sha256);
+    assert.equal(crypto.createHash("sha256").update(sw).digest("hex"), v.sw_sha256);
+  } finally {
+    await r.close();
+  }
+});
+
+test("verify: an honest relay (serving this package's own board) passes the transparency check", async () => {
+  const r = await start();
+  try {
+    const { verify } = await import("../src/commands/verify");
+    assert.equal(await verify([r.base]), 0); // served bytes == this package's open-source bytes → match
+  } finally {
+    await r.close();
+  }
+});
+
 test("relay store: caps push subscriptions per board at MAX_SUBS", () => {
   const store = new RelayStore();
   const { tokenHash } = mkToken();

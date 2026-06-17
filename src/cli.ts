@@ -23,6 +23,7 @@ import { uninstall } from "./commands/uninstall";
 import { doctor } from "./commands/doctor";
 import { relay } from "./commands/relay";
 import { hosted } from "./commands/hosted";
+import { verify } from "./commands/verify";
 
 const HELP = `
   🚦 Agent Andon — a traffic-light board for your AI coding agents
@@ -51,6 +52,7 @@ const HELP = `
     andon hosted setup <relay-url>   Opt into the hosted board (sealed, no local server needed)
     andon hosted pair | off | status Add a device · turn off · show state
     andon relay [--port N]           Run the zero-knowledge relay (stores ciphertext only)
+    andon verify <relay-url>         Check a relay serves the exact open-source board (transparency)
 
     andon hook                  (internal) Claude Code hook — reads stdin
     andon codexhook             (internal) Codex hook — reads stdin
@@ -67,7 +69,7 @@ const HELP = `
     andon install claude        # wire it up, restart your Claude session
 `;
 
-const COMMANDS = ["serve", "install", "uninstall", "doctor", "post", "sub", "hosted", "relay", "hook", "codexhook", "help"];
+const COMMANDS = ["serve", "install", "uninstall", "doctor", "post", "sub", "hosted", "relay", "verify", "hook", "codexhook", "help"];
 
 /** Levenshtein distance — for "did you mean?" on a typo'd verb. */
 function editDistance(a: string, b: string): number {
@@ -140,6 +142,10 @@ async function main(): Promise<void> {
     case "relay":
       relay(rest);
       return; // long-running; never returns
+
+    case "verify":
+      process.exit(await verify(rest));
+      return;
 
     case "statusline":
       // statusLine command: never block/crash the agent — always exit 0.
