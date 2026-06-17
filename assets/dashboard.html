@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -113,6 +113,8 @@
     background-repeat:no-repeat;background-position:right 11px center}
   .langsel:hover{color:var(--text);border-color:var(--faint)}
   .langsel:focus{outline:none;border-color:var(--faint)}
+  /* visible keyboard focus (WCAG 2.4.7) — keyboard only, never on mouse click */
+  .btn:focus-visible,.langsel:focus-visible{outline:2px solid var(--text);outline-offset:2px}
 
   /* ── the board: one process = one card, fixed slot, never reordered.
         a card appears when its process starts and is removed only when the
@@ -143,7 +145,7 @@
   .card[data-state="waiting"]{--tc:var(--c-waiting)}
   .card[data-state="done"]   {--tc:var(--c-done)}
   .card[data-state="error"]  {--tc:var(--c-error)}
-  .card[data-state="idle"]   {--tc:var(--c-idle)}
+  .card[data-state="idle"]   {--tc:#7e8794}   /* lighter slate so the IDLE chip text clears WCAG AA on the card surface (var(--c-idle) was ~1.3:1) */
 
   /* a faint state glyph — a redundant, colour-blind-safe channel readable as a
      silhouette at distance even when the hue is hard to resolve */
@@ -316,24 +318,24 @@
   <div class="grid"></div>
 
   <div class="andon" id="andon">
-    <span class="andon-dot"></span>
-    <span class="andon-word" id="andonWord">IDLE</span>
+    <span class="andon-dot" aria-hidden="true"></span>
+    <span class="andon-word" id="andonWord" aria-live="polite" aria-atomic="true">IDLE</span>
     <span class="andon-cn" id="andonCn">空闲</span>
     <span class="andon-tally" id="andonTally"></span>
   </div>
 
   <div class="app">
-    <div class="head">
+    <div class="head" role="banner">
       <span class="brand">ANDON</span>
       <span id="headLabel">agent status</span>
       <span class="lvbadge" id="lvBadge" style="display:none"></span>
       <span class="rule"></span>
       <span class="conn" id="conn"><span class="led"></span><span class="conn-txt">live</span></span>
       <span class="clock" id="clock">--:--</span>
-      <select class="langsel" id="langSel" title="Language · 语言 · 言語"></select>
+      <select class="langsel" id="langSel" aria-label="Language" title="Language · 语言 · 言語"></select>
       <button class="btn sound" id="soundBtn"><span class="sico" aria-hidden="true"><svg viewBox="0 0 22 22" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5h3.5L12 5v12L7.5 13.5H4z"/><path d="M15.5 8a4.5 4.5 0 0 1 0 6"/></svg></span><span class="slbl">Enable sound</span></button>
     </div>
-    <div class="board" id="board"></div>
+    <div class="board" id="board" role="main" aria-label="agent status board"></div>
   </div>
 
 <script>
@@ -739,7 +741,10 @@ function render(){
   if (chime) playChime(chime);
   // a fresh stuck/needs-you just floated to the top — bring it into view so the
   // user never has to scroll to find what's calling them.
-  if (chime === "error" || chime === "waiting") board.scrollTo({top:0, behavior:"smooth"});
+  if (chime === "error" || chime === "waiting"){
+    const smooth = !matchMedia("(prefers-reduced-motion: reduce)").matches; // don't disorient vestibular users
+    board.scrollTo({top:0, behavior: smooth ? "smooth" : "auto"});
+  }
 }
 
 /* live "ago" without touching structure, so nothing resets */
