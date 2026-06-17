@@ -80,6 +80,14 @@
   body[data-dominant="waiting"] .andon{animation:barBeat 1.6s ease-in-out infinite}
   body[data-dominant="error"]   .andon{animation:barBeat .9s  ease-in-out infinite}
   @keyframes barBeat{0%,100%{filter:brightness(1)}50%{filter:brightness(1.18)}}
+  /* batch "landed together": one bright sweep + a single brightness pulse across
+     the bar when ≥2 cards land READY together. One-shot, never loops. */
+  .andon.burst{overflow:hidden;animation:barBurst .9s var(--ease)}
+  .andon.burst::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.34) 50%,transparent 70%);
+    transform:translateX(-120%);animation:barSweep .9s var(--ease)}
+  @keyframes barBurst{0%{filter:brightness(1)}28%{filter:brightness(1.22)}100%{filter:brightness(1)}}
+  @keyframes barSweep{to{transform:translateX(120%)}}
 
   /* ───────── layout ───────── */
   .app{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;
@@ -289,7 +297,7 @@
 
   @media (prefers-reduced-motion:reduce){
     .andon-dot,.chip .dot,.andon,.card,.card .glyph{animation:none!important}
-    .card.celebrate::after{animation:none!important;opacity:0}
+    .card.celebrate::after,.andon.burst::after{animation:none!important;opacity:0}
   }
 
   /* ── narrow screens (phone portrait) ──────────────────────────────────────
@@ -370,7 +378,8 @@ const STR = {
     empty:{big:"IDLE",sub:"start a run in Claude Code or Codex — it lights up here"},
     lev:{ today:"TODAY", handsOff:"hands-off", handsOffSub:"time you were free while agents worked",
       agentHours:"agent-hours", agentHoursSub:"sum of working time", agents:"agents run",
-      pulledIn:"pulled in", stuck:"stuck", peak:"peak at once", nudge:"board’s clear — queue another run" },
+      pulledIn:"pulled in", stuck:"stuck", peak:"peak at once", nudge:"board’s clear — queue another run",
+      batch:n=>[n+" READY","landed together"] },
     head:"agent status", live:"live", recon:"reconnecting…", off:"OFFLINE", offCn:"lost the Mac", offTally:"reconnecting…",
     sound:"Enable sound", soundOn:"Sound on", ago:agoEn,
   },
@@ -383,7 +392,8 @@ const STR = {
     empty:{big:"空闲",sub:"在 Claude Code 或 Codex 跑个任务，这里就会亮起"},
     lev:{ today:"今日", handsOff:"无人值守", handsOffSub:"agent 替你干活、你空出来的时间",
       agentHours:"agent 工时", agentHoursSub:"工作时长合计", agents:"个 agent",
-      pulledIn:"次被叫回", stuck:"卡住", peak:"并发峰值（同时最多）", nudge:"看板清空了 —— 再派一个?" },
+      pulledIn:"次被叫回", stuck:"卡住", peak:"并发峰值（同时最多）", nudge:"看板清空了 —— 再派一个?",
+      batch:n=>[n+" 个就绪","同时完成"] },
     head:"状态看板", live:"在线", recon:"重连中…", off:"已离线", offCn:"与 Mac 失联", offTally:"重连中…",
     sound:"开启提示音", soundOn:"提示音开", ago:agoZh,
   },
@@ -478,12 +488,21 @@ for (const code of LOCALES){
 const andonWord  = document.getElementById("andonWord");
 const andonCn    = document.getElementById("andonCn");
 const andonTally = document.getElementById("andonTally");
+const andon      = document.getElementById("andon");
 
 let last  = {sessions:[], server_time:0};
 let skew  = 0;                     // server_time - local time, for live "ago"
 let order = [];                    // stable card order (first-seen wins; never reshuffled)
 const cards = new Map();           // id -> card element (reused in place)
 const celebrateTimers = new Map(); // id -> pending "remove .celebrate" timeout
+const staggerTimers = new Map();   // id -> pending staggered "add .celebrate" timeout
+// batch "landed together" flourish state: when ≥2 cards turn READY close together
+// the top bar briefly flares the real count, then repaints from live state.
+let pendingDone = [];    // {id,t} READY transitions inside the rolling batch window
+let burstActive = false; // the bar is currently holding the batch caption
+let burstN = 0;          // count shown in the active burst
+let burstTimer = null;   // single self-ending hold timer (transience is structural)
+let lastSweepAt = 0;     // rate-limits the sweep+chime climax (cooldown)
 let prevState = {};
 let primed = false;
 let connOk = true;                 // last connection state, for re-rendering on language change
@@ -491,6 +510,11 @@ let connOk = true;                 // last connection state, for re-rendering on
 const DONE_GRACE_MS = 4000;   // a "done" must persist this long before it goes green
 const doneSince = new Map();  // id -> serverTime(ms) it first read done (debounce)
 let graceTimer = null;
+// batch-flourish tuning
+const BATCH_WINDOW_MS = 4000;    // READY transitions within this window count as one batch
+const STAGGER_STEP_MS = 110;     // per-row delay so a batch reads as a ripple, not a flash
+const BURST_HOLD_MS   = 2600;    // how long the bar holds the batch caption before repainting
+const BURST_COOLDOWN_MS = 8000;  // a long trickle of finishes can't machine-gun the bar's climax
 
 const nowSec = () => Date.now()/1000;
 const serverNow = () => nowSec() + skew;
@@ -533,9 +557,39 @@ function setBar(list){
   else if (c.done)    { dom="done";    pair=B.done(); }
   else                { dom="idle";    pair=B.idle(); }
   document.body.dataset.dominant = dom;
-  andonWord.textContent  = pair[0];
-  andonCn.textContent    = pair[1];
+  // hold the batch "landed together" caption while it's flaring (the burst repaints
+  // from live state when it ends); the tally + dominant colour still update live.
+  if (!(burstActive && dom === "done")){
+    andonWord.textContent  = pair[0];
+    andonCn.textContent    = pair[1];
+  }
   andonTally.textContent = list.length ? tally(c) : S().none;
+}
+
+/* batch "landed together" flourish on the top bar — transient by construction: a
+   single self-ending timer repaints the bar from live state, so it can never
+   become a standing counter or a second persistent attention magnet. */
+function engageBurst(n){
+  burstN = n;
+  const pair = (S().lev || STR.en.lev).batch(n);
+  andonWord.textContent = pair[0];
+  andonCn.textContent   = pair[1];
+  andon.classList.add("burst");
+  if (!burstActive && Date.now() - lastSweepAt >= BURST_COOLDOWN_MS){
+    void andon.offsetWidth;       // restart the one-shot sweep + brightness pulse
+    lastSweepAt = Date.now();
+    playBatchChime(n);            // one richer arpeggio instead of N flat done-dings
+  }
+  burstActive = true;
+  clearTimeout(burstTimer);
+  burstTimer = setTimeout(endBurst, BURST_HOLD_MS);
+}
+function endBurst(){
+  if (!burstActive) return;
+  burstActive = false;
+  clearTimeout(burstTimer); burstTimer = null;
+  andon.classList.remove("burst");
+  setBar(last.sessions || []);    // repaint from live state → restores "YOUR MOVE"
 }
 
 /* ---------- cards (created once per process, then updated in place) ---------- */
@@ -661,7 +715,8 @@ function render(){
   // drop cards whose process is gone
   const ids = new Set(list.map(s => s.id));
   for (const [id, el] of [...cards]) if (!ids.has(id)){ el.remove(); cards.delete(id); doneSince.delete(id);
-    clearTimeout(celebrateTimers.get(id)); celebrateTimers.delete(id); }
+    clearTimeout(celebrateTimers.get(id)); celebrateTimers.delete(id);
+    clearTimeout(staggerTimers.get(id)); staggerTimers.delete(id); }
 
   if (list.length === 0){
     order = [];
@@ -714,15 +769,23 @@ function render(){
   // fire the one-time "shipped" flourish on cards that just turned READY. Applied
   // after placement (so a tier move can't restart it); remove+reflow+add restarts
   // the animation cleanly if the same card celebrates again later.
-  for (const id of justDone){
-    const el = cards.get(id);
-    if (!el) continue;
-    clearTimeout(celebrateTimers.get(id));   // cancel a still-pending removal so a re-trigger isn't cut short
-    el.classList.remove("celebrate");
-    void el.offsetWidth;
-    el.classList.add("celebrate");
-    celebrateTimers.set(id, setTimeout(() => { el.classList.remove("celebrate"); celebrateTimers.delete(id); }, 780));
-  }
+  // Stagger the per-card flourish top-to-bottom so a batch lands as a ripple, not
+  // a simultaneous flash. A single finish (i=0) fires immediately — unchanged.
+  const doneOrder = justDone.slice().sort((a, b) => ordered.indexOf(a) - ordered.indexOf(b));
+  doneOrder.forEach((id, i) => {
+    const fire = () => {
+      staggerTimers.delete(id);
+      const el = cards.get(id);
+      if (!el || el.dataset.state !== "done") return;  // card left, or a quick id-reuse is no longer READY
+      clearTimeout(celebrateTimers.get(id));   // cancel a still-pending removal so a re-trigger isn't cut short
+      el.classList.remove("celebrate");
+      void el.offsetWidth;
+      el.classList.add("celebrate");
+      celebrateTimers.set(id, setTimeout(() => { el.classList.remove("celebrate"); celebrateTimers.delete(id); }, 780));
+    };
+    clearTimeout(staggerTimers.get(id));        // a re-trigger restarts this id's stagger cleanly
+    if (i === 0) fire(); else staggerTimers.set(id, setTimeout(fire, STAGGER_STEP_MS * i));
+  });
 
   // SSE won't push during a grace wait — re-render when the soonest one matures,
   // so a session that genuinely stays done turns green a few seconds later.
@@ -736,7 +799,18 @@ function render(){
   }
   if (soonest !== Infinity) graceTimer = setTimeout(render, Math.max(250, soonest + 50));
 
-  if (chime) playChime(chime);
+  // batch "landed together": ≥2 cards turned READY within the window while the
+  // board is otherwise calm (done dominant) — flare the bar with the real count
+  // and replace the N duplicate done-dings with one richer arpeggio.
+  if (justDone.length) for (const id of justDone) pendingDone.push({ id, t: Date.now() });
+  pendingDone = pendingDone.filter(e => Date.now() - e.t < BATCH_WINDOW_MS);
+  const domNow = document.body.dataset.dominant;
+  const N = Math.min(pendingDone.length, counts(list).done || 0); // never claim more than are on screen
+  let batched = false;
+  if (justDone.length && domNow === "done" && N >= 2){ engageBurst(N); batched = true; }
+  else if (burstActive && domNow !== "done"){ endBurst(); }   // a real alert preempts the calm caption
+
+  if (chime && !(batched && chime === "done")) playChime(chime);
   // a fresh stuck/needs-you just floated to the top — bring it into view so the
   // user never has to scroll to find what's calling them.
   if (chime === "error" || chime === "waiting") board.scrollTo({top:0, behavior:"smooth"});
@@ -810,6 +884,15 @@ function playChime(kind){
   if (kind === "done"){ tone(660,0,.18,.18); tone(990,.16,.30,.15); }
   else if (kind === "waiting"){ tone(560,0,.24,.16); }
   else if (kind === "error"){ tone(320,0,.18,.20); tone(250,.20,.34,.20); }
+}
+/* the batch chime: a brief rising arpeggio whose tone-count tracks the batch size
+   (capped), one shot, gated by soundOn, never louder/longer than the alert chimes. */
+function playBatchChime(n){
+  if (!soundOn || !actx) return;
+  if (actx.state === "suspended") actx.resume();
+  const notes = [660, 880, 990, 1170];
+  const k = Math.min(Math.max(2, n), notes.length);
+  for (let i = 0; i < k; i++) tone(notes[i], i * 0.10, 0.22, 0.16);
 }
 function armAudio(){ // create + resume the WebAudio context — only works inside a user gesture
   if (!actx){ try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e){} }
