@@ -190,25 +190,34 @@
     color:var(--ink); border-color:var(--ink-soft) }
   @keyframes cardBeat{ 0%,100%{ filter:brightness(1) } 50%{ filter:brightness(1.13) } }
 
-  /* ── completion reward ──────────────────────────────────────────────────────
+  /* ── completion reward (strong) ─────────────────────────────────────────────
      When a card transitions to READY (the real Stop/done hook event — the same
      signal that fires the chime, nothing is clicked), play a one-time "shipped"
-     flourish: the card flashes + gives a tiny physical pop, the ✓ snaps in big
-     then settles, and a light sweep crosses once. ~0.66s, never loops. */
-  .card.celebrate{animation:cardCele .66s var(--ease)}
+     burst: the card flashes bright with a double-pulse + a small physical pop, a
+     green ring flashes around the inside edge, the ✓ snaps in BIG with a green
+     glow then settles, and a bright sweep crosses. ~0.7s, never loops, fully
+     contained (inset ring → never clipped by the scroll container). */
+  .card.celebrate{animation:cardCele .7s var(--ease), ringFlash .7s var(--ease)}
   @keyframes cardCele{
-    0%{ transform:scale(.995); filter:brightness(.9) }
-    24%{ transform:scale(1.014); filter:brightness(1.5) }
+    0%{ transform:scale(.99); filter:brightness(.86) }
+    18%{ transform:scale(1.022); filter:brightness(1.85) }
+    40%{ transform:scale(1.004); filter:brightness(1.05) }
+    56%{ filter:brightness(1.25) }
     100%{ transform:scale(1); filter:brightness(1) } }
-  .card.celebrate .glyph{animation:checkPop .66s var(--ease)}
+  @keyframes ringFlash{
+    0%{ box-shadow:0 16px 36px -34px rgba(0,0,0,.9), inset 0 0 0 0 rgba(58,168,107,0) }
+    20%{ box-shadow:0 16px 36px -34px rgba(0,0,0,.9), inset 0 0 0 3px rgba(58,168,107,.95), inset 0 0 28px rgba(58,168,107,.42) }
+    100%{ box-shadow:0 16px 36px -34px rgba(0,0,0,.9), inset 0 0 0 0 rgba(58,168,107,0) } }
+  .card.celebrate .glyph{animation:checkPop .7s var(--ease)}
   @keyframes checkPop{
-    0%{ transform:translateY(-50%) scale(.3); opacity:0 }
-    40%{ transform:translateY(-50%) scale(1.55); opacity:1 }
-    100%{ transform:translateY(-50%) scale(1); opacity:.2 } }
+    0%{ transform:translateY(-50%) scale(.25); opacity:0; filter:none }
+    38%{ transform:translateY(-50%) scale(1.8); opacity:1; filter:drop-shadow(0 0 13px rgba(58,168,107,.9)) }
+    62%{ transform:translateY(-50%) scale(1.07); opacity:.92; filter:drop-shadow(0 0 5px rgba(58,168,107,.5)) }
+    100%{ transform:translateY(-50%) scale(1); opacity:.2; filter:none } }
   .card.celebrate::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:8px;
-    background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.42) 50%,transparent 70%);
-    transform:translateX(-120%);animation:cardSweep .64s var(--ease)}
-  @keyframes cardSweep{ to{ transform:translateX(120%) } }
+    background:linear-gradient(100deg,transparent 26%,rgba(255,255,255,.58) 50%,transparent 74%);
+    transform:translateX(-130%);animation:cardSweep .68s var(--ease)}
+  @keyframes cardSweep{ to{ transform:translateX(130%) } }
 
   .card-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
   /* state as letters + colour — the traffic-light signal */
@@ -600,7 +609,7 @@ function render(){
     el.classList.remove("celebrate");
     void el.offsetWidth;
     el.classList.add("celebrate");
-    celebrateTimers.set(id, setTimeout(() => { el.classList.remove("celebrate"); celebrateTimers.delete(id); }, 700));
+    celebrateTimers.set(id, setTimeout(() => { el.classList.remove("celebrate"); celebrateTimers.delete(id); }, 780));
   }
 
   // SSE won't push during a grace wait — re-render when the soonest one matures,
