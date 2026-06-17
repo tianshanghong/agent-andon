@@ -182,21 +182,26 @@ const PUSH_HOSTS: RegExp[] = [
   /(^|\.)push\.microsoft\.com$/, // Edge / Windows
 ];
 
+/** Only an https endpoint on a known push-service host — the SSRF gate, shared by
+ *  /push/subscribe and /push/unsubscribe so neither can aim the server elsewhere. */
+export function isAllowedPushEndpoint(endpoint: unknown): endpoint is string {
+  if (typeof endpoint !== "string") return false;
+  let u: URL;
+  try {
+    u = new URL(endpoint);
+  } catch {
+    return false;
+  }
+  if (u.protocol !== "https:") return false;
+  const host = u.hostname.toLowerCase().replace(/\.$/, "");
+  return PUSH_HOSTS.some((re) => re.test(host));
+}
+
 /** True for a structurally valid W3C subscription on a real push host (defensive: it arrives over HTTP). */
 export function isValidSubscription(x: unknown): x is PushSubscription {
   if (!x || typeof x !== "object") return false;
   const s = x as Record<string, unknown>;
-  if (typeof s.endpoint !== "string") return false;
-  let u: URL;
-  try {
-    u = new URL(s.endpoint);
-  } catch {
-    return false;
-  }
-  // Always https (a real push endpoint is) and only on a known push-service host.
-  if (u.protocol !== "https:") return false;
-  const host = u.hostname.toLowerCase().replace(/\.$/, "");
-  if (!PUSH_HOSTS.some((re) => re.test(host))) return false;
+  if (!isAllowedPushEndpoint(s.endpoint)) return false;
   const k = s.keys as Record<string, unknown> | undefined;
   if (!k || typeof k.p256dh !== "string" || typeof k.auth !== "string") return false;
   // sanity: the UA public key is a 65-byte point, auth is 16 bytes
@@ -206,6 +211,9 @@ export function isValidSubscription(x: unknown): x is PushSubscription {
     return false;
   }
 }
+
+/** Cap stored subscriptions so a token-holder can't grow memory unbounded. */
+const MAX_PUSH_SUBS = 50;
 
 function defaultVapidPath(dataDir?: string): string {
   return path.join(dataDir || path.join(os.homedir(), ".andon"), "vapid.json");
@@ -256,6 +264,8 @@ export class PushHub {
   }
 
   add(sub: PushSubscription): void {
+    // updates to an existing device always pass; new ones stop at the cap
+    if (!this.subs.has(sub.endpoint) && this.subs.size >= MAX_PUSH_SUBS) return;
     this.subs.set(sub.endpoint, sub);
   }
   remove(endpoint: string): void {
@@ -266,16 +276,20 @@ export class PushHub {
   async pushAll(title: string, body: string, url?: string): Promise<void> {
     if (this.subs.size === 0) return;
     const payload = Buffer.from(JSON.stringify({ title, body, url }), "utf8");
-    for (const sub of [...this.subs.values()]) {
-      let enc: Buffer;
-      try {
-        enc = encryptPayload(sub, payload);
-      } catch {
-        continue; // a malformed stored subscription can't poison the loop
-      }
-      const { status } = await this.send(sub, enc, this.vapid, this.subject);
-      if (status === 404 || status === 410) this.subs.delete(sub.endpoint); // gone for good
-    }
+    // Send concurrently — a slow / hung push host must not block the rest (each
+    // send carries its own timeout). Prune the ones that report gone.
+    await Promise.allSettled(
+      [...this.subs.values()].map(async (sub) => {
+        let enc: Buffer;
+        try {
+          enc = encryptPayload(sub, payload);
+        } catch {
+          return; // a malformed stored subscription can't poison the batch
+        }
+        const { status } = await this.send(sub, enc, this.vapid, this.subject);
+        if (status === 404 || status === 410) this.subs.delete(sub.endpoint); // gone for good
+      }),
+    );
   }
 
   /**

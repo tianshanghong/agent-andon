@@ -3,8 +3,9 @@
 ## What Andon is
 
 Agent Andon is a **local-first status board**. It runs on your own machine and renders only high-level
-agent status — agent name, project-folder basename, a coarse state, and a short (≤140-char) status line.
-It **never serves your code, full logs, secrets, or file contents.**
+agent status — agent name, project-folder basename, a coarse state, and a short status line. Andon never
+reads your code, logs, or files itself — it only relays the one line of status your hook posts (which, by
+design, is a status message, not file contents). Request bodies are capped at 64 KB.
 
 ## Deployment modes & what to expect
 

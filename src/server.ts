@@ -18,7 +18,7 @@ import * as path from "path";
 import { SessionStore } from "./store";
 import { MANIFEST, FAVICON_SVG, SERVICE_WORKER } from "./assets";
 import { makeAlerter, type AlertConfig } from "./alerts";
-import { PushHub, isValidSubscription } from "./push";
+import { PushHub, isValidSubscription, isAllowedPushEndpoint } from "./push";
 import { menubarText } from "./menubar";
 import type { AndonEvent, Session } from "./types";
 
@@ -264,7 +264,7 @@ export function createServer(opts: ServerOptions): AndonServer {
       if (pushEnabled && p === "/push/unsubscribe") {
         readJsonBody((v) => {
           const ep = (v as { endpoint?: unknown })?.endpoint;
-          if (typeof ep === "string") ensurePush().remove(ep);
+          if (isAllowedPushEndpoint(ep)) ensurePush().remove(ep); // only validated push hosts (unknown ones are a no-op anyway)
           send(200, JSON.stringify({ ok: true }));
         });
         return;

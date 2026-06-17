@@ -47,6 +47,7 @@ self.addEventListener("push", function(event){
 self.addEventListener("notificationclick", function(event){
   event.notification.close();
   var url = (event.notification.data && event.notification.data.url) || "/";
+  try { if (url !== "/" && new URL(url, self.location.origin).origin !== self.location.origin) url = "/"; } catch (e) { url = "/"; }
   event.waitUntil((async function(){
     var wins = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
     for (var i = 0; i < wins.length; i++) { try { return wins[i].focus(); } catch (e) {} }
