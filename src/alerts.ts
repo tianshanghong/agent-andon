@@ -128,17 +128,44 @@ const BUCKET_CAP = 6; // allow a burst (e.g. several agents going amber at once)
 const BUCKET_REFILL_PER_SEC = 1; // …then sustain at ~1/s
 
 /**
- * Stateful alerter: returns a function to feed each fresh snapshot. Fires on a
- * *transition* into an alerting state (computed via alertState, so done+pending
- * never alerts). Urgent states fire immediately; a completion is debounced so a
- * transient green flicker never fires a false "ready". All spawns are throttled.
+ * Config for a transition watcher. One watcher = one source of truth for "a
+ * session just flipped into a state that needs you / finished", with the
+ * debounce + throttle every notification channel must share so they can't
+ * disagree (the desktop alerter and the phone-push notifier both build on this).
  */
-export function makeAlerter(cfg: AlertConfig) {
+export interface TransitionWatcherCfg {
+  /** transition INTO waiting/error (urgent) — fires immediately, throttled */
+  onAlert: (s: Session) => void;
+  /** transition INTO done — fires after the grace; omit to ignore completions */
+  onDone?: (s: Session) => void;
+  doneGraceMs?: number;
+  /** per-session minimum gap between fires */
+  cooldownMs?: number;
+  /** global burst allowance (token bucket) */
+  bucketCap?: number;
+  /** global sustained rate (tokens/sec) */
+  refillPerSec?: number;
+}
+
+/**
+ * Stateful transition watcher: returns a function to feed each fresh snapshot.
+ * Fires on a *transition* into an alerting state (computed via alertState, so
+ * done+pending never fires). Urgent states fire immediately; a completion is
+ * debounced so a transient green flicker never fires a false "ready". All fires
+ * are throttled (per-session cooldown + a global token bucket) so a LAN/internet
+ * client spamming /event can't drive an unbounded notification flood.
+ */
+export function makeTransitionWatcher(cfg: TransitionWatcherCfg): (sessions: Session[]) => void {
+  const doneGraceMs = cfg.doneGraceMs ?? DONE_ALERT_GRACE_MS;
+  const cooldownMs = cfg.cooldownMs ?? PER_ID_COOLDOWN_MS;
+  const bucketCap = cfg.bucketCap ?? BUCKET_CAP;
+  const refillPerSec = cfg.refillPerSec ?? BUCKET_REFILL_PER_SEC;
+
   const last = new Map<string, State>(); // last EFFECTIVE (alertState) value
   const latest = new Map<string, Session>(); // latest session, for fire-time recheck
   const doneTimers = new Map<string, ReturnType<typeof setTimeout>>();
-  const lastAlertAt = new Map<string, number>();
-  let tokens = BUCKET_CAP;
+  const lastFireAt = new Map<string, number>();
+  let tokens = bucketCap;
   let lastRefill = Date.now();
 
   const cancelDone = (id: string) => {
@@ -148,15 +175,15 @@ export function makeAlerter(cfg: AlertConfig) {
       doneTimers.delete(id);
     }
   };
-  const fire = (s: Session) => {
+  const throttled = (s: Session, fn: (s: Session) => void) => {
     const now = Date.now();
-    if (now - (lastAlertAt.get(s.id) ?? 0) < PER_ID_COOLDOWN_MS) return; // per-session cooldown
-    tokens = Math.min(BUCKET_CAP, tokens + ((now - lastRefill) / 1000) * BUCKET_REFILL_PER_SEC);
+    if (now - (lastFireAt.get(s.id) ?? 0) < cooldownMs) return; // per-session cooldown
+    tokens = Math.min(bucketCap, tokens + ((now - lastRefill) / 1000) * refillPerSec);
     lastRefill = now;
     if (tokens < 1) return; // global flood guard
     tokens -= 1;
-    lastAlertAt.set(s.id, now);
-    alertFor(s, cfg);
+    lastFireAt.set(s.id, now);
+    fn(s);
   };
 
   return function onSnapshot(sessions: Session[]): void {
@@ -171,14 +198,16 @@ export function makeAlerter(cfg: AlertConfig) {
 
       if (es === "waiting" || es === "error") {
         cancelDone(s.id);
-        fire(s); // urgent → immediate (throttled)
+        throttled(s, cfg.onAlert); // urgent → immediate (throttled)
       } else if (es === "done") {
         cancelDone(s.id);
+        if (!cfg.onDone) continue; // this consumer ignores completions
+        const onDone = cfg.onDone;
         const t = setTimeout(() => {
           doneTimers.delete(s.id);
           const cur = latest.get(s.id);
-          if (cur && alertState(cur) === "done") fire(cur); // still really-done after grace
-        }, DONE_ALERT_GRACE_MS);
+          if (cur && alertState(cur) === "done") throttled(cur, onDone); // still really-done after grace
+        }, doneGraceMs);
         t.unref?.();
         doneTimers.set(s.id, t);
       } else {
@@ -189,9 +218,22 @@ export function makeAlerter(cfg: AlertConfig) {
       if (!seen.has(id)) {
         last.delete(id);
         latest.delete(id);
-        lastAlertAt.delete(id);
+        lastFireAt.delete(id);
         cancelDone(id);
       }
     }
   };
+}
+
+/**
+ * Desktop-banner alerter: a transition watcher whose fires spawn native OS
+ * notifications. Same behavior as before — waiting/error fire immediately, a
+ * completion fires a quiet "READY" banner after the grace — now expressed on top
+ * of the shared watcher so the phone-push channel stays in lockstep with it.
+ */
+export function makeAlerter(cfg: AlertConfig): (sessions: Session[]) => void {
+  return makeTransitionWatcher({
+    onAlert: (s) => alertFor(s, cfg),
+    onDone: (s) => alertFor(s, cfg),
+  });
 }

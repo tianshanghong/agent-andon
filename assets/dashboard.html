@@ -100,7 +100,7 @@
   .btn.on{color:var(--c-done);border-color:rgba(58,168,107,.5)}
   /* sound toggle: text on the desktop/wall board, a compact icon on phones (so
      the header is one row in every language). The icon follows currentColor. */
-  .btn.sound{display:inline-flex;align-items:center;gap:7px}
+  .btn.sound,.btn.push{display:inline-flex;align-items:center;gap:7px}
   .sico{display:none;align-items:center}
   .sico svg{display:block}
   /* language picker: a native <select> (scales to any number of languages — the
@@ -308,9 +308,9 @@
     .brand{letter-spacing:.18em;flex:none}
     .langsel{padding:6px 24px 6px 10px;font-size:12px;min-width:0}
     .btn{padding:6px 10px;font-size:11px}
-    .btn.sound{padding:6px 9px;flex:none}
-    .btn.sound .slbl{display:none}                    /* swap the localized label … */
-    .btn.sound .sico{display:inline-flex}             /* … for a language-neutral icon */
+    .btn.sound,.btn.push{padding:6px 9px;flex:none}
+    .btn.sound .slbl,.btn.push .slbl{display:none}    /* swap the localized label … */
+    .btn.sound .sico,.btn.push .sico{display:inline-flex} /* … for a language-neutral icon */
   }
 </style>
 </head>
@@ -334,6 +334,7 @@
       <span class="clock" id="clock">--:--</span>
       <select class="langsel" id="langSel" aria-label="Language" title="Language · 语言 · 言語"></select>
       <button class="btn sound" id="soundBtn"><span class="sico" aria-hidden="true"><svg viewBox="0 0 22 22" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5h3.5L12 5v12L7.5 13.5H4z"/><path d="M15.5 8a4.5 4.5 0 0 1 0 6"/></svg></span><span class="slbl">Enable sound</span></button>
+      <button class="btn push" id="pushBtn" style="display:none" aria-label="Enable phone alerts" title="Enable phone alerts"><span class="sico" aria-hidden="true"><svg viewBox="0 0 22 22" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 3a5 5 0 0 0-5 5v3l-1.4 2.4a.6.6 0 0 0 .5.9h11.8a.6.6 0 0 0 .5-.9L17 11V8a5 5 0 0 0-5-5z"/><path d="M9.4 17a1.7 1.7 0 0 0 3.2 0"/></svg></span><span class="slbl">Phone alerts</span></button>
     </div>
     <div class="board" id="board" role="main" aria-label="agent status board"></div>
   </div>
@@ -482,6 +483,7 @@ const conn    = document.getElementById("conn");
 const connTxt = conn.querySelector(".conn-txt");
 const clock   = document.getElementById("clock");
 const soundBtn= document.getElementById("soundBtn");
+const pushBtn = document.getElementById("pushBtn");
 const langSel = document.getElementById("langSel");
 const headLabel = document.getElementById("headLabel");
 const lvBadge = document.getElementById("lvBadge");
@@ -883,6 +885,57 @@ if (soundOn){
   };
   for (const ev of GEST) window.addEventListener(ev, rearm);
 }
+
+/* ---------- phone push (Web Push; opt-in per device, served over HTTPS) ----------
+   The button only appears when push can actually work (a secure context with the
+   Push API — i.e. an installed PWA over HTTPS, e.g. via Tailscale). One tap
+   subscribes this device; the server then pushes a "needs you / stuck" alert even
+   when the board is closed and the phone is locked. Nothing leaves the box until
+   you tap, and even then the payload is encrypted end-to-end by the push spec. */
+const PUSH_OK = "serviceWorker" in navigator && "PushManager" in window &&
+                "Notification" in window && window.isSecureContext;
+const pushTok = () => { try { return new URLSearchParams(location.search).get("token") || ""; } catch (e){ return ""; } };
+const pushUrl = (p) => { const t = pushTok(); return t ? p + (p.indexOf("?") < 0 ? "?" : "&") + "token=" + encodeURIComponent(t) : p; };
+function b64uToU8(s){
+  const pad = "=".repeat((4 - (s.length % 4)) % 4);
+  const raw = atob((s + pad).replace(/-/g, "+").replace(/_/g, "/"));
+  const u = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) u[i] = raw.charCodeAt(i);
+  return u;
+}
+async function postSub(sub){
+  try { await fetch(pushUrl("/push/subscribe"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(sub) }); } catch (e){}
+}
+function reflectPush(on){ if (pushBtn) pushBtn.style.display = on ? "none" : ""; } // hide the button once subscribed
+async function pushInit(){
+  if (!PUSH_OK || !pushBtn) return;                         // unsupported / plain HTTP → no button at all
+  let reg;
+  try { reg = await navigator.serviceWorker.register("/sw.js"); } catch (e){ return; }
+  try {
+    const sub = await reg.pushManager.getSubscription();
+    if (sub){ postSub(sub); reflectPush(true); return; }     // already on → refresh the server's copy, hide
+  } catch (e){}
+  reflectPush(false);                                        // supported but off → offer the button
+}
+async function enablePush(){
+  if (!PUSH_OK) return;
+  pushBtn.disabled = true;
+  try {
+    if (await Notification.requestPermission() !== "granted"){ pushBtn.disabled = false; return; }
+    const reg = await navigator.serviceWorker.register("/sw.js");
+    const { publicKey } = await (await fetch(pushUrl("/push/vapid"))).json();
+    const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToU8(publicKey) });
+    await postSub(sub);
+    reflectPush(true);
+  } catch (e){ pushBtn.disabled = false; }
+}
+if (pushBtn){
+  pushBtn.addEventListener("click", enablePush);
+  // re-register the subscription when you return to the board, so an in-memory
+  // server that has restarted re-learns this phone without a manual reload.
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) pushInit(); });
+}
+pushInit();
 
 /* ---------- keep the iPad awake (iPadOS 16.4+) ---------- */
 let wakeLock = null;

@@ -3,8 +3,20 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as http from "node:http";
 import type { AddressInfo } from "node:net";
+import * as os from "node:os";
+import * as path from "node:path";
 import { createServer } from "../src/server";
 import { SessionStore } from "../src/store";
+
+const PUSH_DIR = path.join(os.tmpdir(), "andon-srv-push-test");
+// A structurally valid W3C subscription (RFC 8291 §5 receiver keys).
+const SUB = {
+  endpoint: "https://push.example.net/x",
+  keys: {
+    p256dh: "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4",
+    auth: "BTBZMqHH6r4Tts7J_aSIgg",
+  },
+};
 
 interface Reply {
   status: number;
@@ -37,12 +49,13 @@ function request(
   });
 }
 
-function start(token?: string) {
+function start(token?: string, extra?: { push?: { enabled?: boolean; subject?: string; dataDir?: string } }) {
   const { server, store } = createServer({
     port: 0,
     host: "127.0.0.1",
     token,
     store: new SessionStore(() => 1000),
+    ...extra,
   });
   return new Promise<{ port: number; store: SessionStore; close: () => Promise<void> }>(
     (resolve) => {
@@ -134,6 +147,72 @@ test("unknown route -> 404", async () => {
   const s = await start();
   try {
     assert.equal((await request(s.port, "GET", "/nope")).status, 404);
+  } finally {
+    await s.close();
+  }
+});
+
+test("push: sw.js served, VAPID key issued, subscribe validates the body", async () => {
+  const s = await start(undefined, { push: { dataDir: PUSH_DIR } });
+  try {
+    const sw = await request(s.port, "GET", "/sw.js");
+    assert.equal(sw.status, 200);
+    assert.match(String(sw.headers["content-type"]), /javascript/);
+    assert.match(sw.body, /push/);
+
+    const vapid = await request(s.port, "GET", "/push/vapid");
+    assert.equal(vapid.status, 200);
+    const pk = JSON.parse(vapid.body).publicKey;
+    assert.equal(Buffer.from(pk, "base64url").length, 65); // uncompressed P-256 point
+
+    const good = await request(s.port, "POST", "/push/subscribe", {
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(SUB),
+    });
+    assert.equal(good.status, 200);
+    assert.equal(JSON.parse(good.body).ok, true);
+
+    const bad = await request(s.port, "POST", "/push/subscribe", {
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ endpoint: "not-a-url", keys: {} }),
+    });
+    assert.equal(bad.status, 400);
+  } finally {
+    await s.close();
+  }
+});
+
+test("push: disabled -> sw.js / vapid / subscribe all 404", async () => {
+  const s = await start(undefined, { push: { enabled: false, dataDir: PUSH_DIR } });
+  try {
+    assert.equal((await request(s.port, "GET", "/sw.js")).status, 404);
+    assert.equal((await request(s.port, "GET", "/push/vapid")).status, 404);
+    assert.equal(
+      (await request(s.port, "POST", "/push/subscribe", { body: JSON.stringify(SUB) })).status,
+      404,
+    );
+  } finally {
+    await s.close();
+  }
+});
+
+test("push: vapid + subscribe respect the token; sw.js stays open", async () => {
+  const s = await start("sekret", { push: { dataDir: PUSH_DIR } });
+  try {
+    assert.equal((await request(s.port, "GET", "/push/vapid")).status, 401);
+    assert.equal((await request(s.port, "GET", "/push/vapid?token=sekret")).status, 200);
+    assert.equal((await request(s.port, "GET", "/sw.js")).status, 200); // register can't carry a token
+    assert.equal(
+      (await request(s.port, "POST", "/push/subscribe", { body: JSON.stringify(SUB) })).status,
+      401,
+    );
+    assert.equal(
+      (await request(s.port, "POST", "/push/subscribe?token=sekret", {
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(SUB),
+      })).status,
+      200,
+    );
   } finally {
     await s.close();
   }

@@ -16,10 +16,11 @@ import * as http from "http";
 import * as fs from "fs";
 import * as path from "path";
 import { SessionStore } from "./store";
-import { MANIFEST, FAVICON_SVG } from "./assets";
+import { MANIFEST, FAVICON_SVG, SERVICE_WORKER } from "./assets";
 import { makeAlerter, type AlertConfig } from "./alerts";
+import { PushHub, isValidSubscription } from "./push";
 import { menubarText } from "./menubar";
-import type { AndonEvent } from "./types";
+import type { AndonEvent, Session } from "./types";
 
 /** Reject event bodies larger than this (plenty for a status line). */
 const MAX_BODY = 64 * 1024;
@@ -36,6 +37,8 @@ export interface ServerOptions {
   alert?: AlertConfig;
   /** Inject a store (tests); a fresh one is created otherwise. */
   store?: SessionStore;
+  /** Web Push for phones. Available by default; `{ enabled: false }` disables the endpoints. */
+  push?: { enabled?: boolean; subject?: string; dataDir?: string };
 }
 
 export interface AndonServer {
@@ -81,6 +84,20 @@ export function createServer(opts: ServerOptions): AndonServer {
   // alerter throttles spawns so a LAN client can't flood them via /event.
   const alerter =
     opts.alert && (opts.alert.notify || opts.alert.say) ? makeAlerter(opts.alert) : null;
+
+  // Web Push (opt-in per device). The hub is built lazily on the first subscribe
+  // / vapid request, so a user who never enables phone alerts has zero footprint
+  // — no VAPID key file written, nothing ever sent off the box.
+  const pushEnabled = opts.push?.enabled !== false;
+  let pushHub: PushHub | null = null;
+  let pushNotify: ((sessions: Session[]) => void) | null = null;
+  const ensurePush = (): PushHub => {
+    if (!pushHub) {
+      pushHub = new PushHub({ subject: opts.push?.subject, dataDir: opts.push?.dataDir });
+      pushNotify = pushHub.notifier();
+    }
+    return pushHub;
+  };
 
   let dashboard: Buffer | null = null;
   try {
@@ -130,6 +147,37 @@ export function createServer(opts: ServerOptions): AndonServer {
       res.end(buf);
     };
 
+    // Read a JSON request body under the size cap, then hand it to onJson. Shared
+    // by POST /event and the /push/* writes so the cap stays in one place.
+    const readJsonBody = (onJson: (v: unknown) => void): void => {
+      const chunks: Buffer[] = [];
+      let size = 0;
+      let aborted = false;
+      req.on("data", (c: Buffer) => {
+        size += c.length;
+        if (size > MAX_BODY && !aborted) {
+          aborted = true;
+          send(413, JSON.stringify({ error: "payload too large" }));
+          req.destroy();
+        } else if (!aborted) {
+          chunks.push(c);
+        }
+      });
+      req.on("end", () => {
+        if (aborted || res.writableEnded) return;
+        let v: unknown;
+        try {
+          v = JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
+        } catch {
+          return send(400, JSON.stringify({ error: "bad json" }));
+        }
+        onJson(v);
+      });
+      req.on("error", () => {
+        if (!res.writableEnded) send(400, JSON.stringify({ error: "read error" }));
+      });
+    };
+
     const url = new URL(req.url || "/", "http://localhost");
     const p = url.pathname;
 
@@ -176,44 +224,53 @@ export function createServer(opts: ServerOptions): AndonServer {
         send(200, JSON.stringify(MANIFEST), "application/manifest+json");
       } else if (p === "/favicon.svg") {
         send(200, FAVICON_SVG, "image/svg+xml");
+      } else if (pushEnabled && p === "/sw.js") {
+        // Static service worker (no secrets); fetchable without a token so it can
+        // register at the root scope.
+        send(200, SERVICE_WORKER, "text/javascript; charset=utf-8");
+      } else if (pushEnabled && p === "/push/vapid") {
+        if (!authorized(url, req)) return send(401, JSON.stringify({ error: "unauthorized" }));
+        send(200, JSON.stringify({ publicKey: ensurePush().publicKey }));
       } else {
         send(404, JSON.stringify({ error: "not found" }));
       }
       return;
     }
 
-    if (req.method === "POST" && p === "/event") {
+    if (req.method === "POST") {
       if (!sameOriginOrNone(req)) return send(403, JSON.stringify({ error: "cross-origin forbidden" }));
       if (!authorized(url, req)) return send(401, JSON.stringify({ error: "unauthorized" }));
-      const chunks: Buffer[] = [];
-      let size = 0;
-      let aborted = false;
-      req.on("data", (c: Buffer) => {
-        size += c.length;
-        if (size > MAX_BODY && !aborted) {
-          aborted = true;
-          send(413, JSON.stringify({ error: "payload too large" }));
-          req.destroy();
-        } else if (!aborted) {
-          chunks.push(c);
-        }
-      });
-      req.on("end", () => {
-        if (aborted || res.writableEnded) return;
-        let ev: AndonEvent;
-        try {
-          ev = JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
-        } catch {
-          return send(400, JSON.stringify({ error: "bad json" }));
-        }
-        const r = store.apply(ev);
-        if (r.ok) broadcast(); // push the change to every open board immediately
-        if (r.ok && alerter) alerter(store.snapshot().sessions);
-        send(r.ok ? 200 : 400, JSON.stringify(r));
-      });
-      req.on("error", () => {
-        if (!res.writableEnded) send(400, JSON.stringify({ error: "read error" }));
-      });
+
+      if (p === "/event") {
+        readJsonBody((v) => {
+          const r = store.apply(v as AndonEvent);
+          if (r.ok) broadcast(); // push the change to every open board immediately
+          if (r.ok && alerter) alerter(store.snapshot().sessions);
+          if (r.ok && pushNotify) pushNotify(store.snapshot().sessions); // phones (if any subscribed)
+          send(r.ok ? 200 : 400, JSON.stringify(r));
+        });
+        return;
+      }
+
+      if (pushEnabled && p === "/push/subscribe") {
+        readJsonBody((v) => {
+          if (!isValidSubscription(v)) return send(400, JSON.stringify({ error: "invalid subscription" }));
+          ensurePush().add(v);
+          send(200, JSON.stringify({ ok: true }));
+        });
+        return;
+      }
+
+      if (pushEnabled && p === "/push/unsubscribe") {
+        readJsonBody((v) => {
+          const ep = (v as { endpoint?: unknown })?.endpoint;
+          if (typeof ep === "string") ensurePush().remove(ep);
+          send(200, JSON.stringify({ ok: true }));
+        });
+        return;
+      }
+
+      send(404, JSON.stringify({ error: "not found" }));
       return;
     }
 

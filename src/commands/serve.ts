@@ -10,6 +10,7 @@ export interface ServeArgs {
   token?: string;
   notify: boolean; // native desktop banner on needs-you/stuck
   say: boolean; // spoken alert on needs-you/stuck
+  push: boolean; // Web Push endpoints available (opt-in per device)
 }
 
 export function parseServeArgs(argv: string[]): ServeArgs {
@@ -20,6 +21,7 @@ export function parseServeArgs(argv: string[]): ServeArgs {
     token: process.env.ANDON_TOKEN || undefined,
     notify: true, // native desktop alerts ON by default (--no-notify to disable)
     say: false,
+    push: process.env.ANDON_PUSH !== "off", // phone-push endpoints available (--no-push to disable)
   };
   let notifyExplicit = false; // did the user pick notify on/off themselves?
   // Consume the value after a flag, erroring if it's missing or is itself a flag.
@@ -37,6 +39,8 @@ export function parseServeArgs(argv: string[]): ServeArgs {
     else if (a === "--notify") { args.notify = true; notifyExplicit = true; }
     else if (a === "--no-notify") { args.notify = false; notifyExplicit = true; }
     else if (a === "--say") { args.say = true; args.notify = true; notifyExplicit = true; }
+    else if (a === "--no-push") args.push = false;
+    else if (a === "--push") args.push = true;
     else if (a === "--port") args.port = Number(takeValue(argv, i++, "--port"));
     else if (a === "--host") args.host = takeValue(argv, i++, "--host");
     else if (a === "--token") args.token = takeValue(argv, i++, "--token");
@@ -68,6 +72,7 @@ export function serve(argv: string[]): void {
     host: args.host,
     token: args.token,
     alert: { notify: args.notify, say: args.say },
+    push: { enabled: args.push, subject: process.env.ANDON_PUSH_SUBJECT, dataDir: process.env.ANDON_DATA_DIR },
   });
 
   if (args.demo) startDemo(store);
@@ -95,6 +100,7 @@ export function serve(argv: string[]): void {
     console.log("              (iPad must be on the same Wi-Fi)");
     if (args.token) console.log("  🔒 token auth enabled");
     if (args.notify) console.log(`  🔔 desktop alerts on${args.say ? " + speech" : ""} — needs-you · stuck · done  (--no-notify to disable)`);
+    if (args.push) console.log('  📱 phone alerts ready — open the board on your phone over HTTPS (e.g. Tailscale), Add to Home Screen, tap "Enable phone alerts"');
     if (args.demo) console.log("  [demo] injecting fake agents, cycling every 3s");
     console.log("  Ctrl-C to stop\n");
   });
