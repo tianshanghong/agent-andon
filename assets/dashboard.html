@@ -252,6 +252,41 @@
   .idle-hero .cn{color:var(--muted);font-size:clamp(1rem,2.4vw,1.5rem)}
   .idle-hero .sub{font-family:var(--mono);font-size:12.5px;letter-spacing:.05em;color:var(--faint)}
 
+  /* ── header leverage badge: a whisper-quiet, leverage-only ambient cue. It is
+     deliberately faint and small so it can never become a second attention magnet
+     competing with the signal bar (hidden on phones, where the header is tight). */
+  .lvbadge{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--faint);white-space:nowrap}
+  .lvbadge b{color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums}
+  .lvbadge .lvb-k{color:var(--faint);letter-spacing:.16em;margin-right:7px}
+
+  /* ── idle "today" leverage panel: the reward-when-calm surface, shown ONLY when
+     the board is empty AND something ran today. Numbers count up once on appear
+     then FREEZE (an earned reveal, not a live ticker). Honest labels; the
+     attention cell is amber (the cost), everything else stays calm (the gain). */
+  .lvhero{margin:auto 0;width:100%;max-width:920px;align-self:center;
+    display:flex;flex-direction:column;gap:24px;padding:0 8px;animation:lvFade .5s var(--ease)}
+  @keyframes lvFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .lvh-today{font-family:var(--mono);font-size:13px;letter-spacing:.3em;color:var(--faint);
+    text-transform:uppercase;text-align:center}
+  .lvh-row{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
+  .lvh-big{flex:1;min-width:240px;border:1px solid var(--hairline);border-radius:12px;
+    background:color-mix(in srgb,var(--c-done) 6%,var(--surface));padding:22px 26px}
+  .lvh-n{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums;color:var(--text);
+    font-size:clamp(2.4rem,6.5vw,4.2rem);line-height:1}
+  .lvh-l{margin-top:10px;font-family:var(--mono);font-size:13px;color:var(--muted);letter-spacing:.02em}
+  .lvh-l b{color:var(--c-done);font-weight:600}
+  .lvh-cells{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+  .lvh-cell{flex:1;min-width:150px;border:1px solid var(--hairline);border-radius:10px;
+    background:var(--surface);padding:15px 18px;text-align:center}
+  .lvh-cn{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums;color:var(--text);
+    font-size:clamp(1.6rem,4vw,2.2rem)}
+  .lvh-cl{margin-top:5px;font-family:var(--mono);font-size:12.5px;color:var(--faint);letter-spacing:.03em}
+  .lvh-cell.cost{background:color-mix(in srgb,var(--c-waiting) 7%,var(--surface));border-color:transparent}
+  .lvh-cell.cost .lvh-cn{color:var(--c-waiting)}
+  .lvh-nudge{text-align:center;font-family:var(--mono);font-size:14.5px;color:var(--muted);letter-spacing:.02em}
+  .lvh-nudge::before{content:"› ";color:var(--c-done)}
+  .lvhero .sub{text-align:center;font-family:var(--mono);font-size:12px;letter-spacing:.05em;color:var(--faint)}
+
   @media (prefers-reduced-motion:reduce){
     .andon-dot,.chip .dot,.andon,.card,.card .glyph{animation:none!important}
     .card.celebrate::after{animation:none!important;opacity:0}
@@ -267,7 +302,7 @@
     .andon-tally{display:none}            /* the overflow culprit, and redundant with the cards */
     .head{flex-wrap:nowrap;gap:11px;min-width:0}      /* one row, always */
     .head .rule{display:none}
-    #headLabel, .clock, .conn .conn-txt{display:none} /* keep only the dot + lang + sound */
+    #headLabel, .clock, .conn .conn-txt, .lvbadge{display:none} /* keep only the dot + lang + sound */
     .brand{letter-spacing:.18em;flex:none}
     .langsel{padding:6px 24px 6px 10px;font-size:12px;min-width:0}
     .btn{padding:6px 10px;font-size:11px}
@@ -291,6 +326,7 @@
     <div class="head">
       <span class="brand">ANDON</span>
       <span id="headLabel">agent status</span>
+      <span class="lvbadge" id="lvBadge" style="display:none"></span>
       <span class="rule"></span>
       <span class="conn" id="conn"><span class="led"></span><span class="conn-txt">live</span></span>
       <span class="clock" id="clock">--:--</span>
@@ -332,6 +368,9 @@ const STR = {
     tally:{error:"stuck",waiting:"needs you",done:"ready",working:"working",idle:"idle"}, none:"no agents running",
     bg:n=>"⋯ "+n+" background",
     empty:{big:"IDLE",sub:"start a run in Claude Code or Codex — it lights up here"},
+    lev:{ today:"TODAY", handsOff:"hands-off", handsOffSub:"time you were free while agents worked",
+      agentHours:"agent-hours", agentHoursSub:"sum of working time", agents:"agents run",
+      pulledIn:"pulled in", stuck:"stuck", peak:"peak at once", nudge:"board’s clear — queue another run" },
     head:"agent status", live:"live", recon:"reconnecting…", off:"OFFLINE", offCn:"lost the Mac", offTally:"reconnecting…",
     sound:"Enable sound", soundOn:"Sound on", ago:agoEn,
   },
@@ -342,6 +381,9 @@ const STR = {
     tally:{error:"卡住",waiting:"待处理",done:"就绪",working:"运行",idle:"空闲"}, none:"没有进程在跑",
     bg:n=>"⋯ "+n+" 个后台运行",
     empty:{big:"空闲",sub:"在 Claude Code 或 Codex 跑个任务，这里就会亮起"},
+    lev:{ today:"今日", handsOff:"无人值守", handsOffSub:"agent 替你干活、你空出来的时间",
+      agentHours:"agent 工时", agentHoursSub:"工作时长合计", agents:"个 agent",
+      pulledIn:"次被叫回", stuck:"卡住", peak:"并发峰值（同时最多）", nudge:"看板清空了 —— 再派一个?" },
     head:"状态看板", live:"在线", recon:"重连中…", off:"已离线", offCn:"与 Mac 失联", offTally:"重连中…",
     sound:"开启提示音", soundOn:"提示音开", ago:agoZh,
   },
@@ -425,6 +467,7 @@ const clock   = document.getElementById("clock");
 const soundBtn= document.getElementById("soundBtn");
 const langSel = document.getElementById("langSel");
 const headLabel = document.getElementById("headLabel");
+const lvBadge = document.getElementById("lvBadge");
 // populate the language picker once — a native <select> scales to any number of
 // languages (the OS shows a scrollable picker on the iPad), unlike a cycle button.
 for (const code of LOCALES){
@@ -534,10 +577,68 @@ function reorder(list){
 }
 
 /* ---------- render (in place — positions and animations stay stable) ---------- */
+/* ---------- the honest "today" leverage/attention surfaces (badge + idle panel) ---------- */
+function fmtDur(sec){
+  sec = Math.max(0, Math.round(sec));
+  const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60);
+  if (h > 0) return h + "h " + m + "m";
+  if (m > 0) return m + "m";
+  return sec + "s";
+}
+/* count a number up once on appearance, then freeze on the exact value — an
+   earned reveal at the calm return moment, NOT a live ticker (see the guardrail). */
+function countUp(el, target, fmt, dur){
+  if (!el) return;
+  dur = dur || 850;
+  const t0 = performance.now();
+  (function step(t){
+    const p = Math.min(1, (t - t0) / dur);
+    el.textContent = fmt(target * (1 - Math.pow(1 - p, 3)));   // easeOutCubic
+    if (p < 1) requestAnimationFrame(step); else el.textContent = fmt(target);
+  })(t0);
+}
+/* the whisper-quiet always-on header cue: leverage only, no attention stat */
+function updateBadge(){
+  if (!lvBadge) return;
+  const td = last.today;
+  if (td && td.agents > 0){
+    const L = S().lev || STR.en.lev;
+    lvBadge.innerHTML = '<span class="lvb-k">' + L.today + '</span><b>' + fmtDur(td.hands_off_sec) +
+      '</b> ' + L.handsOff + ' · <b>' + (td.agent_sec/3600).toFixed(1) + '</b> ' + L.agentHours;
+    lvBadge.style.display = "";
+  } else lvBadge.style.display = "none";
+}
+function leverageHeroHTML(td){
+  const L = S().lev || STR.en.lev, e = S().empty;
+  const cell = (id, label, cost) => '<div class="lvh-cell' + (cost ? ' cost' : '') + '">' +
+    '<div class="lvh-cn" id="' + id + '"></div><div class="lvh-cl">' + label + '</div></div>';
+  const stuckTxt = td.stuck > 0 ? ' · ' + td.stuck + ' ' + L.stuck : '';
+  return '<div class="lvhero"><div class="lvh-today">' + L.today + '</div>' +
+    '<div class="lvh-row">' +
+      '<div class="lvh-big"><div class="lvh-n" id="cuHands"></div><div class="lvh-l"><b>' + L.handsOff + '</b> · ' + L.handsOffSub + '</div></div>' +
+      '<div class="lvh-big"><div class="lvh-n" id="cuHours"></div><div class="lvh-l"><b>' + L.agentHours + '</b> · ' + L.agentHoursSub + '</div></div>' +
+    '</div>' +
+    '<div class="lvh-cells">' +
+      cell('cuAgents', L.agents, false) +
+      cell('cuPulled', L.pulledIn + stuckTxt, true) +
+      cell('cuPeak', L.peak, false) +
+    '</div>' +
+    '<div class="lvh-nudge">' + L.nudge + '</div>' +
+    '<div class="sub">' + e.sub + '</div></div>';
+}
+function animateHero(td){
+  countUp(document.getElementById("cuHands"), td.hands_off_sec, fmtDur);
+  countUp(document.getElementById("cuHours"), td.agent_sec/3600, v => v.toFixed(1));
+  countUp(document.getElementById("cuAgents"), td.agents, v => String(Math.round(v)));
+  countUp(document.getElementById("cuPulled"), td.pulled_in, v => String(Math.round(v)));
+  countUp(document.getElementById("cuPeak"), td.peak, v => String(Math.round(v)));
+}
+
 function render(){
   const list = last.sessions || [];
   const t = serverNow();
   setBar(list);
+  updateBadge();
 
   // chime on a transition into needs-you / stuck / done (skip the first render);
   // collect the cards that just turned READY so they get the completion flourish
@@ -564,13 +665,24 @@ function render(){
 
   if (list.length === 0){
     order = [];
-    const e = S().empty;
-    board.innerHTML =
-      '<div class="idle-hero"><div class="big">' + e.big + '</div>' +
-      '<div class="sub">' + e.sub + '</div></div>';
+    const td = last.today;
+    const wantHero = !!(td && td.agents > 0);
+    // Build the panel ONLY when the kind we want isn't already on screen — so it
+    // counts up once (not every render), yet still upgrades plain-IDLE → leverage
+    // panel if today's data arrives on a later render (e.g. after a server start
+    // or a midnight reset), and downgrades back at midnight.
+    if (wantHero && !board.querySelector(".lvhero")){
+      board.innerHTML = leverageHeroHTML(td);   // reward-when-calm: counted up once, then frozen
+      animateHero(td);
+    } else if (!wantHero && !board.querySelector(".idle-hero")){
+      const e = S().empty;
+      board.innerHTML =
+        '<div class="idle-hero"><div class="big">' + e.big + '</div>' +
+        '<div class="sub">' + e.sub + '</div></div>';
+    }
     return;
   }
-  const hero = board.querySelector(".idle-hero");
+  const hero = board.querySelector(".idle-hero, .lvhero");
   if (hero) hero.remove();
 
   const byId = new Map(list.map(s => [s.id, s]));
