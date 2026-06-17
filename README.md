@@ -114,7 +114,7 @@ andon serve
 
 ```bash
 andon install claude        # edits ~/.claude/settings.json (keeps a .andon-backup)
-andon install codex         # edits ~/.codex/config.toml   (keeps a .andon-backup)
+andon install codex         # edits ~/.codex/hooks.json    (keeps a .andon-backup)
 andon doctor                # confirm everything's connected; reprints the iPad URL
 ```
 
