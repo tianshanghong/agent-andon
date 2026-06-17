@@ -100,7 +100,7 @@
   .btn.on{color:var(--c-done);border-color:rgba(58,168,107,.5)}
   /* sound toggle: text on the desktop/wall board, a compact icon on phones (so
      the header is one row in every language). The icon follows currentColor. */
-  .btn.sound,.btn.push{display:inline-flex;align-items:center;gap:7px}
+  .btn.sound{display:inline-flex;align-items:center;gap:7px}
   .sico{display:none;align-items:center}
   .sico svg{display:block}
   /* language picker: a native <select> (scales to any number of languages — the
@@ -308,9 +308,9 @@
     .brand{letter-spacing:.18em;flex:none}
     .langsel{padding:6px 24px 6px 10px;font-size:12px;min-width:0}
     .btn{padding:6px 10px;font-size:11px}
-    .btn.sound,.btn.push{padding:6px 9px;flex:none}
-    .btn.sound .slbl,.btn.push .slbl{display:none}    /* swap the localized label … */
-    .btn.sound .sico,.btn.push .sico{display:inline-flex} /* … for a language-neutral icon */
+    .btn.sound{padding:6px 9px;flex:none}
+    .btn.sound .slbl{display:none}                    /* swap the localized label … */
+    .btn.sound .sico{display:inline-flex}             /* … for a language-neutral icon */
   }
 </style>
 </head>
@@ -333,8 +333,7 @@
       <span class="conn" id="conn"><span class="led"></span><span class="conn-txt">live</span></span>
       <span class="clock" id="clock">--:--</span>
       <select class="langsel" id="langSel" aria-label="Language" title="Language · 语言 · 言語"></select>
-      <button class="btn sound" id="soundBtn"><span class="sico" aria-hidden="true"><svg viewBox="0 0 22 22" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5h3.5L12 5v12L7.5 13.5H4z"/><path d="M15.5 8a4.5 4.5 0 0 1 0 6"/></svg></span><span class="slbl">Enable sound</span></button>
-      <button class="btn push" id="pushBtn" style="display:none" aria-label="Enable phone alerts" title="Enable phone alerts"><span class="sico" aria-hidden="true"><svg viewBox="0 0 22 22" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 3a5 5 0 0 0-5 5v3l-1.4 2.4a.6.6 0 0 0 .5.9h11.8a.6.6 0 0 0 .5-.9L17 11V8a5 5 0 0 0-5-5z"/><path d="M9.4 17a1.7 1.7 0 0 0 3.2 0"/></svg></span><span class="slbl">Phone alerts</span></button>
+      <button class="btn sound" id="soundBtn"><span class="sico" aria-hidden="true"><svg viewBox="0 0 22 22" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 3a5 5 0 0 0-5 5v3l-1.4 2.4a.6.6 0 0 0 .5.9h11.8a.6.6 0 0 0 .5-.9L17 11V8a5 5 0 0 0-5-5z"/><path d="M9.4 17a1.7 1.7 0 0 0 3.2 0"/></svg></span><span class="slbl">Enable alerts</span></button>
     </div>
     <div class="board" id="board" role="main" aria-label="agent status board"></div>
   </div>
@@ -375,7 +374,7 @@ const STR = {
       agentHours:"agent-hours", agentHoursSub:"sum of working time", agents:"agents run",
       pulledIn:"pulled in", stuck:"stuck", peak:"peak at once", nudge:"board’s clear — queue another run" },
     head:"agent status", live:"live", recon:"reconnecting…", off:"OFFLINE", offCn:"lost the Mac", offTally:"reconnecting…",
-    sound:"Enable sound", soundOn:"Sound on", ago:agoEn,
+    sound:"Enable alerts", soundOn:"Alerts on", ago:agoEn,
   },
   zh: {
     chip:{working:"进行中",waiting:"需要你",done:"该你看了",error:"卡住了",idle:"空闲"},
@@ -388,7 +387,7 @@ const STR = {
       agentHours:"agent 工时", agentHoursSub:"工作时长合计", agents:"个 agent",
       pulledIn:"次被叫回", stuck:"卡住", peak:"并发峰值（同时最多）", nudge:"看板清空了 —— 再派一个?" },
     head:"状态看板", live:"在线", recon:"重连中…", off:"已离线", offCn:"与 Mac 失联", offTally:"重连中…",
-    sound:"开启提示音", soundOn:"提示音开", ago:agoZh,
+    sound:"开启提醒", soundOn:"提醒已开", ago:agoZh,
   },
   ja: {
     chip:{working:"稼働中",waiting:"要対応",done:"確認して",error:"停止",idle:"待機中"},
@@ -401,7 +400,7 @@ const STR = {
       agentHours:"エージェント稼働時間", agentHoursSub:"稼働時間の合計", agents:"エージェント",
       pulledIn:"呼び戻し", stuck:"停止", peak:"同時稼働ピーク", nudge:"看板が空きました — もう一件まわしませんか?" },
     head:"エージェント状態", live:"接続中", recon:"再接続中…", off:"オフライン", offCn:"Mac と切断", offTally:"再接続中…",
-    sound:"サウンドを有効化", soundOn:"サウンド ON", ago:agoJa,
+    sound:"通知を有効化", soundOn:"通知 ON", ago:agoJa,
   },
   ko: {
     chip:{working:"작업 중",waiting:"확인 필요",done:"준비됨",error:"멈춤",idle:"대기 중"},
@@ -414,7 +413,7 @@ const STR = {
       agentHours:"에이전트 시간", agentHoursSub:"작동 시간 합계", agents:"에이전트 실행",
       pulledIn:"호출됨", stuck:"멈춤", peak:"동시 최대", nudge:"보드가 비었어요 — 하나 더 돌려볼까요?" },
     head:"에이전트 상태", live:"연결됨", recon:"재연결 중…", off:"오프라인", offCn:"Mac 연결 끊김", offTally:"재연결 중…",
-    sound:"소리 켜기", soundOn:"소리 켜짐", ago:agoKo,
+    sound:"알림 켜기", soundOn:"알림 켜짐", ago:agoKo,
   },
   es: {
     chip:{working:"EN CURSO",waiting:"TE NECESITA",done:"LISTO",error:"ATASCADO",idle:"INACTIVO"},
@@ -427,7 +426,7 @@ const STR = {
       agentHours:"horas de agente", agentHoursSub:"suma del tiempo de trabajo", agents:"agentes ejecutados",
       pulledIn:"te requirieron", stuck:"atascado", peak:"máx. en paralelo", nudge:"el tablero está despejado — lanza otra tarea" },
     head:"estado de agentes", live:"en vivo", recon:"reconectando…", off:"SIN CONEXIÓN", offCn:"se perdió el Mac", offTally:"reconectando…",
-    sound:"Activar sonido", soundOn:"Sonido activado", ago:agoEs,
+    sound:"Activar alertas", soundOn:"Alertas activadas", ago:agoEs,
   },
   de: {
     chip:{working:"LÄUFT",waiting:"BRAUCHT DICH",done:"FERTIG",error:"HÄNGT FEST",idle:"INAKTIV"},
@@ -440,7 +439,7 @@ const STR = {
       agentHours:"Agentenstunden", agentHoursSub:"Summe der Laufzeit", agents:"Agenten gelaufen",
       pulledIn:"zurückgeholt", stuck:"Hänger", peak:"gleichzeitig max.", nudge:"Board ist leer — schick noch einen Lauf los" },
     head:"Agentenstatus", live:"live", recon:"neu verbinden…", off:"OFFLINE", offCn:"Mac verloren", offTally:"neu verbinden…",
-    sound:"Ton aktivieren", soundOn:"Ton an", ago:agoDe,
+    sound:"Mitteilungen aktivieren", soundOn:"Mitteilungen an", ago:agoDe,
   },
   fr: {
     chip:{working:"EN COURS",waiting:"À TOI",done:"PRÊT",error:"BLOQUÉ",idle:"INACTIF"},
@@ -453,7 +452,7 @@ const STR = {
       agentHours:"heures-agent", agentHoursSub:"temps de travail cumulé", agents:"agents lancés",
       pulledIn:"rappels", stuck:"bloqué", peak:"pic simultané", nudge:"le tableau est vide — lance un autre agent" },
     head:"état des agents", live:"en direct", recon:"reconnexion…", off:"HORS LIGNE", offCn:"Mac perdu", offTally:"reconnexion…",
-    sound:"Activer le son", soundOn:"Son activé", ago:agoFr,
+    sound:"Activer les alertes", soundOn:"Alertes activées", ago:agoFr,
   },
 };
 const LOCALES = ["en","zh","ja","ko","es","de","fr"];
@@ -483,7 +482,6 @@ const conn    = document.getElementById("conn");
 const connTxt = conn.querySelector(".conn-txt");
 const clock   = document.getElementById("clock");
 const soundBtn= document.getElementById("soundBtn");
-const pushBtn = document.getElementById("pushBtn");
 const langSel = document.getElementById("langSel");
 const headLabel = document.getElementById("headLabel");
 const lvBadge = document.getElementById("lvBadge");
@@ -864,7 +862,12 @@ langSel.addEventListener("change", () => {
 soundBtn.addEventListener("click", () => {
   soundOn = !soundOn;
   try { localStorage.setItem("andon.alerts", soundOn ? "on" : "off"); } catch (e){}
-  if (soundOn){ armAudio(); tone(880, 0, .12, .10); }
+  if (soundOn){
+    armAudio(); tone(880, 0, .12, .10);   // arm + confirm the chime (this tap unlocks audio)…
+    pushSubscribe();                       // …and, where supported, subscribe phone push (asks permission)
+  } else {
+    pushUnsubscribe();                     // alerts off → stop phone pushes to this device too
+  }
   reflectSound();
 });
 
@@ -886,12 +889,12 @@ if (soundOn){
   for (const ev of GEST) window.addEventListener(ev, rearm);
 }
 
-/* ---------- phone push (Web Push; opt-in per device, served over HTTPS) ----------
-   The button only appears when push can actually work (a secure context with the
-   Push API — i.e. an installed PWA over HTTPS, e.g. via Tailscale). One tap
-   subscribes this device; the server then pushes a "needs you / stuck" alert even
-   when the board is closed and the phone is locked. Nothing leaves the box until
-   you tap, and even then the payload is encrypted end-to-end by the push spec. */
+/* ---------- the push half of "alerts": phone notifications (Web Push) -----------
+   Driven by the single alerts button above. Phone push only works in a secure
+   context with the Push API (an installed PWA over HTTPS, e.g. via Tailscale); on
+   a plain desktop/iPad tab PUSH_OK is false and the button is chime-only. When it
+   works, the server pushes "needs you / stuck" even with the board closed and the
+   phone locked — and the payload is encrypted end-to-end by the push spec. */
 const PUSH_OK = "serviceWorker" in navigator && "PushManager" in window &&
                 "Notification" in window && window.isSecureContext;
 const pushTok = () => { try { return new URLSearchParams(location.search).get("token") || ""; } catch (e){ return ""; } };
@@ -906,36 +909,47 @@ function b64uToU8(s){
 async function postSub(sub){
   try { await fetch(pushUrl("/push/subscribe"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(sub) }); } catch (e){}
 }
-function reflectPush(on){ if (pushBtn) pushBtn.style.display = on ? "none" : ""; } // hide the button once subscribed
-async function pushInit(){
-  if (!PUSH_OK || !pushBtn) return;                         // unsupported / plain HTTP → no button at all
-  let reg;
-  try { reg = await navigator.serviceWorker.register("/sw.js"); } catch (e){ return; }
-  try {
-    const sub = await reg.pushManager.getSubscription();
-    if (sub){ postSub(sub); reflectPush(true); return; }     // already on → refresh the server's copy, hide
-  } catch (e){}
-  reflectPush(false);                                        // supported but off → offer the button
-}
-async function enablePush(){
+/* subscribe this device to phone push — prompts for notification permission the
+   first time (the merged alerts tap is the gesture). Best-effort: if the device
+   can't push or permission is denied, the chime alone still works. */
+async function pushSubscribe(){
   if (!PUSH_OK) return;
-  pushBtn.disabled = true;
   try {
-    if (await Notification.requestPermission() !== "granted"){ pushBtn.disabled = false; return; }
+    if (await Notification.requestPermission() !== "granted") return;
     const reg = await navigator.serviceWorker.register("/sw.js");
-    const { publicKey } = await (await fetch(pushUrl("/push/vapid"))).json();
-    const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToU8(publicKey) });
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub){
+      const { publicKey } = await (await fetch(pushUrl("/push/vapid"))).json();
+      sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToU8(publicKey) });
+    }
     await postSub(sub);
-    reflectPush(true);
-  } catch (e){ pushBtn.disabled = false; }
+  } catch (e){}
 }
-if (pushBtn){
-  pushBtn.addEventListener("click", enablePush);
-  // re-register the subscription when you return to the board, so an in-memory
-  // server that has restarted re-learns this phone without a manual reload.
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) pushInit(); });
+/* alerts turned off → stop phone pushes to this device too. */
+async function pushUnsubscribe(){
+  if (!PUSH_OK) return;
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    const sub = reg && (await reg.pushManager.getSubscription());
+    if (sub){
+      const ep = sub.endpoint;
+      await sub.unsubscribe();
+      try { await fetch(pushUrl("/push/unsubscribe"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ endpoint: ep }) }); } catch (e){}
+    }
+  } catch (e){}
 }
-pushInit();
+/* keep the server's in-memory subscription fresh (it restarted / you came back)
+   without re-prompting — only when alerts are on and permission already granted. */
+async function pushEnsure(){
+  if (!PUSH_OK || !soundOn || Notification.permission !== "granted") return;
+  try {
+    const reg = await navigator.serviceWorker.register("/sw.js");
+    const sub = await reg.pushManager.getSubscription();
+    if (sub) postSub(sub);
+  } catch (e){}
+}
+pushEnsure();
+document.addEventListener("visibilitychange", () => { if (!document.hidden) pushEnsure(); });
 
 /* ---------- keep the iPad awake (iPadOS 16.4+) ---------- */
 let wakeLock = null;
