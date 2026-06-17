@@ -198,3 +198,14 @@ test("today: resets at a new local day; an in-flight session re-bases", () => {
   assert.equal(t.agent_sec, 0);
   assert.equal(t.agents, 1); // 'a' still present, so it counts as seen "today"
 });
+
+test("today: a backwards clock step never yields a negative metric (honest)", () => {
+  const clock = { v: 100 };
+  const s = storeAt(clock);
+  s.apply({ agent: "x", id: "a", state: "working" }); // working since t=100
+  clock.v = 60; // clock jumps backwards (NTP correction / manual change), same local day
+  const t = s.snapshot().today; // live open-interval read must guard like the closed paths
+  assert.ok(t.agent_sec >= 0, `agent_sec must never go negative, got ${t.agent_sec}`);
+  assert.ok(t.hands_off_sec >= 0, `hands_off_sec must never go negative, got ${t.hands_off_sec}`);
+  assert.ok(t.longest_hands_off_sec >= 0, `longest_hands_off_sec must never go negative, got ${t.longest_hands_off_sec}`);
+});

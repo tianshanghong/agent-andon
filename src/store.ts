@@ -169,11 +169,14 @@ export class SessionStore {
   /** Honest "today so far" tallies, including the currently-open intervals. */
   private today(now: number): Today {
     let agentSec = this.agentSec;
-    for (const since of this.workingSince.values()) agentSec += now - since;
+    // Math.max guards mirror the closed-interval paths in account() — a backwards
+    // clock step (NTP correction / manual change) must never make an honest metric
+    // go negative in the live snapshot.
+    for (const since of this.workingSince.values()) agentSec += Math.max(0, now - since);
     let handsOff = this.handsOffSec;
     let longest = this.longestHandsOffSec;
     if (this.anyWorkingSince != null) {
-      const d = now - this.anyWorkingSince;
+      const d = Math.max(0, now - this.anyWorkingSince);
       handsOff += d;
       if (d > longest) longest = d;
     }

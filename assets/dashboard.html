@@ -194,7 +194,7 @@
 
   /* ── completion reward (strong) ─────────────────────────────────────────────
      When a card transitions to READY (the real Stop/done hook event — the same
-     signal that fires the chime, nothing is clicked), play a one-time "shipped"
+     signal that fires the chime, nothing is clicked), play a one-time turn-complete
      burst: the card flashes bright with a double-pulse + a small physical pop, a
      green ring flashes around the inside edge, the ✓ snaps in BIG with a green
      glow then settles, and a bright sweep crosses. ~0.7s, never loops, fully
@@ -713,7 +713,7 @@ function render(){
     prevEl = el;
   }
 
-  // fire the one-time "shipped" flourish on cards that just turned READY. Applied
+  // fire the one-time turn-complete flourish on cards that just turned READY. Applied
   // after placement (so a tier move can't restart it); remove+reflow+add restarts
   // the animation cleanly if the same card celebrates again later.
   for (const id of justDone){
