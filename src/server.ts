@@ -28,6 +28,27 @@ const MAX_BODY = 64 * 1024;
 /** dist/server.js -> ../assets/dashboard.html (also correct once installed). */
 const DASHBOARD_PATH = path.join(__dirname, "..", "assets", "dashboard.html");
 
+/**
+ * A "light" Content-Security-Policy for the board page. It keeps `unsafe-inline`
+ * (the dashboard is one self-contained file served verbatim — no nonce step), but
+ * locks down everything else: no framing (clickjacking), no plugins/base/forms,
+ * and network/img/font sources pinned to self + Google Fonts. Real defense in
+ * depth with zero behaviour change. (A strict nonce-based CSP is deferred to the
+ * hosted/multi-tenant board, where a shared surface makes it worth the refactor.)
+ */
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src https://fonts.gstatic.com",
+  "img-src 'self' data:",
+  "connect-src 'self'",
+  "object-src 'none'",
+  "base-uri 'none'",
+  "form-action 'none'",
+  "frame-ancestors 'none'",
+].join("; ");
+
 export interface ServerOptions {
   port: number;
   host: string;
@@ -139,11 +160,15 @@ export function createServer(opts: ServerOptions): AndonServer {
       const buf = typeof body === "string" ? Buffer.from(body, "utf8") : body;
       // No CORS headers: the board is same-origin with the server, so it needs
       // none, and withholding them stops any other website from reading /state.
-      res.writeHead(code, {
+      const headers: Record<string, string | number> = {
         "Content-Type": ctype,
         "Content-Length": buf.length,
         "Cache-Control": "no-store",
-      });
+        "X-Content-Type-Options": "nosniff",
+        "Referrer-Policy": "no-referrer",
+      };
+      if (ctype.startsWith("text/html")) headers["Content-Security-Policy"] = CSP;
+      res.writeHead(code, headers);
       res.end(buf);
     };
 

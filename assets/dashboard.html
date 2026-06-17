@@ -152,6 +152,7 @@
   .glyph{position:absolute;top:50%;right:24px;transform:translateY(-50%);
     font-family:var(--sans);font-weight:700;line-height:1;
     font-size:clamp(1.7rem,3.4vw,2.5rem);color:var(--tc);opacity:.20;pointer-events:none}
+  @media (prefers-contrast:more){ .card .glyph{opacity:.6} }   /* readable for high-contrast users; the state word is the primary signal */
 
   /* ── ACROSS-THE-ROOM: calm states stay quiet; the two that NEED YOU go LOUD.
      loudness (luminance + area + motion), not hue, carries across a room and
@@ -335,7 +336,7 @@
       <select class="langsel" id="langSel" aria-label="Language" title="Language · 语言 · 言語"></select>
       <button class="btn sound" id="soundBtn"><span class="sico" aria-hidden="true"><svg viewBox="0 0 22 22" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 3a5 5 0 0 0-5 5v3l-1.4 2.4a.6.6 0 0 0 .5.9h11.8a.6.6 0 0 0 .5-.9L17 11V8a5 5 0 0 0-5-5z"/><path d="M9.4 17a1.7 1.7 0 0 0 3.2 0"/></svg></span><span class="slbl">Enable alerts</span></button>
     </div>
-    <div class="board" id="board" role="main" aria-label="agent status board"></div>
+    <div class="board" id="board" role="list" aria-label="agent status board"></div>
   </div>
 
 <script>
@@ -405,7 +406,7 @@ const STR = {
   ko: {
     chip:{working:"작업 중",waiting:"확인 필요",done:"준비됨",error:"멈춤",idle:"대기 중"},
     bar:{ error:n=>[n+" 건 확인 필요","작업이 멈춤"], waiting:n=>[n+" 건 확인 필요","당신 차례"],
-          working:()=>["작동 중","모두 실행 중 · 안심하세요"], done:()=>["당신 차례","모두 준비됨 · 확인하세요"], idle:()=>["대기 중","실행 중인 작업 없음"] },
+          working:()=>["작동 중","모두 실행 중 · 편히 계세요"], done:()=>["당신 차례","모두 준비됨 · 확인하세요"], idle:()=>["대기 중","실행 중인 작업 없음"] },
     tally:{error:"멈춤",waiting:"확인",done:"준비",working:"작동",idle:"대기"}, none:"실행 중인 에이전트 없음",
     bg:n=>"⋯ "+n+" 백그라운드",
     empty:{big:"대기 중",sub:"Claude Code 또는 Codex에서 작업을 시작하면 여기에 표시됩니다"},
@@ -417,7 +418,7 @@ const STR = {
   },
   es: {
     chip:{working:"EN CURSO",waiting:"TE NECESITA",done:"LISTO",error:"ATASCADO",idle:"INACTIVO"},
-    bar:{ error:n=>[n+" TE NECESITA","algo está atascado"], waiting:n=>[n+" TE NECESITA","te toca"],
+    bar:{ error:n=>[n+(n===1?" TE NECESITA":" TE NECESITAN"),"algo está atascado"], waiting:n=>[n+(n===1?" TE NECESITA":" TE NECESITAN"),"te toca"],
           working:()=>["EN MARCHA","todo en marcha · tranquilo"], done:()=>["TE TOCA","todo listo · échale un vistazo"], idle:()=>["INACTIVO","nada en ejecución"] },
     tally:{error:"atascado",waiting:"te necesita",done:"listo",working:"en curso",idle:"inactivo"}, none:"no hay agentes en ejecución",
     bg:n=>"⋯ "+n+" en segundo plano",
@@ -447,7 +448,7 @@ const STR = {
           working:()=>["EN COURS","tout tourne · tranquille"], done:()=>["À TOI","tout est prêt · jette un œil"], idle:()=>["INACTIF","rien en cours"] },
     tally:{error:"bloqué",waiting:"à toi",done:"prêt",working:"en cours",idle:"inactif"}, none:"aucun agent en cours",
     bg:n=>"⋯ "+n+" en arrière-plan",
-    empty:{big:"INACTIF",sub:"lance une tâche dans Claude Code ou Codex — elle apparaît ici"},
+    empty:{big:"INACTIF",sub:"lance une tâche dans Claude Code ou Codex — elle apparaîtra ici"},
     lev:{ today:"AUJOURD’HUI", handsOff:"mains libres", handsOffSub:"temps où tu étais libre pendant que les agents travaillaient",
       agentHours:"heures-agent", agentHoursSub:"temps de travail cumulé", agents:"agents lancés",
       pulledIn:"rappels", stuck:"bloqué", peak:"pic simultané", nudge:"le tableau est vide — lance un autre agent" },
@@ -559,6 +560,7 @@ function setBar(list){
 function makeCard(){
   const el = document.createElement("div");
   el.className = "card";
+  el.setAttribute("role", "listitem"); // each agent is an item in the board's list (a11y)
   el.innerHTML =
     '<span class="glyph"></span>' +
     '<div class="card-top"><span class="chip"><span class="dot"></span>' +
@@ -630,7 +632,7 @@ function leverageHeroHTML(td){
   const cell = (id, label, cost) => '<div class="lvh-cell' + (cost ? ' cost' : '') + '">' +
     '<div class="lvh-cn" id="' + id + '"></div><div class="lvh-cl">' + label + '</div></div>';
   const stuckTxt = td.stuck > 0 ? ' · ' + td.stuck + ' ' + L.stuck : '';
-  return '<div class="lvhero"><div class="lvh-today">' + L.today + '</div>' +
+  return '<div class="lvhero" role="group" aria-label="' + L.today + '"><div class="lvh-today">' + L.today + '</div>' +
     '<div class="lvh-row">' +
       '<div class="lvh-big"><div class="lvh-n" id="cuHands"></div><div class="lvh-l"><b>' + L.handsOff + '</b> · ' + L.handsOffSub + '</div></div>' +
       '<div class="lvh-big"><div class="lvh-n" id="cuHours"></div><div class="lvh-l"><b>' + L.agentHours + '</b> · ' + L.agentHoursSub + '</div></div>' +
