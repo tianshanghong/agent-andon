@@ -46,20 +46,22 @@ export function swSha(): string {
   return _sh;
 }
 /** The package version these bytes came from (walks up for package.json, like the board). */
+let _ver: string | null = null;
 export function bundleVersion(): string {
+  if (_ver) return _ver; // immutable per process — don't re-walk the fs on every /version hit
   let dir = __dirname;
   for (let i = 0; i < 6; i++) {
     const p = path.join(dir, "package.json");
     if (fs.existsSync(p)) {
       try {
-        return (JSON.parse(fs.readFileSync(p, "utf8")).version as string) || "?";
+        return (_ver = (JSON.parse(fs.readFileSync(p, "utf8")).version as string) || "?");
       } catch {
-        return "?";
+        return (_ver = "?");
       }
     }
     dir = path.dirname(dir);
   }
-  return "?";
+  return (_ver = "?");
 }
 
 /**

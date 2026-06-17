@@ -386,6 +386,7 @@ const STR = {
     tally:{error:"stuck",waiting:"needs you",done:"ready",working:"working",idle:"idle"}, none:"no agents running",
     bg:n=>"⋯ "+n+" background",
     empty:{big:"IDLE",sub:"start a run in Claude Code or Codex — it lights up here"},
+    repair:{big:"RE-PAIR",sub:"open your board link again on this device"},
     lev:{ today:"TODAY", handsOff:"hands-off", handsOffSub:"time you were free while agents worked",
       agentHours:"agent-hours", agentHoursSub:"sum of working time", agents:"agents run",
       pulledIn:"pulled in", stuck:"stuck", peak:"peak at once", nudge:"board’s clear — queue another run" },
@@ -399,6 +400,7 @@ const STR = {
     tally:{error:"卡住",waiting:"待处理",done:"就绪",working:"运行",idle:"空闲"}, none:"没有进程在跑",
     bg:n=>"⋯ "+n+" 个后台运行",
     empty:{big:"空闲",sub:"在 Claude Code 或 Codex 跑个任务，这里就会亮起"},
+    repair:{big:"重新配对",sub:"在此设备上重新打开你的看板链接"},
     lev:{ today:"今日", handsOff:"无人值守", handsOffSub:"agent 替你干活、你空出来的时间",
       agentHours:"agent 工时", agentHoursSub:"工作时长合计", agents:"个 agent",
       pulledIn:"次被叫回", stuck:"卡住", peak:"并发峰值（同时最多）", nudge:"看板清空了 —— 再派一个?" },
@@ -412,6 +414,7 @@ const STR = {
     tally:{error:"停止",waiting:"要対応",done:"完了",working:"稼働",idle:"待機"}, none:"稼働中のエージェントなし",
     bg:n=>"⋯ "+n+" 件 バックグラウンド",
     empty:{big:"待機中",sub:"Claude Code か Codex でタスクを開始すると、ここに表示されます"},
+    repair:{big:"再ペアリング",sub:"この端末でボードのリンクをもう一度開いてください"},
     lev:{ today:"今日", handsOff:"ノータッチ", handsOffSub:"エージェントが稼働し、あなたが手を離せていた時間",
       agentHours:"エージェント稼働時間", agentHoursSub:"稼働時間の合計", agents:"エージェント",
       pulledIn:"呼び戻し", stuck:"停止", peak:"同時稼働ピーク", nudge:"看板が空きました — もう一件まわしませんか?" },
@@ -425,6 +428,7 @@ const STR = {
     tally:{error:"멈춤",waiting:"확인",done:"준비",working:"작동",idle:"대기"}, none:"실행 중인 에이전트 없음",
     bg:n=>"⋯ "+n+" 백그라운드",
     empty:{big:"대기 중",sub:"Claude Code 또는 Codex에서 작업을 시작하면 여기에 표시됩니다"},
+    repair:{big:"다시 페어링",sub:"이 기기에서 보드 링크를 다시 열어 주세요"},
     lev:{ today:"오늘", handsOff:"무인 작동", handsOffSub:"에이전트가 일하는 동안 당신이 자유로웠던 시간",
       agentHours:"에이전트 시간", agentHoursSub:"작동 시간 합계", agents:"에이전트 실행",
       pulledIn:"호출됨", stuck:"멈춤", peak:"동시 최대", nudge:"보드가 비었어요 — 하나 더 돌려볼까요?" },
@@ -438,6 +442,7 @@ const STR = {
     tally:{error:"atascado",waiting:"te necesita",done:"listo",working:"en curso",idle:"inactivo"}, none:"no hay agentes en ejecución",
     bg:n=>"⋯ "+n+" en segundo plano",
     empty:{big:"INACTIVO",sub:"inicia una tarea en Claude Code o Codex — aparecerá aquí"},
+    repair:{big:"VINCULAR DE NUEVO",sub:"vuelve a abrir el enlace de tu tablero en este dispositivo"},
     lev:{ today:"HOY", handsOff:"sin que intervengas", handsOffSub:"tiempo libre mientras los agentes trabajaban",
       agentHours:"horas de agente", agentHoursSub:"suma del tiempo de trabajo", agents:"agentes ejecutados",
       pulledIn:"te requirieron", stuck:"atascado", peak:"máx. en paralelo", nudge:"el tablero está despejado — lanza otra tarea" },
@@ -451,6 +456,7 @@ const STR = {
     tally:{error:"hängt fest",waiting:"braucht dich",done:"fertig",working:"läuft",idle:"inaktiv"}, none:"keine Agenten aktiv",
     bg:n=>"⋯ "+n+" im Hintergrund",
     empty:{big:"INAKTIV",sub:"starte einen Lauf in Claude Code oder Codex — er erscheint hier"},
+    repair:{big:"NEU KOPPELN",sub:"öffne den Board-Link auf diesem Gerät erneut"},
     lev:{ today:"HEUTE", handsOff:"freigespielt", handsOffSub:"Zeit, in der du frei warst, während Agenten liefen",
       agentHours:"Agentenstunden", agentHoursSub:"Summe der Laufzeit", agents:"Agenten gelaufen",
       pulledIn:"zurückgeholt", stuck:"Hänger", peak:"gleichzeitig max.", nudge:"Board ist leer — schick noch einen Lauf los" },
@@ -464,6 +470,7 @@ const STR = {
     tally:{error:"bloqué",waiting:"à toi",done:"prêt",working:"en cours",idle:"inactif"}, none:"aucun agent en cours",
     bg:n=>"⋯ "+n+" en arrière-plan",
     empty:{big:"INACTIF",sub:"lance une tâche dans Claude Code ou Codex — elle apparaîtra ici"},
+    repair:{big:"RÉ-APPAIRER",sub:"rouvre le lien de ton tableau sur cet appareil"},
     lev:{ today:"AUJOURD’HUI", handsOff:"mains libres", handsOffSub:"temps où tu étais libre pendant que les agents travaillaient",
       agentHours:"heures-agent", agentHoursSub:"temps de travail cumulé", agents:"agents lancés",
       pulledIn:"rappels", stuck:"bloqué", peak:"pic simultané", nudge:"le tableau est vide — lance un autre agent" },
@@ -856,9 +863,19 @@ async function openSealed(key, boardId, ev){
   if (o.seq !== ev.seq) throw new Error("seq");
   return o;
 }
+/* No key on THIS device (a returning visit / new device / cleared storage; a PWA
+   launch has #k stripped, so the key must come from IndexedDB). The relay is fine —
+   you just need to re-open your board link. A distinct state, NOT "offline". */
+function showRepair(){
+  const r = S().repair || STR.en.repair;
+  connOk = false; conn.classList.add("off"); connTxt.textContent = S().recon;
+  document.body.dataset.dominant = "offline";
+  andonWord.textContent = r.big; andonCn.textContent = ""; andonTally.textContent = r.sub;
+  board.innerHTML = '<div class="idle-hero"><div class="big">' + r.big + '</div><div class="sub">' + r.sub + '</div></div>';
+}
 async function startHosted(){
   const rawKey = HKEY_B64 ? b64uToU8(HKEY_B64) : await idbGet("key:" + BOARD_ID); // #k on pair; else a returning visit (PWA/bookmark)
-  if (!rawKey){ setConn(false); return; }
+  if (!rawKey){ showRepair(); return; }
   const slots = {}; slots["key:" + BOARD_ID] = rawKey; slots["boardUrl:" + BOARD_ID] = location.origin + "/b/" + encodeURIComponent(BOARD_ID);
   await idbSet(slots); // per-board slots so two boards on one origin can't cross keys (push SW + reloads)
   let key; try { key = await crypto.subtle.importKey("raw", rawKey, "AES-GCM", false, ["decrypt"]); } catch(e){ setConn(false); return; }

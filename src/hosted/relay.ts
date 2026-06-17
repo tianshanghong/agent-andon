@@ -456,15 +456,15 @@ export function createRelay(opts: RelayOptions = {}): { server: http.Server; sto
 
       // GET /s/<board>    snapshot (board-id is the read capability in the MVP)
       if (req.method === "GET" && parts.length === 2 && parts[0] === "s") {
-        if (!snapshotLimit(clientIp(req))) return send(res, 429, { error: "rate limited" });
         const boardId = decodeURIComponent(parts[1]);
+        if (!snapshotLimit(boardId + ":" + clientIp(req))) return send(res, 429, { error: "rate limited" });
         return send(res, 200, { events: store.snapshot(boardId) });
       }
 
       // GET /e/<board>    SSE live stream (board-id is the read capability)
       if (req.method === "GET" && parts.length === 2 && parts[0] === "e") {
-        if (!snapshotLimit(clientIp(req))) return send(res, 429, { error: "rate limited" });
         const boardId = decodeURIComponent(parts[1]);
+        if (!snapshotLimit(boardId + ":" + clientIp(req))) return send(res, 429, { error: "rate limited" });
         let initial: StoredEvent[];
         try {
           initial = store.snapshot(boardId); // validates the board exists (404) + gives current state

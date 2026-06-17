@@ -35,6 +35,17 @@ CLI verbs (`andon relay`, `andon hosted`, `andon verify`) are thin wrappers in
    connects SSE, decrypts each event with WebCrypto, renders the same traffic-light
    board. The service worker decrypts pushes with `K`.
 
+## Known parity gaps vs self-host (small, disclosed)
+- **Background-task masking (`pending`) is not carried to the hosted board.** Locally,
+  a card stays "running" until its background sub-agents drain (so a finished *turn*
+  with draining work never falsely reads "all done"). The forwarder seals
+  `{title,message,agent}` but not `pending`, so a hosted board can show READY a bit
+  early for sessions with draining background work. Fix path (follow-up): track
+  `pending` per session in the forwarder and seal it inside the ciphertext (wire/AAD
+  unchanged).
+- **The idle "today" leverage panel is absent** on hosted boards — those tallies are
+  computed locally and deliberately never sent to the relay.
+
 ## Transparency (the T2 claim, see `docs/zero-knowledge-explainer.md`)
 The relay serves the board JS, so "even if breached, can't read it" is only literally
 true for an installed client (T3). For the **web board (T2)** the honest claim is

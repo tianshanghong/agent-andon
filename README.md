@@ -362,14 +362,32 @@ local-first default.
 
 ---
 
-## Hosted version (on the roadmap)
+## Hosted ("board from anywhere")
 
-Andon is local-first and **free to self-host forever**. If you'd rather not run a server, an optional
-**hosted relay** is planned — always-on phone alerts and a board you can reach from anywhere, designed as
-a **zero-knowledge** relay so even *it* can't read your agents' messages (end-to-end encrypted). It will
-be opt-in and will never be the default; self-hosting stays the first-class path.
+Andon is local-first and **free to self-host forever** — that stays the default. If you'd rather reach
+your board (and get phone alerts) from anywhere without setting up HTTPS/Tailscale, there's an optional,
+**opt-in** hosted relay built in:
 
-Want it? **Star / watch this repo** to follow along, or open an issue to say what you'd need.
+```
+andon relay                      # run the zero-knowledge relay (you or anyone can host it)
+andon hosted setup <relay-url>   # opt in — generates a key that never leaves your machine
+andon verify <relay-url>         # check the relay serves the exact open-source code
+```
+
+Every status is **end-to-end encrypted on your machine** before it leaves; the relay routes + stores
+**ciphertext only** and can't read your agents' titles, messages, or code. The board you open is the
+*same* board, decrypted in your browser with a key carried in the link's `#fragment` (never sent to the
+server) — no local server needed.
+
+**What the relay can / can't see** — ✓ can't read: prompts, code, project names, messages. • can see:
+that you're active and roughly when, how many sessions, your IP. Self-host shares nothing and stays the default.
+
+**Verifiable, not just trusted.** A web board's code is served by the relay, so "even if breached" only
+holds for an installed client. For the web board the honest claim is *"we can't secretly backdoor you"*:
+the served code is open-source + reproducible, the relay declares its hash at `/version`, and `andon
+verify` confirms it matches your own copy.
+
+A turnkey **managed** service (so you don't run the relay yourself) may come later — **star / watch** to follow along.
 
 ---
 
