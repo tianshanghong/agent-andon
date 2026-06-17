@@ -362,6 +362,17 @@ local-first default.
 
 ---
 
+## Hosted version (on the roadmap)
+
+Andon is local-first and **free to self-host forever**. If you'd rather not run a server, an optional
+**hosted relay** is planned — always-on phone alerts and a board you can reach from anywhere, designed as
+a **zero-knowledge** relay so even *it* can't read your agents' messages (end-to-end encrypted). It will
+be opt-in and will never be the default; self-hosting stays the first-class path.
+
+Want it? **Star / watch this repo** to follow along, or open an issue to say what you'd need.
+
+---
+
 ## License
 
 [AGPL-3.0-or-later](LICENSE) — © 2026 wwang.
