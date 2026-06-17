@@ -40,10 +40,36 @@ export interface Session {
   updated_at: number;
 }
 
+/**
+ * Honest, local-only "today so far" tallies — leverage + attention. Resets at
+ * local midnight. Every field is a literal measured fact (counts and elapsed
+ * seconds); NOTHING here is a "shipped/merged/completed" count, since a done/Stop
+ * hook only means a turn was handed back, not that a task was delivered.
+ */
+export interface Today {
+  /** distinct sessions seen today */
+  agents: number;
+  /** Σ of every session's time spent in `working` today (→ "agent-hours") */
+  agent_sec: number;
+  /** wall-clock today during which ≥1 session was working (you were free) */
+  hands_off_sec: number;
+  /** longest single hands-off stretch today */
+  longest_hands_off_sec: number;
+  /** times an agent needed you (entered waiting/error from a calm state) */
+  pulled_in: number;
+  /** times an agent hit `error` (subset of pulled_in) */
+  stuck: number;
+  /** max sessions working at once today */
+  peak: number;
+  /** sessions working right now */
+  working_now: number;
+}
+
 /** The payload the dashboard polls from GET /state. */
 export interface Snapshot {
   server_time: number;
   sessions: Session[];
+  today: Today;
 }
 
 /**

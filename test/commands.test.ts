@@ -124,6 +124,7 @@ test("menubar: summarises the most urgent state for a status bar", () => {
       { id: "a", agent: "claude", state: "working" as const, title: "api", message: "", pending: 0, updated_at: 0 },
       { id: "b", agent: "codex", state: "waiting" as const, title: "site", message: "approve?", pending: 0, updated_at: 0 },
     ],
+    today: { agents: 2, agent_sec: 0, hands_off_sec: 0, longest_hands_off_sec: 0, pulled_in: 0, stuck: 0, peak: 0, working_now: 1 },
   };
   const out = menubarText(snap, 8787);
   assert.match(out.split("\n")[0]!, /🟠 1 need you/); // bar text = most urgent
