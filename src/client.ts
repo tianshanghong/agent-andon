@@ -10,6 +10,7 @@ import * as http from "http";
 import * as https from "https";
 import { URL } from "url";
 import { serverBase } from "./net";
+import { forwardHosted } from "./hosted";
 import type { AndonEvent } from "./types";
 
 export interface PostResult {
@@ -18,7 +19,21 @@ export interface PostResult {
   error?: string;
 }
 
+/**
+ * Post a status. Fans out to the LOCAL board and, if `andon hosted setup` was run,
+ * a SEALED copy to the hosted relay — concurrently. A hosted user therefore needs no
+ * local server at all (the local leg just fails harmlessly). Resolves ok if either
+ * leg succeeds; still never throws or blocks long.
+ */
 export function postEvent(ev: AndonEvent, timeoutMs = 1500): Promise<PostResult> {
+  return Promise.all([postLocal(ev, timeoutMs), forwardHosted(ev, timeoutMs)]).then(([local, hosted]) => ({
+    ok: local.ok || hosted.ok,
+    status: local.status,
+    error: local.ok ? undefined : local.error,
+  }));
+}
+
+function postLocal(ev: AndonEvent, timeoutMs: number): Promise<PostResult> {
   return new Promise((resolve) => {
     let settled = false;
     const finish = (r: PostResult) => {
