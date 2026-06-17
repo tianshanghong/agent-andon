@@ -4,7 +4,7 @@
  * sealed copy to the relay. Self-host stays the default; this is opt-in.
  */
 import * as readline from "readline";
-import { provisionHosted, loadHostedConfig, clearHostedConfig, pairingUrl } from "../hosted";
+import { provisionHosted, loadHostedConfig, clearHostedConfig, pairingUrl } from "../hosted/forwarder";
 
 function ask(q: string): Promise<string> {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });

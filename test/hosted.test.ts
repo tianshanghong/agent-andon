@@ -10,9 +10,9 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as http from "http";
-import { createRelay } from "../src/relay";
-import { open, generateKey } from "../src/e2e";
-import { provisionHosted, forwardHosted, loadHostedConfig, saveHostedConfig, clearHostedConfig } from "../src/hosted";
+import { createRelay } from "../src/hosted/relay";
+import { open, generateKey } from "../src/hosted/e2e";
+import { provisionHosted, forwardHosted, loadHostedConfig, saveHostedConfig, clearHostedConfig } from "../src/hosted/forwarder";
 import { postEvent } from "../src/client";
 
 const TMP = (): string => path.join(os.tmpdir(), "andon-hosted-test-" + crypto.randomBytes(6).toString("hex"));

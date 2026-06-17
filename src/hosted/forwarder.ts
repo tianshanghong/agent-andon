@@ -19,8 +19,8 @@ import * as path from "path";
 import * as os from "os";
 import { URL } from "url";
 import { generateKey, seal } from "./e2e";
-import { VALID_STATES, type AndonEvent } from "./types";
-import type { PostResult } from "./client";
+import { VALID_STATES, type AndonEvent } from "../types";
+import type { PostResult } from "../client";
 
 export interface HostedConfig {
   relayUrl: string; // e.g. https://relay.andon.dev (no trailing slash)

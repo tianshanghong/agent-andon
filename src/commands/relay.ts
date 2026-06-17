@@ -4,7 +4,7 @@
  * It stores ciphertext only and cannot read your agents' content. In-repo because
  * T2's whole guarantee is reproducible, publicly-auditable code.
  */
-import { createRelay } from "../relay";
+import { createRelay } from "../hosted/relay";
 
 export function relay(args: string[]): void {
   const pi = args.indexOf("--port");

@@ -10,7 +10,7 @@ import * as http from "http";
 import * as https from "https";
 import { URL } from "url";
 import { serverBase } from "./net";
-import { forwardHosted } from "./hosted";
+import { forwardHosted } from "./hosted/forwarder";
 import type { AndonEvent } from "./types";
 
 export interface PostResult {

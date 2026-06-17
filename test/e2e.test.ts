@@ -7,7 +7,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as crypto from "crypto";
-import { generateKey, seal, open, makeFreshnessGuard, type Routing, type Content } from "../src/e2e";
+import { generateKey, seal, open, makeFreshnessGuard, type Routing, type Content } from "../src/hosted/e2e";
 
 const KEY = generateKey();
 const R: Routing = { boardId: "board-abc", sid: "s1", state: "waiting", seq: 1 };

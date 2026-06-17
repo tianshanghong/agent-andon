@@ -10,8 +10,8 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as http from "http";
-import { createRelay, RelayStore, validateEvent, RelayError, type RelayEvent } from "../src/relay";
-import { seal, open, generateKey } from "../src/e2e";
+import { createRelay, RelayStore, validateEvent, RelayError, type RelayEvent } from "../src/hosted/relay";
+import { seal, open, generateKey } from "../src/hosted/e2e";
 
 const TMP = (): string => path.join(os.tmpdir(), "andon-relay-test-" + crypto.randomBytes(6).toString("hex"));
 
