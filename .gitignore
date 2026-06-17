@@ -5,6 +5,9 @@ build/
 *.log
 .DS_Store
 
+# secrets safety net — never commit local env files
+.env*
+
 # personal design doc — review artifact, not version-controlled
 docs/DESIGN.md
 docs/DESIGN.pdf
