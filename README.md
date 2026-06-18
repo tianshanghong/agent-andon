@@ -387,6 +387,9 @@ holds for an installed client. For the web board the honest claim is *"we can't 
 the served code is open-source + reproducible, the relay declares its hash at `/version`, and `andon
 verify` confirms it matches your own copy.
 
+**Full guides:** [using hosted](docs/hosted.md) (board, phone/PWA, verify, multi-tenant, troubleshooting) ·
+[deploying a relay](docs/deploy-relay.md) (HTTPS, auto-start, capacity & abuse).
+
 A turnkey **managed** service (so you don't run the relay yourself) may come later — **star / watch** to follow along.
 
 ---
