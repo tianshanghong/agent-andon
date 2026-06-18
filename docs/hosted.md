@@ -88,7 +88,7 @@ Switching back and forth is free; `off` just deletes the local config (`~/.andon
 |---|---|
 | ❌ **Cannot read** | your prompts, code, project names, titles, messages, leverage tallies |
 | • **Can see** | that you're active and roughly when (per-event timing), how many sessions, your IP, ciphertext size bucket |
-| • **Can do** | delay/withhold an event (a malicious relay could make an alert late) — but it **cannot fabricate** content or read it |
+| • **Can do** | delay/withhold an event, or re-show one of your **real past** push notifications (a stale "needs you" for an already-resolved session) — but it **cannot invent new content, and cannot read it** |
 
 Self-host shares **nothing** and stays the default. Hosted is the convenience-vs-metadata tradeoff, stated plainly.
 

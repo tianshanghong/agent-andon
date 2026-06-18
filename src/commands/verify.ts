@@ -24,7 +24,16 @@ function fetchBytes(urlStr: string, timeoutMs = 8000): Promise<{ status: number;
     const lib = u.protocol === "https:" ? https : http;
     const req = lib.get(u, { timeout: timeoutMs }, (res) => {
       const chunks: Buffer[] = [];
-      res.on("data", (c: Buffer) => chunks.push(c));
+      let size = 0;
+      res.on("data", (c: Buffer) => {
+        size += c.length;
+        if (size > 2 * 1024 * 1024) {
+          // a malicious relay (exactly what verify vets) must not OOM the CLI; real board+SW are tens of KB
+          req.destroy();
+          return reject(new Error("response too large"));
+        }
+        chunks.push(c);
+      });
       res.on("end", () => resolve({ status: res.statusCode || 0, body: Buffer.concat(chunks) }));
     });
     req.on("error", reject);

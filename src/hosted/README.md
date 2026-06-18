@@ -46,7 +46,7 @@ CLI verbs (`andon relay`, `andon hosted`, `andon verify`) are thin wrappers in
 - **The idle "today" leverage panel is absent** on hosted boards — those tallies are
   computed locally and deliberately never sent to the relay.
 
-## Transparency (the T2 claim, see `docs/zero-knowledge-explainer.md`)
+## Transparency (the T2 claim)
 The relay serves the board JS, so "even if breached, can't read it" is only literally
 true for an installed client (T3). For the **web board (T2)** the honest claim is
 **"we can't *secretly* backdoor you"**, backed by:

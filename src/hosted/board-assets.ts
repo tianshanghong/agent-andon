@@ -118,6 +118,7 @@ async function openSealed(rawKey, boardId, ev){
     { name: "AES-GCM", iv: b64uToU8(ev.enc.nonce), additionalData: aad, tagLength: 128 },
     key, b64uToU8(ev.enc.ct));
   const pt = new Uint8Array(ptBuf);
+  if (pt.length < 4) throw new Error("short");
   const len = (pt[0] | (pt[1] << 8) | (pt[2] << 16) | (pt[3] << 24)) >>> 0; // unsigned, matches node readUInt32LE
   if (len + 4 > pt.length) throw new Error("bad length");
   const obj = JSON.parse(new TextDecoder().decode(pt.subarray(4, 4 + len)));

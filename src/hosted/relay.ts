@@ -409,8 +409,8 @@ export function createRelay(opts: RelayOptions = {}): { server: http.Server; sto
     const url = new URL(req.url || "/", "http://localhost");
     const parts = url.pathname.split("/").filter(Boolean);
     const fail = (e: unknown) => {
-      const status = e instanceof RelayError ? e.status : 400;
-      send(res, status, { error: e instanceof Error ? e.message : "bad request" });
+      if (e instanceof RelayError) return send(res, e.status, { error: e.message });
+      send(res, 400, { error: "bad request" }); // never echo a raw internal error message to callers
     };
 
     try {
@@ -475,6 +475,7 @@ export function createRelay(opts: RelayOptions = {}): { server: http.Server; sto
         const set = sse.get(boardId) ?? new Set<http.ServerResponse>();
         if (sseTotal >= MAX_SSE_TOTAL || set.size >= MAX_SSE_PER_BOARD || (sseByIp.get(ip) ?? 0) >= MAX_SSE_PER_IP)
           return send(res, 503, { error: "too many streams" });
+        res.setTimeout(0); // long-lived stream — don't let the 30s socket idle timeout drop a healthy SSE
         res.writeHead(200, {
           "Content-Type": "text/event-stream",
           "Cache-Control": "no-store",
@@ -555,12 +556,19 @@ export function createRelay(opts: RelayOptions = {}): { server: http.Server; sto
 
       // POST /p/<board>/unsubscribe
       if (req.method === "POST" && parts.length === 3 && parts[0] === "p" && parts[2] === "unsubscribe") {
+        if (!subscribeLimit(clientIp(req))) return send(res, 429, { error: "rate limited" });
         const boardId = decodeURIComponent(parts[1]);
         return readBody(
           req,
           (body) => {
-            store.unsubscribe(boardId, (body as { endpoint?: unknown })?.endpoint);
-            send(res, 204, {});
+            try {
+              // store.unsubscribe -> save() can throw on a disk fault; without this try/catch
+              // the throw escapes the req "end" callback and crashes the whole multi-tenant relay.
+              store.unsubscribe(boardId, (body as { endpoint?: unknown })?.endpoint);
+              send(res, 204, {});
+            } catch (e) {
+              fail(e);
+            }
           },
           () => send(res, 400, { error: "bad body" }),
         );

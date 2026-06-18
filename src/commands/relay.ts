@@ -7,8 +7,13 @@
 import { createRelay } from "../hosted/relay";
 
 export function relay(args: string[]): void {
+  // A relay is multi-tenant — one stray throw must NOT take everyone down. Log + keep serving.
+  process.on("uncaughtException", (e) => console.error("relay: uncaught exception (kept running):", e));
+  process.on("unhandledRejection", (e) => console.error("relay: unhandled rejection (kept running):", e));
+
   const pi = args.indexOf("--port");
-  const port = pi >= 0 ? parseInt(args[pi + 1], 10) : Number(process.env.ANDON_RELAY_PORT) || 8788;
+  const raw = pi >= 0 ? parseInt(args[pi + 1], 10) : Number(process.env.ANDON_RELAY_PORT);
+  const port = Number.isInteger(raw) && raw > 0 && raw <= 65535 ? raw : 8788; // ignore a missing/garbage --port
   const di = args.indexOf("--data-dir");
   const dataDir = di >= 0 ? args[di + 1] : process.env.ANDON_DATA_DIR;
   const host = process.env.ANDON_RELAY_HOST || "0.0.0.0";

@@ -383,6 +383,26 @@ test("verify: an honest relay (serving this package's own board) passes the tran
   }
 });
 
+test("relay: a disk fault during unsubscribe is contained — the relay does NOT crash", async () => {
+  const dir = TMP();
+  const r = await start(dir);
+  try {
+    const { tokenHash } = mkToken();
+    const { boardId } = (await (await fetch(r.base + "/provision", { method: "POST", body: JSON.stringify({ tokenHash }) })).json()) as { boardId: string };
+    const sub = realSub();
+    await fetch(`${r.base}/p/${boardId}/subscribe`, { method: "POST", body: JSON.stringify(sub) });
+
+    fs.chmodSync(dir, 0o500); // make the tenant dir unwritable → the next save() (in unsubscribe) throws
+    const resp = await fetch(`${r.base}/p/${boardId}/unsubscribe`, { method: "POST", body: JSON.stringify({ endpoint: sub.endpoint }) });
+    fs.chmodSync(dir, 0o700); // restore for cleanup
+    assert.ok(resp.status >= 400); // surfaced as an error, not a crash
+    assert.equal((await fetch(`${r.base}/version`)).status, 200); // …and the relay is still serving every other tenant
+  } finally {
+    await r.close();
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("relay store: caps push subscriptions per board at MAX_SUBS", () => {
   const store = new RelayStore();
   const { tokenHash } = mkToken();

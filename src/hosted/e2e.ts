@@ -6,7 +6,7 @@
  * the push service worker) OPEN them. The relay sees only coarse routing — board-id,
  * session id, coarse state, a sequence number — never titles/messages/tallies.
  *
- * Scheme (see docs/DESIGN-hosted.md):
+ * Scheme (the "Wire format (NORMATIVE …)" note below is the spec):
  *   - AES-256-GCM, fresh random 96-bit nonce per event.
  *   - AAD = [board-id, sid, state, seq]  (the cleartext routing fields the CLIENT
  *     knows at seal time). Binding them means the relay can't swap a blob onto a
