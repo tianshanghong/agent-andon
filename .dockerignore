@@ -1,0 +1,16 @@
+# Keep the build context minimal + reproducible. The build needs only:
+#   package.json, package-lock.json, tsconfig.json, src/, assets/
+node_modules
+dist
+build
+.git
+.github
+test
+docs
+examples
+*.log
+*.andon-backup
+.DS_Store
+.env*
+Dockerfile
+.dockerignore

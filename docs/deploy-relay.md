@@ -39,6 +39,37 @@ ANDON_RELAY_HOST=127.0.0.1 ANDON_RELAY_PORT=8788 ANDON_DATA_DIR=/var/lib/andon a
 
 It handles `SIGINT`/`SIGTERM` gracefully (closes SSE streams so restarts don't hang).
 
+### Or with Docker
+
+The relay ships as a multi-arch image at `ghcr.io/tianshanghong/agent-andon`, built reproducibly from this
+source by CI (the same code `andon verify` checks; provenance + SBOM attached). It runs the relay by default.
+
+```bash
+docker run -d --name andon-relay \
+  -v andon_data:/data \                         # persist hashed tokens + VAPID + subscriptions
+  -e ANDON_PUSH_SUBJECT=mailto:you@example.com \
+  ghcr.io/tianshanghong/agent-andon:latest      # CMD defaults to `relay`
+```
+
+Or a minimal compose (put your own TLS / reverse proxy in front — don't expose 8788 to the internet):
+
+```yaml
+services:
+  relay:
+    image: ghcr.io/tianshanghong/agent-andon:latest
+    restart: unless-stopped
+    environment:
+      ANDON_PUSH_SUBJECT: mailto:you@example.com   # a real contact for the VAPID JWT
+    volumes:
+      - andon_data:/data
+    # route to it from your reverse proxy on port 8788; it needs OUTBOUND internet for Web Push
+volumes:
+  andon_data:
+```
+
+The image is non-root, has a `/version` healthcheck, and keeps all state in the `/data` volume
+(`ANDON_DATA_DIR`) — back that volume up.
+
 ---
 
 ## 3. Put HTTPS in front
