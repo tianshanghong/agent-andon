@@ -903,23 +903,22 @@ async function startHosted(){
   es.onerror = () => setConn(false);
 }
 
-/* ---------- sound: WebAudio when usable, <audio>(MP3) fallback for iOS ---------- */
-const BUILD = "snd-v5"; // bump on each audio change; shown in the diag pill so stale bytes are obvious
-let actx = null, soundOn = false, aReady = false, aErr = "";
+/* ---------- sound: WebAudio synth where usable, <audio>(MP3) fallback for iOS ---------- */
+let actx = null, soundOn = false, aReady = false;
 try { soundOn = localStorage.getItem("andon.alerts") === "on"; } catch (e){} // remember across reloads
 const LOOKAHEAD = 0.06; // iOS drops notes scheduled AT currentTime; a small lead anchors the ramp across the suspend→run flip
-// Pre-rendered MP3 chimes (mirror the WebAudio tones), served from /snd/*.mp3. The <audio>
-// path rings even where AudioContext can't be created (some iPads report audio:none); MP3
-// because iOS Safari won't play WAV inline in <audio> (it offers a download instead).
+// Pre-rendered MP3 chimes (mirror the WebAudio tones), served from /snd/*.mp3 — used ONLY as a
+// fallback where AudioContext is unavailable (e.g. iPad Safari). MP3 (not WAV) because iOS Safari
+// won't play WAV inline in <audio>. Devices with WebAudio never touch these files.
 const SND = { done: "/snd/done.mp3", waiting: "/snd/waiting.mp3", error: "/snd/error.mp3" };
 const aEl = {};
 function ensureEls(){
   if (aReady || typeof Audio === "undefined") return;
-  try { for (const k in SND){ const a = new Audio(SND[k]); a.preload = "auto"; a.playsInline = true; a.onerror = () => { aErr = "media" + (a.error ? a.error.code : "?"); }; aEl[k] = a; } aReady = true; }
-  catch (e){ aErr = (e && e.name) || String(e); }
+  try { for (const k in SND){ const a = new Audio(SND[k]); a.preload = "auto"; a.playsInline = true; aEl[k] = a; } aReady = true; }
+  catch (e){}
 }
-function unlockEl(a){ if (!a) return; try { a.muted = true; const p = a.play(); if (p && p.then) p.then(() => { a.pause(); a.currentTime = 0; a.muted = false; }).catch(() => { a.muted = false; }); } catch (e){} }
-function playEl(kind){ const a = aEl[kind] || aEl.done; if (!a) return; try { a.currentTime = 0; const p = a.play(); if (p && p.catch) p.catch((e) => { aErr = (e && e.name) || String(e); }); } catch (e){ aErr = (e && e.name) || String(e); } }
+function unlockEl(a){ if (!a) return; try { a.muted = true; const p = a.play(); if (p && p.then) p.then(() => { a.pause(); a.currentTime = 0; a.muted = false; }).catch(() => {}); } catch (e){} }
+function playEl(kind){ const a = aEl[kind] || aEl.done; if (!a) return; try { a.currentTime = 0; const p = a.play(); if (p && p.catch) p.catch(() => {}); } catch (e){} }
 function tone(freq, start, dur, peak){
   if (!actx) return;
   const o = actx.createOscillator(), g = actx.createGain();
@@ -943,27 +942,13 @@ function playChime(kind){ // live events (not a gesture)
   playEl(kind);                                                                      // no usable WebAudio (iOS audio:none) → <audio>
 }
 function armAudio(){ // create + unlock everything we can, synchronously in the gesture
-  if (!actx){ try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e){ aErr = (e && e.name) || String(e); } }
+  if (!actx){ const AC = window.AudioContext || window.webkitAudioContext; if (AC){ try { actx = new AC(); } catch (e){} } }
   ensureEls();
   if (actx){
     try { const b = actx.createBuffer(1, 1, actx.sampleRate), s = actx.createBufferSource(); s.buffer = b; s.connect(actx.destination); s.start(0); } catch (e){}
     if (actx.state === "suspended") { try { actx.resume(); } catch (e){} }
   }
   unlockEl(aEl.waiting); unlockEl(aEl.error); // alert chimes fire later (outside a gesture) → unlock now; "done" is unlocked by the audible confirm
-}
-/* tiny, temporary, auto-fading diag — lets a user on a device we can't test read back the
-   real audio state (context state · standalone · build). Neutral debug tooling, untranslated. */
-function diag(msg){
-  let d = document.getElementById("sdiag");
-  if (!d){
-    d = document.createElement("div"); d.id = "sdiag";
-    d.style.cssText = "position:fixed;left:50%;bottom:14px;transform:translateX(-50%);font:11px/1.4 ui-monospace,monospace;"
-      + "color:var(--muted,#8a8f98);background:rgba(0,0,0,.55);padding:5px 9px;border-radius:7px;opacity:0;"
-      + "transition:opacity .35s;pointer-events:none;z-index:99;letter-spacing:.02em";
-    document.body.appendChild(d);
-  }
-  d.textContent = msg; requestAnimationFrame(() => { d.style.opacity = "1"; });
-  clearTimeout(diag._t); diag._t = setTimeout(() => { d.style.opacity = "0"; }, 5000);
 }
 function reflectSound(){
   soundBtn.classList.toggle("on", soundOn);
@@ -997,7 +982,6 @@ soundBtn.addEventListener("click", () => {
     if (actx){ tone(880, 0, .12, .10); unlockEl(aEl.done); } // WebAudio confirm + unlock the fallback's confirm element too
     else playEl("done");                                     // no WebAudio (iOS audio:none) → <audio> chime (also unlocks it)
     pushSubscribe();                     // …and, where supported, subscribe phone push (asks permission)
-    setTimeout(() => diag("audio:" + (actx ? actx.state : "none") + " · el:" + (aReady ? "ok" : "no") + " · std:" + (navigator.standalone ? "yes" : "no") + (aErr ? " · err:" + aErr : "") + " · " + BUILD), 250);
   } else {
     pushUnsubscribe();                   // alerts off → stop phone pushes to this device too
   }
@@ -1012,6 +996,10 @@ soundBtn.addEventListener("click", () => {
 // one-time setup tap, the chime survives every reload, and the very first touch
 // anywhere brings it back without hunting for the button.
 reflectSound();
+// Warm the fallback chimes early: create the <audio> elements + prefetch the MP3s into the HTTP
+// cache so the first play has no network wait (iOS <audio> is slow to start cold, esp. over a relay).
+ensureEls();
+try { for (const k in SND) fetch(SND[k]).catch(() => {}); } catch (e){}
 if (soundOn){
   const GEST = ["pointerdown", "touchend", "click", "keydown"];
   const rearm = () => {
