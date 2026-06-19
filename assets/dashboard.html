@@ -904,39 +904,53 @@ async function startHosted(){
 }
 
 /* ---------- sound (WebAudio, no files) ---------- */
+const BUILD = "snd-v2"; // bump on each audio change; shown in the diag pill so stale bytes are obvious
 let actx = null, soundOn = false;
 try { soundOn = localStorage.getItem("andon.alerts") === "on"; } catch (e){} // remember across reloads
+const LOOKAHEAD = 0.06; // iOS drops notes scheduled AT currentTime; a small lead anchors the ramp across the suspend→run flip
 function tone(freq, start, dur, peak){
   if (!actx) return;
   const o = actx.createOscillator(), g = actx.createGain();
   o.type = "sine"; o.frequency.value = freq;
   o.connect(g); g.connect(actx.destination);
-  const t = actx.currentTime + start;
+  const t = actx.currentTime + LOOKAHEAD + start;
   g.gain.setValueAtTime(0.0001, t);
   g.gain.exponentialRampToValueAtTime(peak, t + 0.02);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   o.start(t); o.stop(t + dur + 0.03);
 }
-function playChime(kind){
-  if (!soundOn || !actx) return;
-  const ring = () => {
-    if (kind === "done"){ tone(660,0,.18,.18); tone(990,.16,.30,.15); }
-    else if (kind === "waiting"){ tone(560,0,.24,.16); }
-    else if (kind === "error"){ tone(320,0,.18,.20); tone(250,.20,.34,.20); }
-  };
-  // iOS won't render into a still-suspended context — resume FIRST, then ring.
-  if (actx.state === "running") ring();
-  else try { actx.resume().then(ring).catch(() => {}); } catch (e){}
+function ringTones(kind){
+  if (kind === "done"){ tone(660,0,.18,.18); tone(990,.16,.30,.15); }
+  else if (kind === "waiting"){ tone(560,0,.24,.16); }
+  else if (kind === "error"){ tone(320,0,.18,.20); tone(250,.20,.34,.20); }
 }
-function armAudio(){ // create + UNLOCK the WebAudio context — only works inside a user gesture; resolves once it's actually running
+function playChime(kind){ // live events (not a gesture) — context is already armed from the enable tap
+  if (!soundOn || !actx) return;
+  if (actx.state === "running") ringTones(kind);
+  else try { actx.resume().then(() => ringTones(kind)).catch(() => {}); } catch (e){}
+}
+function armAudio(){ // create + UNLOCK + resume the WebAudio context — only effective inside a user gesture
   if (!actx){ try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e){} }
-  if (!actx) return Promise.resolve();
-  try { // iOS: a 1-sample silent buffer started inside the gesture unlocks audio output
-    const b = actx.createBuffer(1, 1, 22050), s = actx.createBufferSource();
+  if (!actx) return;
+  try { // iOS: a 1-sample silent buffer started in the gesture helps unlock output (use the context's own rate)
+    const b = actx.createBuffer(1, 1, actx.sampleRate), s = actx.createBufferSource();
     s.buffer = b; s.connect(actx.destination); s.start(0);
   } catch (e){}
-  if (actx.state === "running") return Promise.resolve();
-  try { return actx.resume().catch(() => {}); } catch (e){ return Promise.resolve(); }
+  if (actx.state === "suspended") { try { actx.resume(); } catch (e){} }
+}
+/* tiny, temporary, auto-fading diag — lets a user on a device we can't test read back the
+   real audio state (context state · standalone · build). Neutral debug tooling, untranslated. */
+function diag(msg){
+  let d = document.getElementById("sdiag");
+  if (!d){
+    d = document.createElement("div"); d.id = "sdiag";
+    d.style.cssText = "position:fixed;left:50%;bottom:14px;transform:translateX(-50%);font:11px/1.4 ui-monospace,monospace;"
+      + "color:var(--muted,#8a8f98);background:rgba(0,0,0,.55);padding:5px 9px;border-radius:7px;opacity:0;"
+      + "transition:opacity .35s;pointer-events:none;z-index:99;letter-spacing:.02em";
+    document.body.appendChild(d);
+  }
+  d.textContent = msg; requestAnimationFrame(() => { d.style.opacity = "1"; });
+  clearTimeout(diag._t); diag._t = setTimeout(() => { d.style.opacity = "0"; }, 5000);
 }
 function reflectSound(){
   soundBtn.classList.toggle("on", soundOn);
@@ -966,10 +980,12 @@ soundBtn.addEventListener("click", () => {
   soundOn = !soundOn;
   try { localStorage.setItem("andon.alerts", soundOn ? "on" : "off"); } catch (e){}
   if (soundOn){
-    armAudio().then(() => tone(880, 0, .12, .10)); // arm+unlock, then ring once the context is RUNNING (iOS race)
-    pushSubscribe();                               // …and, where supported, subscribe phone push (asks permission)
+    armAudio();                          // create + unlock + kick off resume — all SYNCHRONOUS in the tap (iOS needs this)
+    tone(880, 0, .12, .10);              // audible confirm started synchronously in the gesture (+lookahead survives the resume flip)
+    pushSubscribe();                     // …and, where supported, subscribe phone push (asks permission)
+    setTimeout(() => diag("audio:" + (actx ? actx.state : "none") + " · std:" + (navigator.standalone ? "yes" : "no") + " · " + BUILD), 200);
   } else {
-    pushUnsubscribe();                     // alerts off → stop phone pushes to this device too
+    pushUnsubscribe();                   // alerts off → stop phone pushes to this device too
   }
   reflectSound();
 });
@@ -985,10 +1001,9 @@ reflectSound();
 if (soundOn){
   const GEST = ["pointerdown", "touchend", "click", "keydown"];
   const rearm = () => {
-    armAudio().then(() => {
-      if (actx && actx.state === "running")
-        for (const ev of GEST) window.removeEventListener(ev, rearm);
-    });
+    armAudio();
+    if (actx && actx.state === "running")
+      for (const ev of GEST) window.removeEventListener(ev, rearm);
   };
   for (const ev of GEST) window.addEventListener(ev, rearm);
 }
