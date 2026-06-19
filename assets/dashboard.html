@@ -903,18 +903,19 @@ async function startHosted(){
   es.onerror = () => setConn(false);
 }
 
-/* ---------- sound: WebAudio when usable, <audio>(data: WAV) fallback for iOS ---------- */
-const BUILD = "snd-v4"; // bump on each audio change; shown in the diag pill so stale bytes are obvious
+/* ---------- sound: WebAudio when usable, <audio>(MP3) fallback for iOS ---------- */
+const BUILD = "snd-v5"; // bump on each audio change; shown in the diag pill so stale bytes are obvious
 let actx = null, soundOn = false, aReady = false, aErr = "";
 try { soundOn = localStorage.getItem("andon.alerts") === "on"; } catch (e){} // remember across reloads
 const LOOKAHEAD = 0.06; // iOS drops notes scheduled AT currentTime; a small lead anchors the ramp across the suspend→run flip
-// Pre-rendered chimes (mirror the WebAudio tones). The <audio> path rings even where
-// AudioContext can't be created at all (some iPads report audio:none) and is iOS-friendly.
-const SND = { done: "/snd/done.wav", waiting: "/snd/waiting.wav", error: "/snd/error.wav" };
+// Pre-rendered MP3 chimes (mirror the WebAudio tones), served from /snd/*.mp3. The <audio>
+// path rings even where AudioContext can't be created (some iPads report audio:none); MP3
+// because iOS Safari won't play WAV inline in <audio> (it offers a download instead).
+const SND = { done: "/snd/done.mp3", waiting: "/snd/waiting.mp3", error: "/snd/error.mp3" };
 const aEl = {};
 function ensureEls(){
   if (aReady || typeof Audio === "undefined") return;
-  try { for (const k in SND){ const a = new Audio(SND[k]); a.preload = "auto"; a.playsInline = true; aEl[k] = a; } aReady = true; }
+  try { for (const k in SND){ const a = new Audio(SND[k]); a.preload = "auto"; a.playsInline = true; a.onerror = () => { aErr = "media" + (a.error ? a.error.code : "?"); }; aEl[k] = a; } aReady = true; }
   catch (e){ aErr = (e && e.name) || String(e); }
 }
 function unlockEl(a){ if (!a) return; try { a.muted = true; const p = a.play(); if (p && p.then) p.then(() => { a.pause(); a.currentTime = 0; a.muted = false; }).catch(() => { a.muted = false; }); } catch (e){} }
