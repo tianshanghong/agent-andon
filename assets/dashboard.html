@@ -903,13 +903,12 @@ async function startHosted(){
   es.onerror = () => setConn(false);
 }
 
-/* ---------- sound: WebAudio synth where usable, <audio>(MP3) fallback for iOS ---------- */
-let actx = null, soundOn = false, aReady = false;
+/* ---------- sound: ONE MP3 chime set for every device (served from /snd/*.mp3) ---------- */
+let soundOn = false, aReady = false;
 try { soundOn = localStorage.getItem("andon.alerts") === "on"; } catch (e){} // remember across reloads
-const LOOKAHEAD = 0.06; // iOS drops notes scheduled AT currentTime; a small lead anchors the ramp across the suspend→run flip
-// Pre-rendered MP3 chimes (mirror the WebAudio tones), served from /snd/*.mp3 — used ONLY as a
-// fallback where AudioContext is unavailable (e.g. iPad Safari). MP3 (not WAV) because iOS Safari
-// won't play WAV inline in <audio>. Devices with WebAudio never touch these files.
+// One source of truth so every device sounds IDENTICAL: a real-time WebAudio synth diverges from
+// the MP3 the iPad is forced to use, so we use the MP3 everywhere. The chimes are rendered to match
+// the original tones; MP3 (not WAV) because iOS Safari won't play WAV inline in <audio>.
 const SND = { done: "/snd/done.mp3", waiting: "/snd/waiting.mp3", error: "/snd/error.mp3" };
 const aEl = {};
 function ensureEls(){
@@ -919,37 +918,8 @@ function ensureEls(){
 }
 function unlockEl(a){ if (!a) return; try { a.muted = true; const p = a.play(); if (p && p.then) p.then(() => { a.pause(); a.currentTime = 0; a.muted = false; }).catch(() => {}); } catch (e){} }
 function playEl(kind){ const a = aEl[kind] || aEl.done; if (!a) return; try { a.currentTime = 0; const p = a.play(); if (p && p.catch) p.catch(() => {}); } catch (e){} }
-function tone(freq, start, dur, peak){
-  if (!actx) return;
-  const o = actx.createOscillator(), g = actx.createGain();
-  o.type = "sine"; o.frequency.value = freq;
-  o.connect(g); g.connect(actx.destination);
-  const t = actx.currentTime + LOOKAHEAD + start;
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(peak, t + 0.02);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.start(t); o.stop(t + dur + 0.03);
-}
-function ringTones(kind){
-  if (kind === "done"){ tone(660,0,.18,.18); tone(990,.16,.30,.15); }
-  else if (kind === "waiting"){ tone(560,0,.24,.16); }
-  else if (kind === "error"){ tone(320,0,.18,.20); tone(250,.20,.34,.20); }
-}
-function playChime(kind){ // live events (not a gesture)
-  if (!soundOn) return;
-  if (actx && actx.state === "running"){ ringTones(kind); return; }                 // WebAudio device → crisp synth
-  if (actx && actx.state === "suspended"){ try { actx.resume().then(() => ringTones(kind)).catch(() => {}); return; } catch (e){} }
-  playEl(kind);                                                                      // no usable WebAudio (iOS audio:none) → <audio>
-}
-function armAudio(){ // create + unlock everything we can, synchronously in the gesture
-  if (!actx){ const AC = window.AudioContext || window.webkitAudioContext; if (AC){ try { actx = new AC(); } catch (e){} } }
-  ensureEls();
-  if (actx){
-    try { const b = actx.createBuffer(1, 1, actx.sampleRate), s = actx.createBufferSource(); s.buffer = b; s.connect(actx.destination); s.start(0); } catch (e){}
-    if (actx.state === "suspended") { try { actx.resume(); } catch (e){} }
-  }
-  unlockEl(aEl.waiting); unlockEl(aEl.error); // alert chimes fire later (outside a gesture) → unlock now; "done" is unlocked by the audible confirm
-}
+function playChime(kind){ if (soundOn) playEl(kind); } // live events — elements already unlocked from the enable tap
+function armAudio(){ ensureEls(); unlockEl(aEl.waiting); unlockEl(aEl.error); } // "done" is unlocked by the audible confirm
 function reflectSound(){
   soundBtn.classList.toggle("on", soundOn);
   const t = soundOn ? S().soundOn : S().sound;
@@ -978,9 +948,8 @@ soundBtn.addEventListener("click", () => {
   soundOn = !soundOn;
   try { localStorage.setItem("andon.alerts", soundOn ? "on" : "off"); } catch (e){}
   if (soundOn){
-    armAudio();                          // create + unlock both paths SYNCHRONOUSLY in the tap
-    if (actx){ tone(880, 0, .12, .10); unlockEl(aEl.done); } // WebAudio confirm + unlock the fallback's confirm element too
-    else playEl("done");                                     // no WebAudio (iOS audio:none) → <audio> chime (also unlocks it)
+    armAudio();                          // unlock the alert chimes in this gesture
+    playEl("done");                      // audible confirm — also unlocks the "done" element
     pushSubscribe();                     // …and, where supported, subscribe phone push (asks permission)
   } else {
     pushUnsubscribe();                   // alerts off → stop phone pushes to this device too
@@ -1005,7 +974,7 @@ if (soundOn){
   const rearm = () => {
     armAudio();
     unlockEl(aEl.done);                  // no audible confirm on a reload — unlock the confirm element too
-    if ((actx && actx.state === "running") || aReady)
+    if (aReady)
       for (const ev of GEST) window.removeEventListener(ev, rearm);
   };
   for (const ev of GEST) window.addEventListener(ev, rearm);
@@ -1086,8 +1055,6 @@ async function reqWake(){
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible"){
     reqWake();
-    // a wall iPad suspends WebAudio on sleep — wake it so chimes keep working
-    if (soundOn && actx && actx.state === "suspended") actx.resume();
   }
 });
 
