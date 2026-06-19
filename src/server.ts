@@ -17,6 +17,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { SessionStore } from "./store";
 import { MANIFEST, FAVICON_SVG, SERVICE_WORKER } from "./assets";
+import { soundName, serveSound, SOUNDS } from "./sounds";
 import { makeAlerter, type AlertConfig } from "./alerts";
 import { PushHub, isValidSubscription, isAllowedPushEndpoint } from "./push";
 import { menubarText } from "./menubar";
@@ -215,6 +216,8 @@ export function createServer(opts: ServerOptions): AndonServer {
     }
 
     if (req.method === "GET") {
+      const snd = soundName(p);
+      if (snd) return serveSound(req, res, SOUNDS[snd]); // alert chimes — public, range-capable (iOS <audio>)
       if (p === "/" || p === "/index.html") {
         if (dashboard) send(200, dashboard, "text/html; charset=utf-8");
         else

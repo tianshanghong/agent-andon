@@ -26,6 +26,7 @@ import type { SealedBlob } from "./e2e";
 import { encryptPayload, sendPush, isValidSubscription, type PushSubscription, type VapidKeys, generateVapidKeys } from "../push";
 import { boardHtml, BOARD_CSP, HOSTED_SW, boardSha, swSha, bundleVersion } from "./board-assets";
 import { FAVICON_SVG } from "../assets";
+import { soundName, serveSound, SOUNDS } from "../sounds";
 
 /** What the hook POSTs (the relay stamps tsSrv on receipt). */
 export interface RelayEvent {
@@ -519,6 +520,12 @@ export function createRelay(opts: RelayOptions = {}): { server: http.Server; sto
       // GET /favicon.svg   so the board + home-screen icon don't 404 (shared with self-host)
       if (req.method === "GET" && parts.length === 1 && parts[0] === "favicon.svg") {
         return sendRaw(res, FAVICON_SVG, "image/svg+xml");
+      }
+
+      // GET /snd/<name>.wav   alert chimes — range-capable (iOS <audio> can't play data: URIs)
+      if (req.method === "GET" && parts.length === 2 && parts[0] === "snd") {
+        const snd = soundName(url.pathname);
+        if (snd) return serveSound(req, res, SOUNDS[snd]);
       }
 
       // GET /version   T2 transparency: the SHA-256 of the EXACT board + SW this relay
