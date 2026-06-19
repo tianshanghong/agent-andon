@@ -910,7 +910,8 @@ const LOOKAHEAD = 0.06; // iOS drops notes scheduled AT currentTime; a small lea
 // Pre-rendered MP3 chimes (mirror the WebAudio tones), served from /snd/*.mp3 — used ONLY as a
 // fallback where AudioContext is unavailable (e.g. iPad Safari). MP3 (not WAV) because iOS Safari
 // won't play WAV inline in <audio>. Devices with WebAudio never touch these files.
-const SND = { done: "/snd/done.mp3", waiting: "/snd/waiting.mp3", error: "/snd/error.mp3" };
+// confirm = the single-beep "enable" sound; done/waiting/error = the two-/one-tone alert chimes
+const SND = { confirm: "/snd/confirm.mp3", done: "/snd/done.mp3", waiting: "/snd/waiting.mp3", error: "/snd/error.mp3" };
 const aEl = {};
 function ensureEls(){
   if (aReady || typeof Audio === "undefined") return;
@@ -948,7 +949,7 @@ function armAudio(){ // create + unlock everything we can, synchronously in the 
     try { const b = actx.createBuffer(1, 1, actx.sampleRate), s = actx.createBufferSource(); s.buffer = b; s.connect(actx.destination); s.start(0); } catch (e){}
     if (actx.state === "suspended") { try { actx.resume(); } catch (e){} }
   }
-  unlockEl(aEl.waiting); unlockEl(aEl.error); // alert chimes fire later (outside a gesture) → unlock now; "done" is unlocked by the audible confirm
+  unlockEl(aEl.done); unlockEl(aEl.waiting); unlockEl(aEl.error); // alert chimes fire later (outside a gesture) → unlock now; "confirm" is unlocked by its own audible play
 }
 function reflectSound(){
   soundBtn.classList.toggle("on", soundOn);
@@ -979,8 +980,8 @@ soundBtn.addEventListener("click", () => {
   try { localStorage.setItem("andon.alerts", soundOn ? "on" : "off"); } catch (e){}
   if (soundOn){
     armAudio();                          // create + unlock both paths SYNCHRONOUSLY in the tap
-    if (actx){ tone(880, 0, .12, .10); unlockEl(aEl.done); } // WebAudio confirm + unlock the fallback's confirm element too
-    else playEl("done");                                     // no WebAudio (iOS audio:none) → <audio> chime (also unlocks it)
+    if (actx) tone(880, 0, .12, .10);   // Android/desktop: live single-beep WebAudio confirm
+    else playEl("confirm");             // iPad: the single-beep confirm MP3 (NOT the two-tone "done")
     pushSubscribe();                     // …and, where supported, subscribe phone push (asks permission)
   } else {
     pushUnsubscribe();                   // alerts off → stop phone pushes to this device too
@@ -1003,8 +1004,7 @@ try { for (const k in SND) fetch(SND[k]).catch(() => {}); } catch (e){}
 if (soundOn){
   const GEST = ["pointerdown", "touchend", "click", "keydown"];
   const rearm = () => {
-    armAudio();
-    unlockEl(aEl.done);                  // no audible confirm on a reload — unlock the confirm element too
+    armAudio();                          // unlocks the alert chimes (done/waiting/error) for this device
     if ((actx && actx.state === "running") || aReady)
       for (const ev of GEST) window.removeEventListener(ev, rearm);
   };
