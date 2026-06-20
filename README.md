@@ -261,17 +261,16 @@ ANDON_LABEL="landing copy"     codex
 
 ---
 
-## Run it in the background
+## Running it (start / stop)
 
 ```bash
-# tmux
-tmux new -s andon 'andon serve'
-
-# or nohup
-nohup andon serve >/tmp/agent-andon.log 2>&1 &
-
-# or at login: see examples/com.agentandon.server.plist
+andon serve                                  # foreground — Ctrl-C to stop
+nohup andon serve > /tmp/andon.log 2>&1 &    # background (macOS / Linux)
+pkill -f "cli.js serve"                      # stop a background one
 ```
+
+Full reference — background, **phone access via Tailscale Serve**, and the relay, each with
+start / check / stop — is in **[docs/running.md](docs/running.md)**.
 
 ---
 
@@ -389,7 +388,7 @@ flowchart TD
 | Board + **desktop alerts** on your computer | `andon serve` — the default *(macOS / Linux / Windows)*, alerts on |
 | Glance at the board on a **phone/tablet on the same Wi-Fi** | `andon serve`, open `http://<your-ip>:8787` — *board only; `http` can't push* |
 | **📱 Phone push — the easy way** *(no server, no Tailscale)* | **☁️ our managed relay:** `andon hosted setup https://relay.agentandon.com` + Add to Home Screen — *launching, [⭐ watch](https://github.com/tianshanghong/agent-andon)* |
-| Phone push, **self-hosted — just you** | `tailscale serve` + `andon serve` + Add to Home Screen |
+| Phone push, **self-hosted — just you** | [`tailscale serve`](docs/running.md) + `andon serve` + Add to Home Screen |
 | Phone push, **your own relay** (team / your infra) | [deploy a relay](docs/deploy-relay.md) (Docker) + Add to Home Screen |
 
 **Rule of thumb:** `andon serve` gives **desktop** alerts for free, everywhere. Want them on your **phone**?
