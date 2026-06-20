@@ -2,6 +2,8 @@
 
 **Glance at any screen — iPad, phone, or browser — or get a desktop alert — the moment your AI coding agent is working, needs you, done, or stuck.**
 
+**English** · [中文](README.zh-CN.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md)
+
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-3aa86b)](LICENSE)
 [![Node ≥ 18](https://img.shields.io/badge/node-%E2%89%A5%2018-5478c4)](https://nodejs.org)
 ![runtime dependencies: 0](https://img.shields.io/badge/runtime%20deps-0-3aa86b)
@@ -26,8 +28,6 @@ a desktop banner, or your menu bar. No app, no account, zero dependencies.
 - **Multi-agent native** — one full-width row per session; whatever needs you floats to the top.
 - **Speaks your language** — **English · 中文 · 日本語 · 한국어 · Español · Deutsch · Français**, auto-detected.
 - **Any screen** — iPad, phone, or browser; no app, no account, no hardware.
-
-<sub>中文用户：把闲置 iPad 立在桌边（或用手机/任意浏览器打开），变成 Claude Code / Codex 的"安灯"状态看板。提交任务后放心去干别的，一瞥就知道 agent 在跑 / 该你了 / 完成了 / 卡住了。</sub>
 
 ---
 
