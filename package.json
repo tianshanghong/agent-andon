@@ -1,6 +1,6 @@
 {
   "name": "agent-andon",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Status board & notifications for Claude Code and Codex — glance at an iPad (or get a desktop alert) when an AI coding agent needs you, finishes, or gets stuck. Self-hosted, zero dependencies.",
   "type": "commonjs",
   "bin": {

@@ -3,7 +3,7 @@
 Notable changes to Agent Andon. Roughly follows [Keep a Changelog](https://keepachangelog.com/);
 the project is pre-1.0, so a minor version may bundle features and fixes together.
 
-## [Unreleased]
+## [0.2.0] — 2026-06-20
 
 ### Added
 - **Hosted "board from anywhere" relay** — an optional, opt-in, **zero-knowledge** relay
