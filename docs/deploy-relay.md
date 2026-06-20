@@ -74,25 +74,45 @@ The image is non-root, has a `/version` healthcheck, and keeps all state in the 
 
 ## 3. Put HTTPS in front
 
-### Caddy (simplest — automatic Let's Encrypt)
+The relay speaks plain **HTTP on `:8788`** — something in front terminates TLS (browsers require HTTPS for
+in-browser decryption + push). You don't add anything relay-specific; you point what you **already run** at
+port 8788. Pick the row that matches you:
+
+| Your setup | How TLS is handled |
+|---|---|
+| **Docker, with a reverse proxy / tunnel already** *(most common)* | route `relay.example.com` → the container's `:8788` from your existing **Traefik / nginx-proxy / Cloudflare Tunnel** — examples below |
+| **A bare host, nothing installed yet** | **Caddy** is the one-liner (auto Let's Encrypt) — see below |
+| **Just you / your team, on Tailscale** | `tailscale serve --bg 8788` → `https://<machine>.<tailnet>.ts.net` (tailnet-only, no public cert) |
+
+**Docker behind a reverse proxy / tunnel** — the container stays HTTP-only; the front does TLS:
+
+```yaml
+# Traefik: labels on the relay service (Traefik — or, behind cloudflared, Cloudflare — supplies the cert)
+labels:
+  - "traefik.enable=true"
+  - "traefik.http.routers.relay.rule=Host(`relay.example.com`)"
+  - "traefik.http.routers.relay.entrypoints=websecure"
+  - "traefik.http.services.relay.loadbalancer.server.port=8788"
+```
+```
+# Cloudflare Tunnel: no open ports — point an ingress hostname at the container
+#   relay.example.com  ->  http://andon-relay:8788
+```
+
+**Bare host — Caddy** (simplest if you have nothing else; automatic Let's Encrypt):
+
 ```
 # /etc/caddy/Caddyfile
 relay.example.com {
     reverse_proxy 127.0.0.1:8788
 }
 ```
-`sudo systemctl reload caddy` — done, you have `https://relay.example.com`.
-
-### Alternatives
-- **nginx + certbot** — `proxy_pass http://127.0.0.1:8788;` plus a normal cert.
-- **Cloudflare Tunnel** — no open ports; `cloudflared` → `127.0.0.1:8788`.
-- **Tailscale Serve** (private, tailnet-only relay) — `tailscale serve --bg 8788`, served at
-  `https://<machine>.<tailnet>.ts.net`. Good for "just my team", not the public internet.
+`sudo systemctl reload caddy` → `https://relay.example.com`. (nginx + certbot works the same: `proxy_pass http://127.0.0.1:8788;`.)
 
 > ⚠️ **Proxy + rate limits:** the relay rate-limits by `req.socket.remoteAddress`. Behind a TLS-terminating
 > proxy that's the **proxy's** IP, so the per-IP limits collapse to one bucket for everyone. The relay does
 > **not** yet parse `X-Forwarded-For` (it's spoofable if trusted naively). Until it does, do per-client
-> rate-limiting **at the proxy** (Caddy/nginx/Cloudflare all can) if you expose it publicly.
+> rate-limiting **at the proxy** (Traefik/Caddy/nginx/Cloudflare all can) if you expose it publicly.
 
 ---
 

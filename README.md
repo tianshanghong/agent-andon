@@ -120,6 +120,8 @@ andon doctor                # confirm everything's connected; reprints the iPad 
 
 Restart your Claude Code session and it lights up the board automatically. That's it.
 
+> Want the board (and phone push) from **anywhere**, not just this Wi-Fi? → [**Which setup do you need?**](#which-setup-do-you-need)
+
 ---
 
 ## Commands
@@ -362,11 +364,39 @@ local-first default.
 
 ---
 
+## Which setup do you need?
+
+Most people just run `andon serve` and watch on the same Mac (or an iPad on the same Wi-Fi). You only
+need more to reach the board — and phone push — **from anywhere**:
+
+```mermaid
+flowchart TD
+    A(["Watch your AI agents"]) --> B{"Where do you want to see it?"}
+    B -->|This computer| S["<b>andon serve</b><br/>desktop alerts on — done"]
+    B -->|iPad, same Wi-Fi| L["<b>andon serve</b><br/>open http://your-mac-ip:8787"]
+    B -->|From anywhere| D{"Just you, or share it?"}
+    D -->|Just me| T["<b>tailscale serve</b> + andon serve<br/>HTTPS + phone push, zero infra"]
+    D -->|Share / team| E{"Run the relay yourself?"}
+    E -->|Yes| R["<b>Deploy a relay</b><br/>Docker behind your proxy/tunnel"]
+    E -->|Use existing| H["<b>andon hosted setup</b><br/>a teammate's or managed relay"]
+```
+
+| You want… | Do this |
+|---|---|
+| Watch on **this computer** | `andon serve` — desktop alerts on *(the default)* |
+| …also on an **iPad on the same Wi-Fi** | `andon serve`, open `http://<mac-ip>:8787` |
+| …from **anywhere, just for you** | `tailscale serve` in front of `andon serve` — HTTPS + phone push, no extra infra |
+| …**shareable** / a team / a clean URL | run a **relay** (below), or `andon hosted setup` an existing one |
+| run a relay **for others** | [deploy a relay](docs/deploy-relay.md) — Docker behind your reverse proxy or tunnel |
+
+**Rule of thumb:** most people only need `andon serve`. Want it on your phone? — **Tailscale if it's just
+you, a relay if you want to share.**
+
 ## Hosted ("board from anywhere")
 
-Andon is local-first and **free to self-host forever** — that stays the default. If you'd rather reach
-your board (and get phone alerts) from anywhere without setting up HTTPS/Tailscale, there's an optional,
-**opt-in** hosted relay built in:
+Andon is local-first and **free to self-host forever** — that stays the default. The optional, **opt-in**
+relay gives you the board (and phone alerts) from anywhere — for when Tailscale isn't enough (sharing, a
+team, a clean public URL):
 
 ```
 andon relay                      # run the zero-knowledge relay (you or anyone can host it)
