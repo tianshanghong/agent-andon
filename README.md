@@ -15,7 +15,7 @@ It's a lightweight, self-hosted way to **monitor several AI coding agents at onc
 the instant one needs your approval, finishes its turn, or gets blocked** — on the board (any device),
 a desktop banner, or your menu bar. No app, no account, zero dependencies.
 
-![Agent Andon board: one full-width row per agent — STUCK and NEEDS YOU floated to the top showing their full message, calm WORKING/READY rows compact below, and a signal bar across the top in the most-urgent colour](docs/board.png)
+![Agent Andon board: agents cycle through working → needs-you → stuck → done; STUCK and NEEDS YOU grow large, show their full message, and float to the top, while a signal bar across the top takes the most-urgent colour](docs/demo.gif)
 
 > *Andon* (行灯) is the lean-manufacturing signal board: a light that tells the
 > whole floor, at a glance, whether a line is running or needs a human. Same idea,
