@@ -11,3 +11,6 @@ build/
 # personal design docs — review artifacts, not version-controlled
 docs/DESIGN*.md
 docs/DESIGN*.pdf
+
+# launch / marketing drafts — local working copies, not for the public repo
+launch/
