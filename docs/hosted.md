@@ -51,7 +51,7 @@ into chat; save it in a password manager. (A scan-to-pair QR is planned to remov
 
 ## Opening the board
 
-- **On the same Mac:** open `http://127.0.0.1:<port>/b/<board-id>#k=<key>`. `localhost` / `127.0.0.1` is a
+- **On the same computer:** open `http://127.0.0.1:<port>/b/<board-id>#k=<key>`. `localhost` / `127.0.0.1` is a
   secure context, so in-browser decryption works over plain HTTP.
 - **On your phone / another device:** the relay must be reachable over **HTTPS** (browsers require a secure
   context for decryption + push). Two easy paths:

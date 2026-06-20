@@ -99,9 +99,9 @@ export function serve(argv: string[]): void {
     const tokenSuffix = args.token ? `?token=${args.token}` : "";
     console.log("\n  🚦 Agent Andon is live");
     console.log("  ──────────────────────────────────────────");
-    console.log(`  This Mac:   http://127.0.0.1:${args.port}${tokenSuffix}`);
-    console.log(`  iPad:       ${url}${tokenSuffix}`);
-    console.log("              (iPad must be on the same Wi-Fi)");
+    console.log(`  This computer:  http://127.0.0.1:${args.port}${tokenSuffix}`);
+    console.log(`  iPad / phone:   ${url}${tokenSuffix}`);
+    console.log("                  (same Wi-Fi as this computer)");
     if (args.token) console.log("  🔒 token auth enabled");
     if (args.notify) console.log(`  🔔 desktop alerts on${args.say ? " + speech" : ""} — needs-you · stuck · done  (--no-notify to disable)`);
     if (args.push) console.log('  📱 phone alerts ready — open the board on your phone over HTTPS (e.g. Tailscale), Add to Home Screen, tap "Enable phone alerts"');

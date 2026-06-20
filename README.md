@@ -38,11 +38,11 @@ iPad/phone/browser, a desktop banner, or your menu bar. No app, no account, zero
 ## How it works
 
 ```
-Claude Code / Codex  ──(native hook)──▶  andon server (your Mac)  ◀──(SSE push)──  iPad Safari
+Claude Code / Codex  ──(native hook)──▶  andon server (your computer)  ◀──(SSE push)──  iPad / phone / browser
 ```
 
 1. **Detect** — each tool's native hook mechanism reports state changes. No change to your workflow.
-2. **Relay** — a tiny HTTP server on your Mac receives the events.
+2. **Relay** — a tiny HTTP server on your computer receives the events.
 3. **Display** — the iPad holds an open SSE stream, so a state change shows in well under a
    second (it falls back to 1 s polling if SSE is unavailable). A signal bar across the top is
    the "tower light," readable across the room; the single most-urgent row pulses and chimes.
@@ -93,14 +93,14 @@ node dist/cli.js serve --demo
 andon serve --demo
 ```
 
-It prints a `http://<your-mac-ip>:8787` URL. Open it on the iPad — you should see two
-rows cycling colors. Once it looks right, `Ctrl-C` and run for real:
+It prints a `http://<your-ip>:8787` URL. Open it on the iPad (or any phone/browser) — you should see
+two rows cycling colors. Once it looks right, `Ctrl-C` and run for real:
 
 ```bash
 andon serve
 ```
 
-**2. Set up the iPad** (same Wi-Fi as the Mac):
+**2. Set up the iPad** (or any phone/browser, same Wi-Fi as the computer):
 
 - Safari → open the printed URL. **It's `http://`, not `https://`.**
 - Tap **"Enable sound"** once to unlock the chime (Safari mutes audio until you tap;
@@ -323,8 +323,8 @@ self-contained board.
 
 ## Troubleshooting
 
-- **iPad can't open the page** — same Wi-Fi? `http` not `https`? Mac firewall allowing
-  incoming connections (System Settings → Network → Firewall)? IP copied correctly
+- **iPad can't open the page** — same Wi-Fi? `http` not `https`? Your computer's firewall allowing
+  incoming connections (on macOS: System Settings → Network → Firewall)? IP copied correctly
   (it's printed at startup, and `andon doctor` reprints it)?
 - **Claude hook does nothing** — run `claude --debug` once and watch for hook errors;
   re-run `andon install claude`; `andon doctor` to confirm.
@@ -366,40 +366,41 @@ local-first default.
 
 ## Which setup do you need?
 
-`andon serve` already gives you the board + **desktop alerts on your Mac** — free, zero setup. The piece
-that needs more is **push to your phone**: a buzz when an agent needs you, *phone locked, you away from the
-desk*. Phone push needs **HTTPS** (a plain same-Wi-Fi `http://` board shows the board but **can't push**)
-**+ "Add to Home Screen"** on the phone (required on iPhone/iPad). Here's how to choose:
+`andon serve` already gives you the board + **desktop alerts on the computer running it** — free, zero
+setup, on **macOS / Linux / Windows**. The part that takes more is **push to your phone**: a buzz when an
+agent needs you, *phone locked, you away from the desk*. Phone push needs a relay reachable over **HTTPS**
++ **"Add to Home Screen"** on the phone (required on iPhone/iPad). **The easy way is our managed relay —
+nothing to run, no Tailscale, no HTTPS to set up.**
 
 ```mermaid
 flowchart TD
-    A(["Watch your AI agents"]) --> B{"Just on this Mac?"}
+    A(["Watch your AI agents"]) --> B{"Just on this computer?"}
     B -->|Yes| S["<b>andon serve</b><br/>board + desktop alerts — done"]
-    B -->|Also on a phone| C{"Phone PUSH alerts,<br/>or just glance at the board?"}
-    C -->|Glance, same Wi-Fi| L["<b>andon serve</b>, open http://mac-ip:8787<br/>board only — http can't push"]
-    C -->|Push, from anywhere| P{"Just you, or share it?"}
-    P -->|Just me| T["<b>tailscale serve</b> + andon serve<br/>+ Add to Home Screen → phone push"]
-    P -->|Share / team| E{"Run the relay yourself?"}
-    E -->|Yes| R["<b>Deploy a relay</b> + Add to Home Screen<br/>board + push, shareable URL"]
-    E -->|Use existing| H["<b>andon hosted setup</b><br/>+ Add to Home Screen"]
+    B -->|Phone too| C{"Phone PUSH, or just glance?"}
+    C -->|Glance| L["<b>andon serve</b> + open http://your-ip:8787<br/>same Wi-Fi, board only — http can't push"]
+    C -->|Push anywhere| M{"Which relay?"}
+    M -->|Managed| G["☁️ <b>Our managed relay</b> — easiest, no server<br/>andon hosted setup relay.agentandon.com"]
+    M -->|Tailscale| T["<b>tailscale serve</b> + andon serve<br/>self-host, just you"]
+    M -->|Own relay| R["<b>Deploy a relay</b> (Docker)<br/>self-host: team / your infra"]
 ```
 
 | You want… | Do this |
 |---|---|
-| Board + **desktop alerts** on this Mac | `andon serve` — the default, alerts on, no setup |
-| Glance at the board on an **iPad on the same Wi-Fi** | `andon serve`, open `http://<mac-ip>:8787` — *board only; `http` can't push* |
-| **Push to your phone, anywhere — just you** | `tailscale serve` + `andon serve`, then **Add to Home Screen** |
-| **Push to your phone — shareable / a team** | run a **relay** (or `andon hosted setup` an existing one), then **Add to Home Screen** |
-| run a relay **for others** | [deploy a relay](docs/deploy-relay.md) — Docker behind your reverse proxy/tunnel |
+| Board + **desktop alerts** on your computer | `andon serve` — the default *(macOS / Linux / Windows)*, alerts on |
+| Glance at the board on a **phone/tablet on the same Wi-Fi** | `andon serve`, open `http://<your-ip>:8787` — *board only; `http` can't push* |
+| **📱 Phone push — the easy way** *(no server, no Tailscale)* | **☁️ our managed relay:** `andon hosted setup https://relay.agentandon.com` + Add to Home Screen — *launching, [⭐ watch](https://github.com/tianshanghong/agent-andon)* |
+| Phone push, **self-hosted — just you** | `tailscale serve` + `andon serve` + Add to Home Screen |
+| Phone push, **your own relay** (team / your infra) | [deploy a relay](docs/deploy-relay.md) (Docker) + Add to Home Screen |
 
-**Rule of thumb:** `andon serve` gives **desktop** alerts for free. Want a buzz on your **phone** when you're
-away? — that needs HTTPS (**Tailscale** if it's just you, a **relay** to share) **+ Add to Home Screen**.
+**Rule of thumb:** `andon serve` gives **desktop** alerts for free, everywhere. Want them on your **phone**?
+— easiest is our **managed relay** (nothing to run); or self-host with **Tailscale** (just you) or **your
+own relay** (a team).
 
 ## Hosted ("board from anywhere")
 
 Andon is local-first and **free to self-host forever** — that stays the default. The optional, **opt-in**
-relay gives you the board (and phone alerts) from anywhere — for when Tailscale isn't enough (sharing, a
-team, a clean public URL):
+relay gives you the board + phone push from anywhere — use **our managed relay** (zero setup, below) or
+**run your own** (it's the same open-source code):
 
 ```
 andon relay                      # run the zero-knowledge relay (you or anyone can host it)
@@ -423,7 +424,9 @@ verify` confirms it matches your own copy.
 **Full guides:** [using hosted](docs/hosted.md) (board, phone/PWA, verify, multi-tenant, troubleshooting) ·
 [deploying a relay](docs/deploy-relay.md) (HTTPS, auto-start, capacity & abuse).
 
-A turnkey **managed** service (so you don't run the relay yourself) may come later — **star / watch** to follow along.
+**Don't want to run anything?** Our **managed relay** at `relay.agentandon.com` is the zero-setup way to get
+the board + phone push — just `andon hosted setup https://relay.agentandon.com`. It's **launching soon**;
+**⭐ star / watch** to catch the go-live.
 
 ---
 

@@ -30,7 +30,7 @@
     --c-done:#3aa86b;      /* green lens — finished cleanly       */
     --c-error:#ff463b;     /* signal red — blocked / stuck; bright + alarming   */
     --c-idle:#3b424d;      /* slate      — nothing running        */
-    --c-offline:#6b4a46;   /* brick      — board lost the Mac     */
+    --c-offline:#6b4a46;   /* brick      — board lost the server     */
 
     --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
     --sans:'IBM Plex Sans','IBM Plex Sans SC',-apple-system,system-ui,'PingFang SC',sans-serif;
@@ -390,7 +390,7 @@ const STR = {
     lev:{ today:"TODAY", handsOff:"hands-off", handsOffSub:"time you were free while agents worked",
       agentHours:"agent-hours", agentHoursSub:"sum of working time", agents:"agents run",
       pulledIn:"pulled in", stuck:"stuck", peak:"peak at once", nudge:"board’s clear — queue another run" },
-    head:"agent status", live:"live", recon:"reconnecting…", off:"OFFLINE", offCn:"lost the Mac", offTally:"reconnecting…",
+    head:"agent status", live:"live", recon:"reconnecting…", off:"OFFLINE", offCn:"lost the server", offTally:"reconnecting…",
     sound:"Enable alerts", soundOn:"Alerts on", ago:agoEn,
   },
   zh: {
@@ -404,7 +404,7 @@ const STR = {
     lev:{ today:"今日", handsOff:"无人值守", handsOffSub:"agent 替你干活、你空出来的时间",
       agentHours:"agent 工时", agentHoursSub:"工作时长合计", agents:"个 agent",
       pulledIn:"次被叫回", stuck:"卡住", peak:"并发峰值（同时最多）", nudge:"看板清空了 —— 再派一个?" },
-    head:"状态看板", live:"在线", recon:"重连中…", off:"已离线", offCn:"与 Mac 失联", offTally:"重连中…",
+    head:"状态看板", live:"在线", recon:"重连中…", off:"已离线", offCn:"与服务器失联", offTally:"重连中…",
     sound:"开启提醒", soundOn:"提醒已开", ago:agoZh,
   },
   ja: {
@@ -418,7 +418,7 @@ const STR = {
     lev:{ today:"今日", handsOff:"ノータッチ", handsOffSub:"エージェントが稼働し、あなたが手を離せていた時間",
       agentHours:"エージェント稼働時間", agentHoursSub:"稼働時間の合計", agents:"エージェント",
       pulledIn:"呼び戻し", stuck:"停止", peak:"同時稼働ピーク", nudge:"看板が空きました — もう一件まわしませんか?" },
-    head:"エージェント状態", live:"接続中", recon:"再接続中…", off:"オフライン", offCn:"Mac と切断", offTally:"再接続中…",
+    head:"エージェント状態", live:"接続中", recon:"再接続中…", off:"オフライン", offCn:"サーバーと切断", offTally:"再接続中…",
     sound:"通知を有効化", soundOn:"通知 ON", ago:agoJa,
   },
   ko: {
@@ -432,7 +432,7 @@ const STR = {
     lev:{ today:"오늘", handsOff:"무인 작동", handsOffSub:"에이전트가 일하는 동안 당신이 자유로웠던 시간",
       agentHours:"에이전트 시간", agentHoursSub:"작동 시간 합계", agents:"에이전트 실행",
       pulledIn:"호출됨", stuck:"멈춤", peak:"동시 최대", nudge:"보드가 비었어요 — 하나 더 돌려볼까요?" },
-    head:"에이전트 상태", live:"연결됨", recon:"재연결 중…", off:"오프라인", offCn:"Mac 연결 끊김", offTally:"재연결 중…",
+    head:"에이전트 상태", live:"연결됨", recon:"재연결 중…", off:"오프라인", offCn:"서버 연결 끊김", offTally:"재연결 중…",
     sound:"알림 켜기", soundOn:"알림 켜짐", ago:agoKo,
   },
   es: {
@@ -446,7 +446,7 @@ const STR = {
     lev:{ today:"HOY", handsOff:"sin que intervengas", handsOffSub:"tiempo libre mientras los agentes trabajaban",
       agentHours:"horas de agente", agentHoursSub:"suma del tiempo de trabajo", agents:"agentes ejecutados",
       pulledIn:"te requirieron", stuck:"atascado", peak:"máx. en paralelo", nudge:"el tablero está despejado — lanza otra tarea" },
-    head:"estado de agentes", live:"en vivo", recon:"reconectando…", off:"SIN CONEXIÓN", offCn:"se perdió el Mac", offTally:"reconectando…",
+    head:"estado de agentes", live:"en vivo", recon:"reconectando…", off:"SIN CONEXIÓN", offCn:"se perdió el servidor", offTally:"reconectando…",
     sound:"Activar alertas", soundOn:"Alertas activadas", ago:agoEs,
   },
   de: {
@@ -460,7 +460,7 @@ const STR = {
     lev:{ today:"HEUTE", handsOff:"freigespielt", handsOffSub:"Zeit, in der du frei warst, während Agenten liefen",
       agentHours:"Agentenstunden", agentHoursSub:"Summe der Laufzeit", agents:"Agenten gelaufen",
       pulledIn:"zurückgeholt", stuck:"Hänger", peak:"gleichzeitig max.", nudge:"Board ist leer — schick noch einen Lauf los" },
-    head:"Agentenstatus", live:"live", recon:"neu verbinden…", off:"OFFLINE", offCn:"Mac verloren", offTally:"neu verbinden…",
+    head:"Agentenstatus", live:"live", recon:"neu verbinden…", off:"OFFLINE", offCn:"Server verloren", offTally:"neu verbinden…",
     sound:"Mitteilungen aktivieren", soundOn:"Mitteilungen an", ago:agoDe,
   },
   fr: {
@@ -474,7 +474,7 @@ const STR = {
     lev:{ today:"AUJOURD’HUI", handsOff:"mains libres", handsOffSub:"temps où tu étais libre pendant que les agents travaillaient",
       agentHours:"heures-agent", agentHoursSub:"temps de travail cumulé", agents:"agents lancés",
       pulledIn:"rappels", stuck:"bloqué", peak:"pic simultané", nudge:"le tableau est vide — lance un autre agent" },
-    head:"état des agents", live:"en direct", recon:"reconnexion…", off:"HORS LIGNE", offCn:"Mac perdu", offTally:"reconnexion…",
+    head:"état des agents", live:"en direct", recon:"reconnexion…", off:"HORS LIGNE", offCn:"serveur perdu", offTally:"reconnexion…",
     sound:"Activer les alertes", soundOn:"Alertes activées", ago:agoFr,
   },
 };
