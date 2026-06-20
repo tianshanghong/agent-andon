@@ -3,6 +3,19 @@
 Notable changes to Agent Andon. Roughly follows [Keep a Changelog](https://keepachangelog.com/);
 the project is pre-1.0, so a minor version may bundle features and fixes together.
 
+## [0.2.1] — 2026-06-20
+
+### Fixed
+- **The board no longer shows "idle" while an agent is actively running.** `SessionStart` fires on
+  resume and auto-compaction too — not only a fresh launch — yet the hook mapped it to `idle`
+  unconditionally, so a busy session that auto-compacted mid-task had its tile blanked to idle. Now
+  only a genuinely fresh start (startup/clear) idles; resume/compact leave the tile untouched. Fixed
+  in both the Claude and Codex hooks.
+
+### Added
+- **README translated into 7 languages** (English · 中文 · 日本語 · 한국어 · Español · Deutsch ·
+  Français) with a language switcher at the top of each.
+
 ## [0.2.0] — 2026-06-20
 
 ### Added
