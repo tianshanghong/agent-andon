@@ -16,7 +16,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node -e \"require('fs').chmodSync('dist/cli.js', 0o755)\"",
     "dev": "tsc --watch",
     "start": "node dist/cli.js serve",
     "demo": "node dist/cli.js serve --demo",
