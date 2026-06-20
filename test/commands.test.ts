@@ -42,6 +42,18 @@ test("claude: SessionStart -> idle, tile appears at launch", () => {
   assert.equal(ev?.title, "proj");
 });
 
+test("claude: SessionStart only idles a FRESH session — resume/compact must not blank a busy tile", () => {
+  // SessionStart also fires on `resume` and auto-`compact` of a mid-work session;
+  // resetting a working tile to idle on compaction is the "idle while running" bug.
+  const at = (source?: string) =>
+    mapClaudeEvent({ hook_event_name: "SessionStart", source, session_id: "s1", cwd: "/x/proj" });
+  assert.equal(at("startup")?.state, "idle");
+  assert.equal(at("clear")?.state, "idle");
+  assert.equal(at(undefined)?.state, "idle"); // older Claude Code: no source → fresh start
+  assert.equal(at("compact"), null); // mid-task compaction: leave the tile as-is
+  assert.equal(at("resume"), null); // returning to an existing session: leave the tile as-is
+});
+
 test("claude: PostToolUse -> working (clears amber after an approval)", () => {
   const ev = mapClaudeEvent({ hook_event_name: "PostToolUse", session_id: "s1", cwd: "/x/proj" });
   assert.equal(ev?.state, "working");
@@ -146,6 +158,9 @@ test("codex hooks: lifecycle events map to states, incl. amber needs-you", () =>
   // accept snake_case too (Codex's trust state uses session_start / pre_tool_use…)
   assert.equal(mapCodexHookEvent({ hook_event_name: "session_start", session_id: "c1" })?.state, "idle");
   assert.equal(mapCodexHookEvent({ hook_event_name: "user_prompt_submit", session_id: "c1" })?.state, "working");
+  // resume/compact SessionStart must not blank a busy tile to idle (same as Claude)
+  assert.equal(mapCodexHookEvent({ hook_event_name: "SessionStart", source: "compact", session_id: "c1" }), null);
+  assert.equal(mapCodexHookEvent({ hook_event_name: "session_start", source: "resume", session_id: "c1" }), null);
   const ev = mapCodexHookEvent({
     hook_event_name: "PermissionRequest",
     session_id: "c1",

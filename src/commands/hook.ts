@@ -2,8 +2,11 @@
  * `andon hook` — the Claude Code hook. Reads the hook JSON on stdin, maps the
  * event to a board state, posts it. Wired to 5 events (see `andon install`):
  *
- *   SessionStart     -> idle      session just launched — show the tile right
- *                                 away (slate), before the first prompt
+ *   SessionStart     -> idle      a FRESH session (source startup/clear) — show
+ *                                 the slate tile before the first prompt. It also
+ *                                 fires on resume/auto-compact of an existing
+ *                                 session; those are ignored so a busy tile isn't
+ *                                 blanked to idle mid-task ("idle while running").
  *   UserPromptSubmit -> working   you just submitted, the agent is off
  *   PostToolUse      -> working   a tool just ran — clears amber the instant you
  *                                 approve a permission and the agent resumes
@@ -94,6 +97,16 @@ export function mapClaudeEvent(data: Record<string, unknown>): AndonEvent | null
   const evName = String(data.hook_event_name ?? "");
   const state = EVENT_TO_STATE[evName];
   if (!state) return null; // unknown event: quietly do nothing
+
+  // SessionStart idles a FRESH session (source startup/clear, or older Claude Code
+  // with no source) so its slate tile appears before the first prompt. But it ALSO
+  // fires on `resume` and auto-`compact` of an existing — often actively-working —
+  // session; blanking that busy tile to idle is the "idle while running" bug, so
+  // leave the tile's current state untouched for those.
+  if (evName === "SessionStart") {
+    const src = String(data.source ?? "");
+    if (src === "compact" || src === "resume") return null;
+  }
 
   // an idle/non-actionable Notification shouldn't change the tile (esp. not
   // flip a finished green tile to amber after 60s of you not responding).

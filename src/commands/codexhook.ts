@@ -3,7 +3,9 @@
  * `andon hook`). Codex's hook system uses the SAME stdin JSON schema as Claude
  * Code, so this mirrors hook.ts with a Codex-specific event→state map.
  *
- *   SessionStart     -> idle      session launched — show the tile right away
+ *   SessionStart     -> idle      a FRESH session launched — show the tile right
+ *                                 away. Resume/auto-compact also fire SessionStart;
+ *                                 those are ignored so a busy tile isn't blanked.
  *   UserPromptSubmit -> working   you just submitted
  *   PostToolUse      -> working   a tool ran — clears amber after approval
  *   PermissionRequest-> waiting   needs your approval (amber) — NEW for Codex
@@ -63,6 +65,14 @@ export function mapCodexHookEvent(data: Record<string, unknown>): AndonEvent | n
   const ev = normEvent(data.hook_event_name);
   const state = STATE_BY_EVENT[ev];
   if (!state) return null; // event we don't track
+
+  // SessionStart also fires on resume/auto-compact of an existing session (same
+  // schema as the Claude hook). Blanking a busy tile to idle mid-task is the
+  // "idle while running" bug, so leave those untouched — only a fresh start idles.
+  if (ev === "sessionstart") {
+    const src = String(data.source ?? "");
+    if (src === "compact" || src === "resume") return null;
+  }
 
   const cwd = String(data.cwd ?? process.cwd());
   const id = process.env.ANDON_SESSION || String(data.session_id ?? "codex");
