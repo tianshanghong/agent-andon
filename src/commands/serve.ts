@@ -67,6 +67,10 @@ export function serve(argv: string[]): void {
     process.exit(1);
   }
 
+  // A wall-mounted board should stay up: log a stray throw instead of letting it kill the server.
+  process.on("uncaughtException", (e) => console.error("serve: uncaught exception (kept running):", e));
+  process.on("unhandledRejection", (e) => console.error("serve: unhandled rejection (kept running):", e));
+
   const { server, store } = createServer({
     port: args.port,
     host: args.host,

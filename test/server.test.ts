@@ -269,3 +269,36 @@ test("POST /event: cross-origin blocked (403), same-origin & no-origin allowed",
     await s.close();
   }
 });
+
+test("GET /snd/done.mp3 serves the chime with range support", async () => {
+  const s = await start();
+  try {
+    const r = await request(s.port, "GET", "/snd/done.mp3");
+    assert.equal(r.status, 200);
+    assert.equal(r.headers["content-type"], "audio/mpeg");
+    assert.equal(r.headers["accept-ranges"], "bytes");
+    assert.ok(Number(r.headers["content-length"]) > 0);
+    const rg = await request(s.port, "GET", "/snd/done.mp3", { headers: { Range: "bytes=0-99" } });
+    assert.equal(rg.status, 206);
+    assert.match(String(rg.headers["content-range"]), /^bytes 0-99\/\d+$/);
+    const oob = await request(s.port, "GET", "/snd/done.mp3", { headers: { Range: "bytes=999999-1000000" } });
+    assert.equal(oob.status, 416);
+  } finally {
+    await s.close();
+  }
+});
+
+test("unknown /snd names 404 — prototype keys cannot crash the server", async () => {
+  const s = await start();
+  try {
+    assert.equal((await request(s.port, "GET", "/snd/nope.mp3")).status, 404);  // unknown chime
+    assert.equal((await request(s.port, "GET", "/snd/done.wav")).status, 404);  // wrong extension
+    // prototype-pollution guard: "constructor" must NOT resolve to an inherited Object member
+    assert.equal((await request(s.port, "GET", "/snd/constructor.mp3", { headers: { Range: "bytes=0-0" } })).status, 404);
+    assert.equal((await request(s.port, "GET", "/snd/__proto__.mp3")).status, 404);
+    // …and the server is still alive after those crafted requests
+    assert.equal((await request(s.port, "GET", "/healthz")).status, 200);
+  } finally {
+    await s.close();
+  }
+});

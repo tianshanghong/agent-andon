@@ -522,7 +522,7 @@ export function createRelay(opts: RelayOptions = {}): { server: http.Server; sto
         return sendRaw(res, FAVICON_SVG, "image/svg+xml");
       }
 
-      // GET /snd/<name>.wav   alert chimes — range-capable (iOS <audio> can't play data: URIs)
+      // GET /snd/<name>.mp3   alert chimes — range-capable (iOS <audio> can't play data: URIs)
       if (req.method === "GET" && parts.length === 2 && parts[0] === "snd") {
         const snd = soundName(url.pathname);
         if (snd) return serveSound(req, res, SOUNDS[snd]);

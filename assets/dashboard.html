@@ -906,7 +906,6 @@ async function startHosted(){
 /* ---------- sound: WebAudio synth where usable, <audio>(MP3) fallback for iOS ---------- */
 let actx = null, soundOn = false, aReady = false;
 try { soundOn = localStorage.getItem("andon.alerts") === "on"; } catch (e){} // remember across reloads
-const LOOKAHEAD = 0.06; // iOS drops notes scheduled AT currentTime; a small lead anchors the ramp across the suspend→run flip
 // Pre-rendered MP3 chimes (mirror the WebAudio tones), served from /snd/*.mp3 — used ONLY as a
 // fallback where AudioContext is unavailable (e.g. iPad Safari). MP3 (not WAV) because iOS Safari
 // won't play WAV inline in <audio>. Devices with WebAudio never touch these files.
@@ -925,7 +924,7 @@ function tone(freq, start, dur, peak){
   const o = actx.createOscillator(), g = actx.createGain();
   o.type = "sine"; o.frequency.value = freq;
   o.connect(g); g.connect(actx.destination);
-  const t = actx.currentTime + LOOKAHEAD + start;
+  const t = actx.currentTime + start;
   g.gain.setValueAtTime(0.0001, t);
   g.gain.exponentialRampToValueAtTime(peak, t + 0.02);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
@@ -939,8 +938,13 @@ function ringTones(kind){
 function playChime(kind){ // live events (not a gesture)
   if (!soundOn) return;
   if (actx && actx.state === "running"){ ringTones(kind); return; }                 // WebAudio device → crisp synth
-  if (actx && actx.state === "suspended"){ try { actx.resume().then(() => ringTones(kind)).catch(() => {}); return; } catch (e){} }
-  playEl(kind);                                                                      // no usable WebAudio (iOS audio:none) → <audio>
+  if (actx && actx.state === "suspended"){
+    // wake WebAudio, but FALL BACK to the unlocked <audio> if it stays suspended (iOS often
+    // rejects resume() outside a gesture, or resolves-but-stays-silent → would be a silent alert).
+    try { actx.resume().then(() => { if (actx.state === "running") ringTones(kind); else playEl(kind); }).catch(() => playEl(kind)); return; }
+    catch (e){ playEl(kind); return; }
+  }
+  playEl(kind);                                                                      // no WebAudio at all (iPad) → <audio>
 }
 function armAudio(){ // create + unlock everything we can, synchronously in the gesture
   if (!actx){ const AC = window.AudioContext || window.webkitAudioContext; if (AC){ try { actx = new AC(); } catch (e){} } }
