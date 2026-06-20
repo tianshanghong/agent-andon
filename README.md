@@ -1,19 +1,19 @@
 # 🚦 Agent Andon — a status board & notifier for Claude Code and Codex
 
-**Glance at an iPad — or get a desktop alert — the moment your AI coding agent is working, needs you, done, or stuck.**
+**Glance at any screen — iPad, phone, or browser — or get a desktop alert — the moment your AI coding agent is working, needs you, done, or stuck.**
 
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-3aa86b)](LICENSE)
 [![Node ≥ 18](https://img.shields.io/badge/node-%E2%89%A5%2018-5478c4)](https://nodejs.org)
 ![runtime dependencies: 0](https://img.shields.io/badge/runtime%20deps-0-3aa86b)
 ![platforms: macOS · Linux · Windows](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-23262e)
 
-Stand an old iPad on your desk. Submit a task to **Claude Code** or **OpenAI Codex**, then go do
-something else — one glance tells you whether the agent is **working, needs you, done, or stuck**.
-No babysitting the terminal, no forgetting to come back.
+Stand an old iPad on your desk — or open the board on your phone or any browser. Submit a task to
+**Claude Code** or **OpenAI Codex**, then go do something else — one glance tells you whether the agent
+is **working, needs you, done, or stuck**. No babysitting the terminal, no forgetting to come back.
 
-It's a lightweight, self-hosted way to **monitor several AI coding agents at once** and **get
-notified the instant one needs your approval, finishes its turn, or gets blocked** — across an
-iPad/phone/browser, a desktop banner, or your menu bar. No app, no account, zero dependencies.
+It's a lightweight, self-hosted way to **monitor several AI coding agents at once** and **get notified
+the instant one needs your approval, finishes its turn, or gets blocked** — on the board (any device),
+a desktop banner, or your menu bar. No app, no account, zero dependencies.
 
 ![Agent Andon board: one full-width row per agent — STUCK and NEEDS YOU floated to the top showing their full message, calm WORKING/READY rows compact below, and a signal bar across the top in the most-urgent colour](docs/board.png)
 
@@ -23,15 +23,26 @@ iPad/phone/browser, a desktop banner, or your menu bar. No app, no account, zero
 
 - **Zero runtime dependencies** — pure Node.js standard library.
 - **One command to wire up** — `andon install claude` edits your hooks for you (with a backup).
-- **Multi-agent native** — one full-width row per session; whatever needs you floats to the top and a signal bar across the top shows the most-urgent state.
-- **Speaks your language** — one language per screen, auto-detected from the browser (**English · 中文 · 日本語 · 한국어 · Español · Deutsch · Français**); pick another from the header dropdown, or `?lang=` to force one.
-- **Just an iPad + Safari** — no app, no hardware, no account.
+- **Multi-agent native** — one full-width row per session; whatever needs you floats to the top.
+- **Speaks your language** — **English · 中文 · 日本語 · 한국어 · Español · Deutsch · Français**, auto-detected.
+- **Any screen** — iPad, phone, or browser; no app, no account, no hardware.
 
-<sub>中文用户：把闲置 iPad 立在桌边，变成 Claude Code / Codex 的"安灯"状态看板。提交任务后放心去干别的，一瞥就知道 agent 在跑 / 该你了 / 完成了 / 卡住了。</sub>
+<sub>中文用户：把闲置 iPad 立在桌边（或用手机/任意浏览器打开），变成 Claude Code / Codex 的"安灯"状态看板。提交任务后放心去干别的，一瞥就知道 agent 在跑 / 该你了 / 完成了 / 卡住了。</sub>
 
 ---
 
-**Contents** · [How it works](#how-it-works) · [Install](#install) · [Quickstart](#quickstart-60-seconds) · [Commands](#commands) · [Notifications](#notifications-desktop-alerts-and-menu-bar) · [Security](#security) · [Configuration](#configuration) · [Develop](#develop) · [Troubleshooting](#troubleshooting)
+## Docs
+
+New here? **[Install](#install)** → **[Quickstart](#quickstart-60-seconds)** → **[Which setup do you need?](#which-setup-do-you-need)**. Then, for depth:
+
+| Guide | What's in it |
+|---|---|
+| **[Commands & event mapping](docs/commands.md)** | full CLI · Claude/Codex event→state · background-task counts · naming tiles |
+| **[Notifications](docs/notifications.md)** | desktop alerts · menu bar · tuning approvals |
+| **[Running it](docs/running.md)** | start / check / stop the board, **Tailscale Serve**, the relay |
+| **[Configuration & security](docs/configuration.md)** | env vars · token auth · network model |
+| **[Hosted board](docs/hosted.md)** · **[Deploying a relay](docs/deploy-relay.md)** | the "board from anywhere" relay — use it, or run one |
+| **[Troubleshooting & FAQ](docs/troubleshooting.md)** · **[Developing](docs/develop.md)** | when something's off · contributing |
 
 ---
 
@@ -43,27 +54,16 @@ Claude Code / Codex  ──(native hook)──▶  andon server (your computer) 
 
 1. **Detect** — each tool's native hook mechanism reports state changes. No change to your workflow.
 2. **Relay** — a tiny HTTP server on your computer receives the events.
-3. **Display** — the iPad holds an open SSE stream, so a state change shows in well under a
-   second (it falls back to 1 s polling if SSE is unavailable). A signal bar across the top is
-   the "tower light," readable across the room; the single most-urgent row pulses and chimes.
+3. **Display** — the board holds an open SSE stream, so a state change shows in well under a second
+   (it falls back to 1 s polling). A signal bar across the top is the "tower light," readable across the room.
 
-State priority (the top bar — and the row order — take the most urgent one):
+State priority (the top bar and the row order take the most urgent one):
 `stuck (red) > needs-you (amber) > done (green) > working (blue) > idle`.
 
-### The board
-
-- **One full-width row per process**, stacked top → bottom; the board scrolls when there are many.
-- **Size by urgency** — *stuck* and *needs-you* rows are large and show their **full message**
-  (never truncated); *working* / *ready* / *idle* rows stay compact, so a busy floor still fits a glance.
-- **What needs you floats to the top** and the board auto-scrolls it into view — the first
-  screen is always the things waiting on you.
-- **Calm by default** — only the single most-urgent row pulses; everything else stays still.
-  Tap **Enable sound** once on the iPad for the chime (remembered across reloads).
-- **Your language** — one language per screen, auto-detected from the browser:
-  **English · 中文 · 日本語 · 한국어 · Español · Deutsch · Français**. Pick another from the header
-  dropdown (a native picker that scales to any number of languages; remembered per device), or open
-  with `?lang=en|zh|ja|ko|es|de|fr` to force one. Agent messages (commands, file paths) stay
-  verbatim, and adding a language is a single block in `assets/dashboard.html`.
+**The board:** one full-width row per process; **stuck / needs-you** grow large, show their **full message**,
+and float to the top (auto-scrolled into view), while *working / ready / idle* stay compact. Calm by default —
+only the single most-urgent row pulses. One language per screen, auto-detected (override with the header
+dropdown or `?lang=`).
 
 ---
 
@@ -93,273 +93,32 @@ node dist/cli.js serve --demo
 andon serve --demo
 ```
 
-It prints a `http://<your-ip>:8787` URL. Open it on the iPad (or any phone/browser) — you should see
-two rows cycling colors. Once it looks right, `Ctrl-C` and run for real:
+It prints a `http://<your-ip>:8787` URL. Open it on any phone, tablet, or browser — you should see two
+rows cycling colors. Once it looks right, `Ctrl-C` and run for real:
 
 ```bash
 andon serve
 ```
 
-**2. Set up the iPad** (or any phone/browser, same Wi-Fi as the computer):
+**2. Open the board** (iPad, phone, or any browser, same Wi-Fi as the computer):
 
-- Safari → open the printed URL. **It's `http://`, not `https://`.**
-- Tap **"Enable sound"** once to unlock the chime (Safari mutes audio until you tap;
-  this is the board's in-browser sound, separate from the default-on desktop alerts).
-  The choice is remembered across reloads — you won't need to tap it again.
-- Share → **Add to Home Screen** → launch from the icon for a full-screen, address-bar-free board.
-- Belt-and-suspenders against sleep: **Settings → Display & Brightness → Auto-Lock → Never.**
-  (The page also requests a Wake Lock.)
+- Open the printed URL. **It's `http://`, not `https://`.**
+- Tap **"Enable sound"** once to unlock the chime (browsers mute audio until you tap; this is the board's
+  in-browser sound, separate from the default-on desktop alerts). Remembered across reloads.
+- On a phone/tablet: **Add to Home Screen** for a full-screen, address-bar-free board. (On a wall iPad,
+  also set **Auto-Lock → Never**; the page requests a Wake Lock too.)
 
 **3. Wire up your agents:**
 
 ```bash
 andon install claude        # edits ~/.claude/settings.json (keeps a .andon-backup)
 andon install codex         # edits ~/.codex/hooks.json    (keeps a .andon-backup)
-andon doctor                # confirm everything's connected; reprints the iPad URL
+andon doctor                # confirm everything's connected; reprints the board URL
 ```
 
 Restart your Claude Code session and it lights up the board automatically. That's it.
 
 > Want the board (and phone push) from **anywhere**, not just this Wi-Fi? → [**Which setup do you need?**](#which-setup-do-you-need)
-
----
-
-## Commands
-
-| Command | What it does |
-|---|---|
-| `andon serve [--demo] [--port N] [--token T] [--no-notify] [--say]` | Run the board server; desktop alerts on by default (`--no-notify` off, `--say` adds speech) |
-| `andon install claude` | Wire Claude Code status hooks (timestamped backup) |
-| `andon install codex` | Wire Codex lifecycle hooks (run `/hooks` to trust) |
-| `andon uninstall <claude\|codex>` | Remove only what Andon added; leaves the rest of your config intact |
-| `andon doctor` | Health check + what's wired + iPad URL |
-| `andon post <state> <agent> [title] [msg]` | Push a status by hand |
-| `andon sub <+n\|-n> [id]` | Bump a process's background-task count |
-| `andon hook` / `andon codexhook` | *(internal — invoked by the hooks)* |
-
-`andon install --dry-run claude` prints the change without writing.
-
-### Event → state mapping (Claude Code)
-
-| Claude Code event | Board state | When |
-|---|---|---|
-| `SessionStart` | idle (slate) | session launched — the tile appears right away |
-| `UserPromptSubmit` | working (blue) | you just submitted a prompt |
-| `PostToolUse` | working (blue) | a tool just ran — clears amber the moment you approve |
-| `Notification` | needs-you (amber, pulses) | waiting on permission / your input |
-| `Stop` | **ready** (green) | turn handed back to you — your move, *not* "all done" |
-| `StopFailure` | stuck (red, pulses) | the turn failed (newer Claude Code only) |
-| `SessionEnd` | *removed* | session ended; tile disappears |
-
-Multiple sessions each get their own tile (keyed by `session_id`). One process =
-one tile; its sub-agents roll up into it rather than spawning their own. A session
-that was *already running* before the board started appears on its next event
-(prompt, tool, turn end) — Andon stays out of your statusLine entirely.
-
-### Background work: keep a card honest past "done"
-
-`Stop` means the foreground agent handed the turn back — it does **not** mean
-background work finished. If a process kicks off background workflows, have them
-report so the card stays "running" (blue) until they drain instead of falsely
-going green:
-
-```bash
-export ANDON_SESSION="<this process's tile id>"   # the session_id of the parent tile
-andon sub +1     # a background task started
-#   ...do the work...
-andon sub -1     # it finished
-```
-
-While the count is `> 0` the card reads `WORKING ⋯N background` and only turns
-green once every task has reported `-1`.
-
-### Codex
-
-Modern Codex (≈ 0.117+) has a full Claude-compatible **hooks** system, so Andon
-gets the same lifecycle as Claude Code — including amber **needs-you**:
-
-```bash
-andon install codex      # wires lifecycle hooks → ~/.codex/hooks.json
-```
-
-| Codex hook event | Board state |
-|---|---|
-| `SessionStart` | idle (tile appears at launch) |
-| `UserPromptSubmit` / `PostToolUse` | working (blue) |
-| `PermissionRequest` | **needs-you (amber)** |
-| `Stop` | ready (green) |
-| `SessionEnd` | *removed* |
-
-> **One extra step Codex requires:** new hooks must be **trusted** before they
-> run — run `/hooks` inside Codex once (or launch `codex
-> --dangerously-bypass-hook-trust`). `andon uninstall codex` cleanly removes the
-> hooks again, with a timestamped backup.
-
-Residual caveat: red "stuck" stays staleness-based (no dedicated failed-turn
-hook). (Already-running sessions appear on their next event, same as Claude.)
-
----
-
-## Notifications: desktop alerts and menu bar
-
-Andon's whole job is to **grab your attention at the right moment** — when an
-agent needs you or gets blocked — and otherwise stay quiet. The board is the
-universal channel (works on any device); these add more, each degrading
-gracefully across macOS / Linux / Windows.
-
-**Native desktop alerts** — a banner on the machine running the server, **on by
-default**. Loud for the states that need you, quiet for completion:
-
-- **needs-you (amber)** / **stuck (red)** → banner + sound (immediate).
-- **done (green)** → one *quiet* banner (no sound), debounced 4s so a transient
-  green never fires a false "ready".
-
-```bash
-andon serve                 # alerts on by default
-andon serve --say           # also speak needs-you / stuck aloud
-andon serve --no-notify     # turn alerts off
-```
-Uses `osascript`/`say` (macOS), `notify-send`/`spd-say` (Linux), PowerShell
-toast/`System.Speech` (Windows). Missing tool → silently skipped. (Auto-off
-under `--demo` so the cycling fake agents don't spam you.) Alerts are
-**throttled** (per-session cooldown + a global token bucket) so a busy — or
-malicious — LAN client posting to `/event` can't drive a process-spawn flood.
-
-**Menu / status bar** — a one-glance summary without a separate iPad:
-
-```bash
-curl -s http://127.0.0.1:8787/menubar     # plain-text summary endpoint
-```
-Wire it to SwiftBar/xbar (macOS) or Waybar/polybar (Linux); see
-`examples/andon-menubar.5s.sh`.
-
-### Fewer interruptions? Configure approvals yourself
-
-Andon **never touches your permission/approval settings** — that's yours to own.
-If amber "needs you" fires more than you'd like, pre-approve safe operations in
-your agent's own config (Andon will then only light up for the rest):
-
-- **Claude Code** — add read-only patterns to `permissions.allow` in
-  `~/.claude/settings.json`, e.g. `"Read"`, `"Bash(git status:*)"`,
-  `"Bash(npm test:*)"`. Your `deny`/`ask` rules always take precedence, and the
-  Bash matcher is shell-operator-aware (so `Bash(git status:*)` won't approve
-  `git status && rm -rf`). See `/permissions`.
-- **Codex** — set `approval_policy` (e.g. `"untrusted"` auto-runs trusted
-  read-only commands) and/or `sandbox_mode` in `~/.codex/config.toml`.
-
-Keeping this in *your* hands means Andon can never weaken your safety rules —
-and the board stays a faithful mirror of when you're genuinely needed.
-
-## Naming a tile
-
-The default title is the project folder name. Override per-terminal:
-
-```bash
-ANDON_LABEL="backend refactor" claude
-ANDON_LABEL="landing copy"     codex
-```
-
----
-
-## Running it (start / stop)
-
-```bash
-andon serve                                  # foreground — Ctrl-C to stop
-nohup andon serve > /tmp/andon.log 2>&1 &    # background (macOS / Linux)
-pkill -f "cli.js serve"                      # stop a background one
-```
-
-Full reference — background, **phone access via Tailscale Serve**, and the relay, each with
-start / check / stop — is in **[docs/running.md](docs/running.md)**.
-
----
-
-## Security
-
-By default the server binds `0.0.0.0` with **no authentication** — anyone on the LAN can
-read and post status. Fine on a trusted home Wi-Fi; **don't run it on a public/untrusted
-network.** For a shared network, set a token (export it everywhere the hooks run too):
-
-```bash
-ANDON_TOKEN=somesecret andon serve
-```
-
-With a token set, `/state` and `/event` require it. The hooks and CLI send it as an
-`x-andon-token` header automatically (as long as `ANDON_TOKEN` is in their environment);
-on the iPad, open the board with `?token=somesecret` and it carries the token through.
-`/healthz` stays open so `andon doctor` always works.
-
-The board only ever exposes high-level status (state, project name, a one-line message) —
-never code or full logs. Event bodies are capped at 64 KB.
-
----
-
-## Configuration
-
-| Env var | Default | Meaning |
-|---|---|---|
-| `AGENT_STATUS_URL` | `http://127.0.0.1:8787` | server base URL the hooks post to |
-| `ANDON_TOKEN` | *(none)* | shared token required by `/state` and `/event` when set |
-| `ANDON_PORT` / `ANDON_HOST` | `8787` / `0.0.0.0` | server bind |
-| `ANDON_LABEL` | folder name | tile title (per terminal) |
-| `ANDON_SESSION` | — | override a tile's session id (e.g. for a background job) |
-
----
-
-## Develop
-
-```bash
-npm run build     # tsc -> dist/
-npm test          # node:test unit tests for the store (Node 22.6+)
-npm run dev       # tsc --watch
-```
-
-Architecture: `src/store.ts` is the pure, tested state model; `src/server.ts` is the
-HTTP layer; `src/commands/*` are the CLI verbs; `assets/dashboard.html` is the
-self-contained board.
-
----
-
-## Troubleshooting
-
-- **iPad can't open the page** — same Wi-Fi? `http` not `https`? Your computer's firewall allowing
-  incoming connections (on macOS: System Settings → Network → Firewall)? IP copied correctly
-  (it's printed at startup, and `andon doctor` reprints it)?
-- **Claude hook does nothing** — run `claude --debug` once and watch for hook errors;
-  re-run `andon install claude`; `andon doctor` to confirm.
-- **Codex tiles never appear / never change** — run `/hooks` inside Codex once to
-  trust the hooks (Codex skips untrusted hooks); `andon doctor` confirms wiring.
-- **A "working" tile is stuck** — a process likely died before sending its end event.
-  It auto-clears after 6h; for Codex, `andon post gone codex` from that project dir clears it now.
-
----
-
-## FAQ
-
-**How do I get notified when Claude Code finishes or needs approval?**
-Run `andon serve` (desktop alerts are on by default) and `andon install claude`. You get a desktop
-banner the instant a session needs you or finishes, plus the live board on any device.
-
-**Can I monitor multiple Claude Code / Codex sessions at once?**
-Yes — that's the point. Every session is its own row, and whatever needs you floats to the top.
-
-**Does it work with OpenAI Codex?**
-Yes. `andon install codex` wires Codex's lifecycle hooks (run `/hooks` once to trust them).
-
-**Do I actually need an iPad?**
-No. The board is a plain web page — open it on any phone, tablet, or browser. A spare iPad just
-makes a nice always-on wall display. You also get desktop banners and a menu-bar summary.
-
-**Is my code or data sent anywhere?**
-No — by default nothing about your agents leaves your machine. Andon is fully self-hosted: no account, no
-telemetry, no analytics, no "phone home." It only ever holds high-level status (state, project name, a
-one-line message) — never your code, logs, or secrets.
-
-Two honest caveats: (1) the board loads its web fonts from Google Fonts unless you self-host them — that
-request carries no agent data, just your browser's normal font fetch. (2) Optional features (phone push,
-and a possible hosted relay) are **strictly opt-in** and each spells out exactly what leaves your machine
-— a hosted relay would be designed so even *it* can't read your agents' messages. They never change this
-local-first default.
 
 ---
 
@@ -395,37 +154,73 @@ flowchart TD
 — easiest is our **managed relay** (nothing to run); or self-host with **Tailscale** (just you) or **your
 own relay** (a team).
 
+---
+
+## Commands
+
+```bash
+andon serve                 # run the board (desktop alerts on by default)
+andon install claude        # wire Claude Code hooks (also: install codex)
+andon doctor                # health check + the board URL
+andon post <state> <agent>  # push a status by hand
+andon uninstall claude      # cleanly remove what Andon added
+```
+
+Full reference — every flag, the Claude/Codex **event → state** mapping, background-task counting, and
+naming tiles — is in **[docs/commands.md](docs/commands.md)**.
+
+---
+
+## Notifications
+
+Desktop alerts are **on by default** — a banner (and sound for needs-you / stuck) on the computer running
+the server, degrading gracefully across macOS / Linux / Windows; there's also a menu-bar summary. Tune it
+with `--say` / `--no-notify`, or pre-approve safe operations so amber fires less. See
+**[docs/notifications.md](docs/notifications.md)**.
+
+---
+
+## Running it (start / stop)
+
+```bash
+andon serve                                  # foreground — Ctrl-C to stop
+nohup andon serve > /tmp/andon.log 2>&1 &    # background (macOS / Linux)
+pkill -f "cli.js serve"                      # stop a background one
+```
+
+Full start / check / stop for the board, **Tailscale Serve**, and the relay: **[docs/running.md](docs/running.md)**.
+
+---
+
 ## Hosted ("board from anywhere")
 
 Andon is local-first and **free to self-host forever** — that stays the default. The optional, **opt-in**
-relay gives you the board + phone push from anywhere — use **our managed relay** (zero setup, below) or
-**run your own** (it's the same open-source code):
+relay gives you the board + phone push from anywhere — use **our managed relay** (zero setup) or **run your
+own** (same open-source code):
 
-```
-andon relay                      # run the zero-knowledge relay (you or anyone can host it)
-andon hosted setup <relay-url>   # opt in — generates a key that never leaves your machine
-andon verify <relay-url>         # check the relay serves the exact open-source code
+```bash
+andon hosted setup https://relay.agentandon.com   # opt in — a key is generated that never leaves your machine
+andon relay                                        # …or run the zero-knowledge relay yourself
+andon verify <relay-url>                           # check a relay serves the exact open-source code
 ```
 
 Every status is **end-to-end encrypted on your machine** before it leaves; the relay routes + stores
-**ciphertext only** and can't read your agents' titles, messages, or code. The board you open is the
-*same* board, decrypted in your browser with a key carried in the link's `#fragment` (never sent to the
-server) — no local server needed.
+**ciphertext only** and can't read your prompts, code, titles, or messages — it sees only that you're
+active, roughly when, and your IP. *"Verifiable, not just trusted":* the served code is open-source +
+reproducible and `andon verify` confirms a relay serves exactly it. Full guides:
+**[using the hosted board](docs/hosted.md)** · **[deploying a relay](docs/deploy-relay.md)**.
 
-**What the relay can / can't see** — ✓ can't read: prompts, code, project names, messages. • can see:
-that you're active and roughly when, how many sessions, your IP. Self-host shares nothing and stays the default.
+> **Don't want to run anything?** Our managed relay at `relay.agentandon.com` is the zero-setup path —
+> it's **launching soon**; **⭐ star / watch** to catch the go-live.
 
-**Verifiable, not just trusted.** A web board's code is served by the relay, so "even if breached" only
-holds for an installed client. For the web board the honest claim is *"we can't secretly backdoor you"*:
-the served code is open-source + reproducible, the relay declares its hash at `/version`, and `andon
-verify` confirms it matches your own copy.
+---
 
-**Full guides:** [using hosted](docs/hosted.md) (board, phone/PWA, verify, multi-tenant, troubleshooting) ·
-[deploying a relay](docs/deploy-relay.md) (HTTPS, auto-start, capacity & abuse).
+## Security
 
-**Don't want to run anything?** Our **managed relay** at `relay.agentandon.com` is the zero-setup way to get
-the board + phone push — just `andon hosted setup https://relay.agentandon.com`. It's **launching soon**;
-**⭐ star / watch** to catch the go-live.
+By default the server binds `0.0.0.0` with **no auth** — fine on trusted home Wi-Fi, **not** on a
+public/untrusted network. Set `ANDON_TOKEN` for a shared network, and don't port-forward it (use the HTTPS
+paths above). The board only exposes high-level status — never code or logs. Details + env vars:
+**[docs/configuration.md](docs/configuration.md)**.
 
 ---
 
