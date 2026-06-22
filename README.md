@@ -204,9 +204,9 @@ andon relay                                        # …or run the zero-knowledg
 andon verify <relay-url>                           # check a relay serves the exact open-source code
 ```
 
-Every status is **end-to-end encrypted on your machine** before it leaves; the relay routes + stores
-**ciphertext only** and can't read your prompts, code, titles, or messages — it sees only that you're
-active, roughly when, and your IP. *"Verifiable, not just trusted":* the served code is open-source +
+Every status is **end-to-end encrypted on your machine** before it leaves; the relay only ever routes
+and stores **that ciphertext, which it cannot decrypt** (it never receives your key) — so it can't read
+your prompts, code, titles, or messages, and sees only that you're active, roughly when, and your IP. *"Verifiable, not just trusted":* the served code is open-source +
 reproducible and `andon verify` confirms a relay serves exactly it. Full guides:
 **[using the hosted board](docs/hosted.md)** · **[deploying a relay](docs/deploy-relay.md)**.
 
