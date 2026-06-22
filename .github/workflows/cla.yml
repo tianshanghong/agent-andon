@@ -1,0 +1,112 @@
+name: CLA
+
+# Self-owned CLA bot — no third-party action (the popular contributor-assistant/github-action is
+# archived). Signatures are committed to signatures/version1/cla.json, so the audit trail lives in
+# this repo's git history. Contributors sign once by commenting the agree phrase on their PR.
+#
+# Make "CLA" a required status check in branch protection to actually gate merges.
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write        # commit the signatures file
+  pull-requests: write   # comment on PRs
+  issues: write          # PRs are issues for the comment API
+  statuses: write        # set the "CLA" commit status
+
+concurrency:
+  group: cla-${{ github.event.pull_request.number || github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  cla:
+    runs-on: ubuntu-latest
+    # PR lifecycle events, or a PR comment that contains the agree phrase
+    if: >
+      github.event_name == 'pull_request_target' ||
+      (github.event.issue.pull_request != null &&
+       contains(github.event.comment.body, 'I have read and agree to the CLA'))
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const SIGN_PHRASE = "I have read and agree to the CLA";
+            const SIG_PATH = "signatures/version1/cla.json";
+            const CLA_VERSION = "1";
+            const { owner, repo } = context.repo;
+            const claUrl = `https://github.com/${owner}/${repo}/blob/HEAD/CLA.md`;
+            // the maintainer and bots never need to sign
+            const ALLOW = new Set(["tianshanghong", "dependabot[bot]", "github-actions[bot]"]);
+
+            // resolve the PR, its author, and head SHA from whichever event fired
+            let prNumber, author, headSha;
+            if (context.eventName === "pull_request_target") {
+              const pr = context.payload.pull_request;
+              prNumber = pr.number; author = pr.user.login; headSha = pr.head.sha;
+            } else {
+              prNumber = context.issue.number;
+              const pr = (await github.rest.pulls.get({ owner, repo, pull_number: prNumber })).data;
+              author = pr.user.login; headSha = pr.head.sha;
+            }
+            const exempt = ALLOW.has(author);
+
+            // load (or initialise) the signatures file
+            let sigSha, signatures = { signedContributors: [] };
+            try {
+              const f = (await github.rest.repos.getContent({ owner, repo, path: SIG_PATH })).data;
+              sigSha = f.sha;
+              signatures = JSON.parse(Buffer.from(f.content, "base64").toString("utf8"));
+            } catch (_) { /* not created yet → start empty */ }
+            const isSigned = (login) =>
+              signatures.signedContributors.some((c) => c.name.toLowerCase() === login.toLowerCase());
+
+            // if this run is a sign-off comment by the PR author, record it
+            if (context.eventName === "issue_comment" && !exempt) {
+              const commenter = context.payload.comment.user.login;
+              // belt-and-suspenders: only the PR author, with the exact phrase, signs for themselves.
+              // comment.body is used only as data in a JS string compare — never in shell/eval.
+              const agreed = String(context.payload.comment.body || "").includes(SIGN_PHRASE);
+              if (agreed && commenter.toLowerCase() === author.toLowerCase() && !isSigned(author)) {
+                signatures.signedContributors.push({
+                  name: author,
+                  id: context.payload.comment.user.id,
+                  pullRequestNo: prNumber,
+                  comment_id: context.payload.comment.id,
+                  created_at: context.payload.comment.created_at,
+                  cla_version: CLA_VERSION,
+                });
+                await github.rest.repos.createOrUpdateFileContents({
+                  owner, repo, path: SIG_PATH, sha: sigSha,
+                  message: `chore(cla): @${author} signed the CLA (PR #${prNumber})`,
+                  content: Buffer.from(JSON.stringify(signatures, null, 2) + "\n").toString("base64"),
+                });
+              }
+            }
+
+            const signed = exempt || isSigned(author);
+
+            // a commit status so branch protection can require "CLA"
+            await github.rest.repos.createCommitStatus({
+              owner, repo, sha: headSha, context: "CLA",
+              state: signed ? "success" : "failure",
+              description: signed ? "CLA signed" : "CLA not signed yet",
+              target_url: claUrl,
+            });
+
+            // for non-exempt authors, keep one sticky status comment up to date
+            if (!exempt) {
+              const marker = "<!-- cla-bot -->";
+              const body = signed
+                ? `${marker}\n✅ @${author} has signed the CLA — thank you!`
+                : `${marker}\nThanks for the pull request, @${author}! Before it can be merged, please ` +
+                  `read the **[CLA](${claUrl})** and then **comment exactly:**\n\n> ${SIGN_PHRASE}\n\n` +
+                  `It's a one-time signature, recorded in \`${SIG_PATH}\`.`;
+              const comments = (await github.rest.issues.listComments({ owner, repo, issue_number: prNumber })).data;
+              const existing = comments.find((c) => c.body && c.body.includes(marker));
+              if (existing) await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+              else await github.rest.issues.createComment({ owner, repo, issue_number: prNumber, body });
+            }
