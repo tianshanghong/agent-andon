@@ -10,6 +10,7 @@ on:
   push:
     branches: [main]
     tags: ["v*"]
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -38,6 +39,7 @@ jobs:
       - uses: docker/setup-buildx-action@v3
 
       - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -60,8 +62,9 @@ jobs:
         with:
           context: .
           file: ${{ matrix.dockerfile }}
-          platforms: linux/amd64,linux/arm64
-          push: true
+          # PRs validate the build (amd64, no push); main/tags publish multi-arch
+          platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
+          push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           provenance: true
