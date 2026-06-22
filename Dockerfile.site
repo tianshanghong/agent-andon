@@ -1,0 +1,11 @@
+# syntax=docker/dockerfile:1
+#
+# Agent Andon — the landing page (agentandon.com) as a static nginx image.
+# Built from site/ by CI and published to ghcr.io/<owner>/agent-andon-site, so
+# deployments pull the image instead of copying the HTML into each stack repo
+# (keeps the public repo the single source of truth — GitOps-clean).
+FROM nginx:1.27-alpine
+LABEL org.opencontainers.image.source="https://github.com/tianshanghong/agent-andon" \
+      org.opencontainers.image.description="Agent Andon — landing page (agentandon.com)" \
+      org.opencontainers.image.licenses="AGPL-3.0-or-later"
+COPY site/ /usr/share/nginx/html/

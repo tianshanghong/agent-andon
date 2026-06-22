@@ -1,8 +1,10 @@
-name: Publish relay image
+name: Publish images
 
-# Builds the relay container from source and publishes it to GHCR
-# (ghcr.io/<owner>/agent-andon). The image is the same open-source code `andon
-# verify` checks — provenance + SBOM are attached for supply-chain transparency.
+# Builds two images from source and publishes them to GHCR:
+#   - ghcr.io/<owner>/agent-andon       — the zero-knowledge relay (the same code `andon verify` checks)
+#   - ghcr.io/<owner>/agent-andon-site  — the landing page (agentandon.com), so deploys pull the
+#                                         image instead of copying site/index.html into stack repos
+# Provenance + SBOM are attached for supply-chain transparency.
 
 on:
   push:
@@ -21,6 +23,14 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: agent-andon
+            dockerfile: Dockerfile
+          - image: agent-andon-site
+            dockerfile: Dockerfile.site
     steps:
       - uses: actions/checkout@v4
 
@@ -38,7 +48,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -49,11 +59,12 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: ${{ matrix.dockerfile }}
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           provenance: true
           sbom: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
