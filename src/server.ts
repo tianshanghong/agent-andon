@@ -70,7 +70,11 @@ export interface AndonServer {
 }
 
 export function createServer(opts: ServerOptions): AndonServer {
-  const store = opts.store ?? new SessionStore();
+  // ANDON_IDLE_TTL_SEC tunes how long a finished/idle tile lingers (default 15 min);
+  // a non-positive/garbage value → undefined → the store's default. now/maxSessions/ttl keep theirs.
+  const idleEnv = Number(process.env.ANDON_IDLE_TTL_SEC);
+  const idleTtl = idleEnv > 0 ? idleEnv : undefined;
+  const store = opts.store ?? new SessionStore(undefined, undefined, undefined, idleTtl);
 
   // SSE push: every open board holds a /events stream and we send the snapshot
   // on any change, so the iPad reflects a state change in well under a second

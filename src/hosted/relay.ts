@@ -43,7 +43,12 @@ const STATES = new Set(["working", "waiting", "done", "error", "idle"]);
 const MAX_SESSIONS = 200; // per board
 const MAX_BOARDS = 500; // total tenants (single-process MVP)
 const IDLE_BOARD_MS = 90 * 24 * 60 * 60 * 1000; // evict boards unused for 90d (beta capacity guard)
-const EVENT_TTL_MS = 6 * 60 * 60 * 1000; // 6h, matches the local board's sweep
+const EVENT_TTL_MS = 6 * 60 * 60 * 1000; // 6h hard cap, matches the local board's sweep
+// quiescent (done/idle) sessions age out early so a torn-down team (teammates that never sent a
+// SessionEnd) doesn't leave a wall of stale "ready" tiles. Relay can't see background-task counts
+// (sealed), so it ages out by state+age only. Override via ANDON_IDLE_TTL_SEC; set ≥ 6h to disable.
+const IDLE_TTL_SEC_ENV = Number(process.env.ANDON_IDLE_TTL_SEC);
+const IDLE_TTL_MS = (IDLE_TTL_SEC_ENV > 0 ? IDLE_TTL_SEC_ENV : 15 * 60) * 1000;
 export const MAX_BODY = 64 * 1024;
 const MAX_SID = 200;
 const MAX_CT = 64 * 1024; // bounds per-event storage (body cap also applies)
@@ -197,8 +202,13 @@ export class RelayStore {
   }
 
   private sweep(b: Board): void {
-    const cutoff = this.now() - EVENT_TTL_MS;
-    for (const [sid, ev] of b.events) if (ev.tsSrv < cutoff) b.events.delete(sid);
+    const now = this.now();
+    const hardCutoff = now - EVENT_TTL_MS;
+    const idleCutoff = now - IDLE_TTL_MS;
+    for (const [sid, ev] of b.events) {
+      const quiescent = ev.state === "done" || ev.state === "idle";
+      if (ev.tsSrv < hardCutoff || (quiescent && ev.tsSrv < idleCutoff)) b.events.delete(sid);
+    }
   }
 
   /** Evict boards no one has ingested-to or read in IDLE_BOARD_MS — so a flood of

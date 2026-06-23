@@ -123,6 +123,21 @@ test("relay store: caps sessions per board, but updating an existing one still w
   assert.doesNotThrow(() => store.ingest(boardId, token, mkEvent(key, boardId, "s5", "done", 2))); // existing sid ok
 });
 
+test("relay sweep ages out quiescent (done/idle) sessions before the hard TTL; keeps active/alerting", () => {
+  const clock = { v: 1_000_000 };
+  const store = new RelayStore(() => clock.v);
+  const { token, tokenHash } = mkToken();
+  const boardId = store.provision(tokenHash);
+  const key = generateKey();
+  store.ingest(boardId, token, mkEvent(key, boardId, "doneSid", "done", 1)); // quiescent → ages out
+  store.ingest(boardId, token, mkEvent(key, boardId, "idleSid", "idle", 1)); // quiescent → ages out
+  store.ingest(boardId, token, mkEvent(key, boardId, "waitSid", "waiting", 1)); // alerting → kept
+  store.ingest(boardId, token, mkEvent(key, boardId, "workSid", "working", 1)); // active → kept
+  clock.v += 16 * 60 * 1000; // +16 min: past the 15-min idle TTL, far before the 6h hard TTL
+  const sids = store.snapshot(boardId).map((e) => e.sid).sort();
+  assert.deepEqual(sids, ["waitSid", "workSid"]);
+});
+
 test("relay store: tenant hashed-tokens persist across restart; events do not", () => {
   const dir = TMP();
   try {

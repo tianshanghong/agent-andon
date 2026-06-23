@@ -21,6 +21,12 @@ import {
 /** Any session untouched for this long is swept (a process died without cleanup). */
 export const HARD_TTL_SEC = 6 * 3600;
 
+/** A quiescent tile (done/idle, no background work) untouched this long is swept,
+ *  even before the hard TTL — finished sub-agents/teammates that never sent a
+ *  SessionEnd (e.g. a team torn down with SIGTERM) shouldn't pile up on the board.
+ *  Set ≥ HARD_TTL_SEC to disable. Override via ANDON_IDLE_TTL_SEC. */
+export const IDLE_TTL_SEC = 15 * 60;
+
 /** Hard cap so a misbehaving/abusive client can't grow the board unbounded. */
 export const MAX_SESSIONS = 200;
 
@@ -53,6 +59,7 @@ export class SessionStore {
     private readonly now: () => number = () => Date.now() / 1000,
     private readonly maxSessions: number = MAX_SESSIONS,
     private readonly ttlSec: number = HARD_TTL_SEC,
+    private readonly idleTtlSec: number = IDLE_TTL_SEC,
   ) {
     this.dayKey = this.localDay(this.now());
   }
@@ -210,10 +217,15 @@ export class SessionStore {
   sweep(): number {
     const now = this.now();
     this.rollDay(now);
-    const cutoff = now - this.ttlSec;
+    const hardCutoff = now - this.ttlSec;
+    const idleCutoff = now - this.idleTtlSec;
     let removed = 0;
     for (const [id, s] of this.sessions) {
-      if (s.updated_at < cutoff) {
+      // quiescent = finished/idle with no background work — these age out early so a
+      // torn-down team (whose teammates never sent a SessionEnd) doesn't leave a wall
+      // of stale "ready" tiles. Active/alerting tiles wait for the full hard TTL.
+      const quiescent = (s.state === "done" || s.state === "idle") && s.pending === 0;
+      if (s.updated_at < hardCutoff || (quiescent && s.updated_at < idleCutoff)) {
         this.sessions.delete(id);
         // close any open working interval at the session's LAST-SEEN time, not
         // `now` — a process that died mid-"working" must not bank phantom
