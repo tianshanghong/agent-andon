@@ -70,8 +70,9 @@
   .lede{color:var(--muted);font-size:19px;line-height:1.55;margin-top:24px;max-width:30em}
   .lede b{color:var(--text);font-weight:600}
 
-  .cmd{margin-top:34px;display:flex;align-items:stretch;max-width:430px;border:1px solid var(--hairline);
-    border-radius:10px;overflow:hidden;background:var(--surface-2);font-family:var(--mono);font-size:14.5px}
+  .cmd{margin-top:13px;display:flex;align-items:stretch;max-width:none;border:1px solid var(--done);
+    border-radius:10px;overflow:hidden;background:var(--surface-2);font-family:var(--mono);font-size:14.5px;
+    box-shadow:0 0 0 4px color-mix(in srgb,var(--done) 12%,transparent)}
   .cmd code{padding:14px 16px;flex:1;white-space:nowrap;overflow:auto}
   .cmd code .p{color:var(--done)}
   .cmd button{border:0;border-left:1px solid var(--hairline);background:transparent;color:var(--muted);
@@ -128,20 +129,7 @@
   .step h3{font-size:18px;font-weight:600;margin-top:10px}
   .step p{color:var(--muted);font-size:14.5px;margin-top:8px}
 
-  /* features */
-  .feat{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:38px;background:var(--hairline-soft);
-    border:1px solid var(--hairline-soft);border-radius:14px;overflow:hidden}
-  .f{background:var(--bg);padding:26px 24px}
-  .f .ic{font-family:var(--mono);color:var(--done);font-size:13px;letter-spacing:.1em}
-  .f h3{font-size:17px;font-weight:600;margin-top:12px}
-  .f p{color:var(--muted);font-size:14px;margin-top:7px;line-height:1.55}
-  @media(max-width:760px){.steps,.feat{grid-template-columns:1fr}}
-
-  /* states legend */
-  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:34px;font-family:var(--mono);font-size:13px}
-  .legend span{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--hairline);
-    padding:9px 14px;border-radius:8px;color:var(--muted);letter-spacing:.04em}
-  .legend i{width:11px;height:11px;border-radius:3px;flex:none}
+  @media(max-width:760px){.steps{grid-template-columns:1fr}}
 
   /* hosted band */
   .band{border:1px solid var(--hairline);border-radius:16px;padding:40px;background:
@@ -180,7 +168,6 @@
   <div class="logo">🚦 ANDON<span class="dim"> /行灯</span></div>
   <div class="navlinks">
     <a href="#how">How it works</a>
-    <a href="#features">Features</a>
     <a href="#anywhere">Board from anywhere</a>
     <a class="star" href="https://github.com/tianshanghong/agent-andon">★ Star on GitHub</a>
   </div>
@@ -192,6 +179,7 @@
     <h1 class="rise" style="animation-delay:.08s">Your AI coding agents,<br><b>at a glance.</b></h1>
     <p class="lede rise" style="animation-delay:.16s">A status board &amp; alerts for <b>Claude Code</b> and <b>Codex</b>. Run several at once — the board lights up the instant one is <b>working, needs you, done,</b> or <b>stuck</b>. No babysitting the terminal.</p>
 
+    <div class="kicker rise" style="animation-delay:.20s;margin-top:32px;color:var(--done)">⚡ Zero setup — one command, straight onto our relay</div>
     <div class="cmd rise" style="animation-delay:.24s">
       <code id="cmd"><span class="p">$</span> npm i -g agent-andon &amp;&amp; andon hosted setup https://relay.agentandon.com &amp;&amp; andon install claude</code>
       <button id="copy" aria-label="Copy command">COPY</button>
@@ -220,26 +208,6 @@
     <div class="step"><div class="n">01 · detect</div><h3>Native hooks</h3><p>Claude Code &amp; Codex fire lifecycle hooks. <code style="font-family:var(--mono);color:var(--text)">andon install claude</code> wires them for you (with a backup).</p></div>
     <div class="step"><div class="n">02 · relay</div><h3>Your computer</h3><p>A zero-dependency Node server receives the events. macOS · Linux · Windows. Nothing leaves your machine.</p></div>
     <div class="step"><div class="n">03 · display</div><h3>Any screen</h3><p>iPad, phone, or browser — a signal bar across the top is the tower light; the most-urgent row floats up and pulses.</p></div>
-  </div>
-</section>
-
-<section id="features" class="wrap" style="padding-top:24px">
-  <div class="eyebrow">Why it's different</div>
-  <h2>Built like a tool, not a SaaS.</h2>
-  <div class="feat">
-    <div class="f"><div class="ic">multi-agent</div><h3>Several at once</h3><p>One full-width row per session; whatever needs you floats to the top. The whole floor at a glance.</p></div>
-    <div class="f"><div class="ic">0 deps</div><h3>Zero dependencies</h3><p>Pure Node.js standard library. No build chain, no account, no hardware — `npx` and you're live.</p></div>
-    <div class="f"><div class="ic">private</div><h3>Self-hosted &amp; quiet</h3><p>No telemetry, no analytics, no phone-home. It only ever holds high-level status — never your code or logs.</p></div>
-    <div class="f"><div class="ic">alerts</div><h3>Desktop + phone</h3><p>Desktop banners on by default; opt in to phone push for a buzz when an agent needs you, even away from the desk.</p></div>
-    <div class="f"><div class="ic">i18n</div><h3>7 languages</h3><p>English · 中文 · 日本語 · 한국어 · Español · Deutsch · Français, auto-detected per screen.</p></div>
-    <div class="f"><div class="ic">on a wall</div><h3>Old-iPad ready</h3><p>Stand a spare iPad on your desk for an always-on signal board. Or just open it in a tab.</p></div>
-  </div>
-  <div class="legend">
-    <span><i style="background:var(--working)"></i>working</span>
-    <span><i style="background:var(--waiting)"></i>needs you</span>
-    <span><i style="background:var(--done)"></i>done</span>
-    <span><i style="background:var(--error)"></i>stuck</span>
-    <span><i style="background:var(--idle)"></i>idle</span>
   </div>
 </section>
 
