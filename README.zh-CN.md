@@ -9,14 +9,14 @@
 ![runtime dependencies: 0](https://img.shields.io/badge/runtime%20deps-0-3aa86b)
 ![platforms: macOS · Linux · Windows](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-23262e)
 
-**⚡ 最快上手** —— 三条命令,就能随时随地用手机看你的 agent 跑到哪了。中继只经手密文、读不到你的代码,你的东西始终是你的:
+**⚡ 最快上手** —— 三条命令，就能随时随地用手机看你的 agent 跑到哪了。中继只经手密文、读不到你的代码，你的东西始终是你的：
 
 ```bash
 npm i -g agent-andon
 andon hosted setup https://relay.agentandon.com
 andon install claude
 ```
-*(随后重启你的 agent · 只想试试? `npx agent-andon serve --demo`)*
+*（随后重启你的 agent · 只想试试？`npx agent-andon serve --demo`）*
 
 把一台闲置的 iPad 立在桌边 —— 或者直接用手机/任意浏览器打开看板。给 **Claude Code** 或
 **OpenAI Codex** 提交一个任务，然后放心去干别的 —— 一瞥就知道 agent 是在 **运行、需要你、已完成，

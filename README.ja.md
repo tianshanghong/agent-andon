@@ -9,14 +9,14 @@
 ![runtime dependencies: 0](https://img.shields.io/badge/runtime%20deps-0-3aa86b)
 ![platforms: macOS · Linux · Windows](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-23262e)
 
-**⚡ 最速で始める** — たった 3 コマンドで、どこからでもスマホでエージェントを見守れます。リレーが扱うのは復号できない暗号文だけ——あなたのコードは外に出ません:
+**⚡ 最速で始める** — たった 3 コマンドで、どこからでもスマホでエージェントを見守れます。リレーが扱うのは復号できない暗号文だけ——あなたのコードは外に出ません：
 
 ```bash
 npm i -g agent-andon
 andon hosted setup https://relay.agentandon.com
 andon install claude
 ```
-*(その後エージェントを再起動 · お試しだけ? `npx agent-andon serve --demo`)*
+*（その後エージェントを再起動 · お試しだけ？`npx agent-andon serve --demo`）*
 
 使っていない iPad を机の上に立てておきましょう——あるいはスマホや任意のブラウザでボードを開くだけでもOK。
 **Claude Code** や **OpenAI Codex** にタスクを投げたら、あとは安心して別のことを——エージェントが
