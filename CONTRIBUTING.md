@@ -37,19 +37,25 @@ npm test           # unit + HTTP integration tests
   code-controlled templates — never a session title/message/agent string (XSS safety on a shared board).
 - Put new pure logic where it can be unit-tested without a network or stdin.
 
-## Licensing of contributions (DCO)
+## Contributor License Agreement (CLA)
 
-Agent Andon is licensed **AGPL-3.0-or-later**, and the maintainer also offers it under separate
-commercial terms (e.g. for an optional hosted service). To keep both possible, contributions are accepted
-under the **[Developer Certificate of Origin](https://developercertificate.org/)**:
+Agent Andon is licensed **AGPL-3.0-or-later**, and the maintainer also offers it under separate terms
+(e.g. for an optional hosted/commercial service). To keep that — and the freedom to evolve the license
+later — possible, contributions are accepted under a **Contributor License Agreement**: see
+**[CLA.md](CLA.md)**.
 
-- **Sign off every commit** — add a `Signed-off-by: Your Name <you@example.com>` line with `git commit -s`.
-  That certifies you wrote the change (or have the right to submit it) under the project's license.
-- By contributing, you grant the maintainer (wwang) a perpetual, irrevocable right to license your
-  contribution under **AGPL-3.0-or-later and other terms (including proprietary/commercial)**, so an
-  official hosted/commercial build remains possible. **You keep the copyright to your contribution.**
+**You keep the copyright to your contribution.** The CLA grants the maintainer a broad license,
+including the right to license / re-license your contribution under AGPL-3.0-or-later, another
+open-source license (e.g. Apache-2.0), and/or commercial terms.
 
-There's no separate CLA to sign — the `Signed-off-by` line plus this section is the agreement.
+**How to sign (one-time):** open your pull request, then comment **exactly**:
+
+> I have read and agree to the CLA
+
+A bot records your signature in [`signatures/version1/cla.json`](signatures/version1/cla.json) — part
+of the repo's git history — and turns the PR's **CLA** status check green. You sign once; it covers
+all your future contributions. PRs can't be merged until the CLA check passes. (The maintainer and
+bots are exempt.)
 
 ## Before opening a PR
 
