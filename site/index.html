@@ -70,16 +70,17 @@
   .lede{color:var(--muted);font-size:19px;line-height:1.55;margin-top:24px;max-width:30em}
   .lede b{color:var(--text);font-weight:600}
 
-  .cmd{margin-top:13px;display:flex;align-items:stretch;max-width:none;border:1px solid var(--done);
-    border-radius:10px;overflow:hidden;background:var(--surface-2);font-family:var(--mono);font-size:14.5px;
-    box-shadow:0 0 0 4px color-mix(in srgb,var(--done) 12%,transparent)}
-  .cmd code{padding:14px 16px;flex:1;white-space:nowrap;overflow:auto}
-  .cmd code .p{color:var(--done)}
-  .cmd button{border:0;border-left:1px solid var(--hairline);background:transparent;color:var(--muted);
-    font-family:var(--mono);font-size:12px;letter-spacing:.08em;padding:0 16px;cursor:pointer;transition:.2s}
-  .cmd button:hover{background:var(--surface);color:var(--text)}
-  .cmd button.ok{color:var(--done)}
-  .hint{font-family:var(--mono);font-size:12.5px;color:var(--faint);margin-top:12px}
+  .cmd{position:relative;margin-top:13px;max-width:560px;border:1px solid var(--done);border-radius:11px;
+    background:var(--surface-2);font-family:var(--mono);font-size:13.5px;
+    box-shadow:0 0 0 4px color-mix(in srgb,var(--done) 9%,transparent)}
+  .cmd code{display:block;padding:16px 18px;white-space:pre;overflow-x:auto;line-height:2}
+  .cmd code .p{color:var(--done);user-select:none;margin-right:2px}
+  .cmd button{position:absolute;top:9px;right:9px;border:1px solid var(--hairline-soft);background:var(--surface);
+    color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:.08em;padding:6px 11px;
+    border-radius:6px;cursor:pointer;transition:.2s}
+  .cmd button:hover{color:var(--text);border-color:var(--muted)}
+  .cmd button.ok{color:var(--done);border-color:var(--done)}
+  .hint{font-family:var(--mono);font-size:12.5px;color:var(--faint);margin-top:12px;max-width:42em;line-height:1.7}
 
   .cta{margin-top:30px;display:flex;gap:14px;flex-wrap:wrap}
   .btn{font-family:var(--mono);font-size:13.5px;letter-spacing:.03em;text-decoration:none;padding:12px 18px;
@@ -179,12 +180,14 @@
     <h1 class="rise" style="animation-delay:.08s">Your AI coding agents,<br><b>at a glance.</b></h1>
     <p class="lede rise" style="animation-delay:.16s">A status board &amp; alerts for <b>Claude Code</b> and <b>Codex</b>. Run several at once — the board lights up the instant one is <b>working, needs you, done,</b> or <b>stuck</b>. No babysitting the terminal.</p>
 
-    <div class="kicker rise" style="animation-delay:.20s;margin-top:32px;color:var(--done)">⚡ Zero setup — one command, straight onto our relay</div>
+    <div class="kicker rise" style="animation-delay:.20s;margin-top:32px;color:var(--done)">⚡ Zero setup — three commands, straight onto our relay</div>
     <div class="cmd rise" style="animation-delay:.24s">
-      <code id="cmd"><span class="p">$</span> npm i -g agent-andon &amp;&amp; andon hosted setup https://relay.agentandon.com &amp;&amp; andon install claude</code>
-      <button id="copy" aria-label="Copy command">COPY</button>
+      <button id="copy" aria-label="Copy commands">COPY</button>
+      <code id="cmd"><span class="p">$</span> npm i -g agent-andon
+<span class="p">$</span> andon hosted setup https://relay.agentandon.com
+<span class="p">$</span> andon install claude</code>
     </div>
-    <div class="hint rise" style="animation-delay:.28s">↑ install · connect to our relay · wire your agent — then open the board on your phone. Just kicking the tires? <code style="font-family:var(--mono);color:var(--muted)">npx agent-andon serve --demo</code></div>
+    <div class="hint rise" style="animation-delay:.28s">install the CLI · pair with our relay · wire your agent — then restart your session and open the board on your phone. Just trying it out? <code style="font-family:var(--mono);color:var(--muted)">npx agent-andon serve --demo</code></div>
 
     <div class="cta rise" style="animation-delay:.34s">
       <a class="btn primary" href="#anywhere">Phone push from anywhere <span class="tag">managed</span></a>
