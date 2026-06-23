@@ -19,7 +19,7 @@ the project is pre-1.0, so a minor version may bundle features and fixes togethe
 ## [0.2.0] — 2026-06-20
 
 ### Added
-- **Hosted "board from anywhere" relay** — an optional, opt-in, **zero-knowledge** relay
+- **Hosted "board from anywhere" relay** — an optional, opt-in, **content-blind** relay
   (`andon relay` / `andon hosted setup` / `andon verify`). Every status is end-to-end encrypted on
   your machine; the relay stores **ciphertext only** and can't read your agents' titles, messages, or
   code. Multi-tenant (one URL, many isolated boards). *"Verifiable, not just trusted":* reproducible

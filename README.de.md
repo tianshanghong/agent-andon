@@ -204,13 +204,14 @@ Andon ist local-first und **für immer kostenlos selbst zu hosten** — das blei
 
 ```bash
 andon hosted setup https://relay.agentandon.com   # aktivieren — es wird ein Schlüssel erzeugt, der deine Maschine nie verlässt
-andon relay                                        # …oder das Zero-Knowledge-Relay selbst betreiben
+andon relay                                        # …oder das inhaltsblinde Relay selbst betreiben
 andon verify <relay-url>                           # prüfen, ob ein Relay genau den Open-Source-Code ausliefert
 ```
 
-Jeder Status wird **auf deinem Rechner Ende-zu-Ende-verschlüsselt**, bevor er ihn verlässt; das Relay leitet
-**nur Chiffretext** weiter und speichert ihn und kann deine Prompts, deinen Code, deine Titel oder Nachrichten
-nicht lesen — es sieht nur, dass du aktiv bist, ungefähr wann, und deine IP. *„Überprüfbar, nicht bloß
+Der **Inhalt** jedes Status (Titel, Nachricht und Agent-Name) wird **auf deinem Rechner Ende-zu-Ende-verschlüsselt**,
+bevor er ihn verlässt; das Relay leitet und speichert nur **diesen Chiffretext, den es nicht entschlüsseln kann** (es
+erhält deinen Schlüssel nie) — es kann deine Prompts, deinen Code, deine Titel oder Nachrichten also nicht lesen. Es
+sieht nur grobe Metadaten: dass du aktiv bist, ungefähr wann, den groben Status und deine IP. *„Überprüfbar, nicht bloß
 vertraut“:* der ausgelieferte Code ist Open Source + reproduzierbar, und `andon verify` bestätigt, dass ein Relay
 genau diesen ausliefert. Vollständige Guides: **[das gehostete Board nutzen](docs/hosted.md)** ·
 **[ein Relay deployen](docs/deploy-relay.md)**.

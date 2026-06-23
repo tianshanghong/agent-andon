@@ -51,7 +51,7 @@ const HELP = `
 
     andon hosted setup <relay-url>   Opt into the hosted board (sealed, no local server needed)
     andon hosted pair | off | status Add a device · turn off · show state
-    andon relay [--port N]           Run the zero-knowledge relay (stores ciphertext only)
+    andon relay [--port N]           Run the content-blind relay (stores ciphertext only)
     andon verify <relay-url>         Check a relay serves the exact open-source board (transparency)
 
     andon hook                  (internal) Claude Code hook — reads stdin

@@ -1,7 +1,7 @@
 name: Publish images
 
 # Builds two images from source and publishes them to GHCR:
-#   - ghcr.io/<owner>/agent-andon       — the zero-knowledge relay (the same code `andon verify` checks)
+#   - ghcr.io/<owner>/agent-andon       — the content-blind relay (the same code `andon verify` checks)
 #   - ghcr.io/<owner>/agent-andon-site  — the landing page (agentandon.com), so deploys pull the
 #                                         image instead of copying site/index.html into stack repos
 # Provenance + SBOM are attached for supply-chain transparency.

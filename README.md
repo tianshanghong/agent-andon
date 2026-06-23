@@ -200,13 +200,14 @@ own** (same open-source code):
 
 ```bash
 andon hosted setup https://relay.agentandon.com   # opt in — a key is generated that never leaves your machine
-andon relay                                        # …or run the zero-knowledge relay yourself
+andon relay                                        # …or run the content-blind relay yourself
 andon verify <relay-url>                           # check a relay serves the exact open-source code
 ```
 
-Every status is **end-to-end encrypted on your machine** before it leaves; the relay routes + stores
-**ciphertext only** and can't read your prompts, code, titles, or messages — it sees only that you're
-active, roughly when, and your IP. *"Verifiable, not just trusted":* the served code is open-source +
+Your status **content** (its title, message, and agent name) is **end-to-end encrypted on your machine**
+before it leaves; the relay only ever routes and stores **that ciphertext, which it cannot decrypt** (it
+never receives your key) — so it can't read your prompts, code, titles, or messages. It sees only coarse
+metadata: that you're active, roughly when, the high-level state, and your IP. *"Verifiable, not just trusted":* the served code is open-source +
 reproducible and `andon verify` confirms a relay serves exactly it. Full guides:
 **[using the hosted board](docs/hosted.md)** · **[deploying a relay](docs/deploy-relay.md)**.
 

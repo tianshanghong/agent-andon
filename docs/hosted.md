@@ -125,7 +125,7 @@ URL**, not a subdomain per user.
 
 Everyone runs `andon hosted setup https://relay.example.com`; each gets a **256-bit unguessable** board id
 under that one URL. Isolation is two-layer and tested:
-- **Nobody reads anybody:** per-board key `K`, relay stores ciphertext only (zero-knowledge).
+- **Nobody reads anybody:** per-board key `K`, relay stores ciphertext only (content-blind).
 - **Nobody writes anybody:** the board id is the read capability; writing needs that board's own ingest token
   (A's token on B's board → `401`).
 

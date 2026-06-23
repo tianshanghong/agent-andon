@@ -1,5 +1,5 @@
 /**
- * End-to-end content-encryption tests (the hosted zero-knowledge core). Verifies the
+ * End-to-end content-encryption tests (the hosted content-blind core). Verifies the
  * relay can NEVER read content and can NEVER tamper without detection: round-trip,
  * AAD binding on every routing field, the inner-seq defense, size-hiding padding,
  * the "no plaintext in the blob" property, and the freshness guard.

@@ -1,5 +1,5 @@
 /**
- * `andon relay [--port N] [--data-dir D]` — run the hosted, zero-knowledge relay.
+ * `andon relay [--port N] [--data-dir D]` — run the hosted, content-blind relay.
  *
  * It stores ciphertext only and cannot read your agents' content. In-repo because
  * T2's whole guarantee is reproducible, publicly-auditable code.
@@ -20,7 +20,7 @@ export function relay(args: string[]): void {
 
   const { server, stop } = createRelay({ dataDir });
   server.listen(port, host, () => {
-    console.log(`🛰  Agent Andon relay (zero-knowledge) on ${host}:${port}`);
+    console.log(`🛰  Agent Andon relay (content-blind) on ${host}:${port}`);
     console.log("   POST /provision   POST /i/<board>   GET /s,/e/<board>   push: /vapid, /p/<board>/subscribe");
     console.log("   stores ciphertext only — it cannot read your agents' content.");
     console.log("   ⚠ no TLS here — the ingest token + board-id travel cleartext over plain HTTP.");

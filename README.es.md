@@ -207,13 +207,14 @@ relay opcional, que **activas tú**, te da el tablero + push al teléfono desde 
 
 ```bash
 andon hosted setup https://relay.agentandon.com   # actívalo — se genera una clave que nunca sale de tu máquina
-andon relay                                        # …o ejecuta tú mismo el relay de conocimiento cero
+andon relay                                        # …o ejecuta tú mismo el relay ciego al contenido
 andon verify <relay-url>                           # comprueba que un relay sirve exactamente el código abierto
 ```
 
-Cada estado se **cifra de extremo a extremo en tu máquina** antes de salir; el relay enruta y
-almacena **solo texto cifrado** y no puede leer tus prompts, tu código, tus títulos ni tus mensajes:
-solo ve que estás activo, más o menos cuándo y tu IP. *«Verificable, no solo de fiar»:* el código
+El **contenido** de cada estado (su título, mensaje y nombre de agente) se **cifra de extremo a extremo en tu
+máquina** antes de salir; el relay solo enruta y almacena **ese texto cifrado, que no puede descifrar** (nunca
+recibe tu clave), así que no puede leer tus prompts, tu código, tus títulos ni tus mensajes. Solo ve metadatos
+generales: que estás activo, más o menos cuándo, el estado general y tu IP. *«Verificable, no solo de fiar»:* el código
 servido es abierto y reproducible, y `andon verify` confirma que un relay sirve exactamente ese.
 Guías completas: **[usar el tablero alojado](docs/hosted.md)** · **[desplegar un relay](docs/deploy-relay.md)** (en inglés).
 

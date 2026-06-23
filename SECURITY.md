@@ -27,7 +27,7 @@ private network you control — e.g. **Tailscale** — rather than exposing the 
 Tailscale also provides a trusted HTTPS name, which is what an in-browser push (PWA) feature needs.
 
 **3. Hosted (roadmap, optional — not in this release).** If/when an official hosted relay ships, it is
-designed to be **zero-knowledge**: your hook encrypts the sensitive fields (title, message, tallies) with
+designed to be **content-blind**: your hook encrypts the sensitive fields (title, message, tallies) with
 a key the server never holds, so the relay can route events and light the board **without reading your
 agents' messages**. It would be strictly opt-in and never the default. **Nothing in this repository sends
 data to any such service today.**
