@@ -193,13 +193,13 @@
     <p class="lede rise" style="animation-delay:.16s">A status board &amp; alerts for <b>Claude Code</b> and <b>Codex</b>. Run several at once — the board lights up the instant one is <b>working, needs you, done,</b> or <b>stuck</b>. No babysitting the terminal.</p>
 
     <div class="cmd rise" style="animation-delay:.24s">
-      <code id="cmd"><span class="p">$</span> npx agent-andon serve --demo</code>
+      <code id="cmd"><span class="p">$</span> npm i -g agent-andon &amp;&amp; andon hosted setup https://relay.agentandon.com &amp;&amp; andon install claude</code>
       <button id="copy" aria-label="Copy command">COPY</button>
     </div>
-    <div class="hint rise" style="animation-delay:.28s">↑ try it in 30 seconds — opens a board with fake agents</div>
+    <div class="hint rise" style="animation-delay:.28s">↑ install · connect to our relay · wire your agent — then open the board on your phone. Just kicking the tires? <code style="font-family:var(--mono);color:var(--muted)">npx agent-andon serve --demo</code></div>
 
     <div class="cta rise" style="animation-delay:.34s">
-      <a class="btn primary" href="#anywhere">Get phone alerts <span class="tag">managed · soon</span></a>
+      <a class="btn primary" href="#anywhere">Phone push from anywhere <span class="tag">managed</span></a>
       <a class="btn ghost" href="https://github.com/tianshanghong/agent-andon">★ Star on GitHub</a>
     </div>
   </div>
@@ -247,10 +247,10 @@
   <div class="band">
     <div class="eyebrow">Board from anywhere</div>
     <h2>Phone push, your way.</h2>
-    <p class="sec-lede">Local-first and free to self-host forever. To reach the board — and get push — from anywhere, route through a relay that <b style="color:var(--text)">stores ciphertext only and can't read your agents' content</b>.</p>
+    <p class="sec-lede">Local-first and free to self-host forever. To reach the board — and get push — from anywhere, route through a relay that's <b style="color:var(--text)">content-blind</b>: it stores only ciphertext it can't decrypt, so it never sees your prompts, code, or messages.</p>
     <div class="opts">
       <div class="opt managed">
-        <div class="h">☁️ Managed relay <span class="badge">launching</span></div>
+        <div class="h">☁️ Managed relay <span class="badge">live</span></div>
         <h3>The easy way — no server</h3>
         <p>Zero setup, no Tailscale, no HTTPS to configure. Opt in and get phone push from anywhere.</p>
         <code>$ andon hosted setup https://relay.agentandon.com</code>
@@ -262,7 +262,7 @@
         <code>$ andon relay   ·   andon verify &lt;url&gt;</code>
       </div>
     </div>
-    <div class="priv">🔒&nbsp;<span><b>Verifiable, not just trusted.</b> The relay is end-to-end encrypted and reproducible from source — <code style="font-family:var(--mono);color:var(--text)">andon verify</code> confirms it serves the exact open-source code.</span></div>
+    <div class="priv">🔒&nbsp;<span><b>Verifiable, not just trusted.</b> Your status content is end-to-end encrypted and the relay's code is reproducible from source — <code style="font-family:var(--mono);color:var(--text)">andon verify</code> confirms it serves the exact open-source code.</span></div>
   </div>
 </section>
 
@@ -285,7 +285,7 @@
   // copy the try-command
   var btn=document.getElementById('copy');
   btn.addEventListener('click',function(){
-    var t='npx agent-andon serve --demo';
+    var t='npm i -g agent-andon && andon hosted setup https://relay.agentandon.com && andon install claude';
     (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){
       btn.textContent='COPIED';btn.classList.add('ok');
       setTimeout(function(){btn.textContent='COPY';btn.classList.remove('ok');},1600);
