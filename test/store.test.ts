@@ -56,15 +56,44 @@ test("snapshot keeps stable arrival order (display ordering is the board's job)"
   assert.deepEqual(s.snapshot().sessions.map((x) => x.id), ["work", "err", "wait"]);
 });
 
-test("sweep drops sessions past the TTL", () => {
+test("sweep drops sessions past the hard TTL (active tiles use it)", () => {
   const clock = { v: 0 };
-  const s = new SessionStore(() => clock.v, 200, 100); // ttl=100s
-  s.apply({ agent: "claude", id: "old", state: "done" });
+  const s = new SessionStore(() => clock.v, 200, 100); // hard ttl=100s
+  s.apply({ agent: "claude", id: "old", state: "working" });
   clock.v = 50;
-  s.apply({ agent: "claude", id: "fresh", state: "done" });
+  s.apply({ agent: "claude", id: "fresh", state: "working" });
   clock.v = 120; // old(0) is now >100s stale, fresh(50) is not
   assert.equal(s.sweep(), 1);
   assert.deepEqual(s.snapshot().sessions.map((x) => x.id), ["fresh"]);
+});
+
+test("sweep ages out quiescent (done/idle) tiles at the idle TTL; keeps active, alerting, background-busy", () => {
+  const clock = { v: 0 };
+  const s = new SessionStore(() => clock.v, 200, 1000, 100); // hard ttl 1000s, idle ttl 100s
+  s.apply({ agent: "claude", id: "doneIdle", state: "done" }); // quiescent → ages out
+  s.apply({ agent: "claude", id: "idleIdle", state: "idle" }); // quiescent → ages out
+  s.apply({ agent: "claude", id: "waiting", state: "waiting" }); // alerting → kept
+  s.apply({ agent: "claude", id: "working", state: "working" }); // active → kept
+  s.apply({ agent: "claude", id: "doneBg", state: "done" }); // done but background-busy → kept
+  s.apply({ id: "doneBg", sub: 1 });
+  clock.v = 150; // past idle ttl (100), far before hard ttl (1000)
+  s.apply({ agent: "claude", id: "doneFresh", state: "done" }); // fresh → kept
+  assert.equal(s.sweep(), 2);
+  assert.deepEqual(
+    s.snapshot().sessions.map((x) => x.id).sort(),
+    ["doneBg", "doneFresh", "waiting", "working"],
+  );
+});
+
+test("a tile uses ONE TTL chosen by state — idle TTL as-is, even when longer than the hard TTL", () => {
+  const clock = { v: 0 };
+  const s = new SessionStore(() => clock.v, 200, 1000, 2000); // hard 1000s, idle 2000s
+  s.apply({ agent: "claude", id: "doneLong", state: "done" }); // quiescent → its own 2000s TTL
+  s.apply({ agent: "claude", id: "workDead", state: "working" }); // non-quiescent → 1000s hard TTL
+  clock.v = 1500; // past the hard TTL (1000), before the idle TTL (2000)
+  s.sweep();
+  // the dead "working" tile is gone at the hard TTL; the done tile lives until its own idle TTL
+  assert.deepEqual(s.snapshot().sessions.map((x) => x.id), ["doneLong"]);
 });
 
 test("`sub` adjusts the background-task count without touching state", () => {

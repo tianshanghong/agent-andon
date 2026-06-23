@@ -43,7 +43,12 @@ const STATES = new Set(["working", "waiting", "done", "error", "idle"]);
 const MAX_SESSIONS = 200; // per board
 const MAX_BOARDS = 500; // total tenants (single-process MVP)
 const IDLE_BOARD_MS = 90 * 24 * 60 * 60 * 1000; // evict boards unused for 90d (beta capacity guard)
-const EVENT_TTL_MS = 6 * 60 * 60 * 1000; // 6h, matches the local board's sweep
+const EVENT_TTL_MS = 6 * 60 * 60 * 1000; // 6h hard cap, matches the local board's sweep
+// Finished/idle sessions use this TTL instead of the 6h hard one, so a torn-down team (teammates
+// killed without a SessionEnd) doesn't leave a wall of "ready" tiles. The relay goes by state only
+// (background-task counts are sealed). Default 15 min; override via ANDON_IDLE_TTL_SEC.
+const IDLE_TTL_SEC_ENV = Number(process.env.ANDON_IDLE_TTL_SEC);
+const IDLE_TTL_MS = (IDLE_TTL_SEC_ENV > 0 ? IDLE_TTL_SEC_ENV : 15 * 60) * 1000;
 export const MAX_BODY = 64 * 1024;
 const MAX_SID = 200;
 const MAX_CT = 64 * 1024; // bounds per-event storage (body cap also applies)
@@ -91,7 +96,7 @@ export class RelayStore {
   private vapidFile?: string;
   private vapidKeys?: VapidKeys;
 
-  constructor(private now: () => number = Date.now, dataDir?: string) {
+  constructor(private now: () => number = Date.now, dataDir?: string, private readonly idleTtlMs: number = IDLE_TTL_MS) {
     if (dataDir) {
       this.file = path.join(dataDir, "relay-tenants.json");
       this.vapidFile = path.join(dataDir, "relay-vapid.json");
@@ -197,8 +202,15 @@ export class RelayStore {
   }
 
   private sweep(b: Board): void {
-    const cutoff = this.now() - EVENT_TTL_MS;
-    for (const [sid, ev] of b.events) if (ev.tsSrv < cutoff) b.events.delete(sid);
+    const now = this.now();
+    for (const [sid, ev] of b.events) {
+      // One TTL per session, chosen by state: a finished/idle session is clutter (a torn-down team's
+      // teammates never send a SessionEnd) so it clears at the short idle TTL; everything else gets the
+      // hard-TTL backstop. The relay can't see background-task counts (sealed), so it goes by state.
+      const quiescent = ev.state === "done" || ev.state === "idle";
+      const ttl = quiescent ? this.idleTtlMs : EVENT_TTL_MS;
+      if (ev.tsSrv < now - ttl) b.events.delete(sid);
+    }
   }
 
   /** Evict boards no one has ingested-to or read in IDLE_BOARD_MS — so a flood of

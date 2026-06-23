@@ -3,6 +3,15 @@
 Notable changes to Agent Andon. Roughly follows [Keep a Changelog](https://keepachangelog.com/);
 the project is pre-1.0, so a minor version may bundle features and fixes together.
 
+## [Unreleased]
+
+### Fixed
+- **Finished sub-agent / teammate tiles no longer pile up on the board.** When a Claude Code team is
+  torn down, its teammates are often killed without a clean `SessionEnd`, so their last `ready`/idle
+  state used to linger for the full 6-hour TTL. Quiescent tiles (done/idle, no background work) now
+  age out after **15 minutes** of inactivity (tunable via `ANDON_IDLE_TTL_SEC`), while active and
+  "needs-you" tiles keep the 6h backstop. Applies to both the local board and the hosted relay.
+
 ## [0.2.1] — 2026-06-20
 
 ### Fixed

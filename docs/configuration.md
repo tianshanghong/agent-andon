@@ -32,6 +32,7 @@ never code or full logs. Event bodies are capped at 64 KB.
 | `ANDON_PORT` / `ANDON_HOST` | `8787` / `0.0.0.0` | server bind |
 | `ANDON_LABEL` | folder name | tile title (per terminal) |
 | `ANDON_SESSION` | — | override a tile's session id (e.g. for a background job) |
+| `ANDON_IDLE_TTL_SEC` | `900` (15 min) | how long a finished/idle tile lingers before auto-removal, so exited sub-agents/teammates don't pile up. Active and "needs-you" tiles use the 6h hard TTL instead. |
 
 (Relay-specific env vars — `ANDON_RELAY_PORT`, `ANDON_DATA_DIR`, `ANDON_PUSH_SUBJECT`, … — are in
 [deploy-relay.md](deploy-relay.md).)
