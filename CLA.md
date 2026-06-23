@@ -2,7 +2,7 @@
 
 **Version 1**
 
-Thank you for contributing to Agent Andon (the "Project"), maintained by wwang (the "Maintainer").
+Thank you for contributing to Agent Andon (the "Project"), maintained by Wei Wang (the "Maintainer").
 This Agreement clarifies the intellectual-property license granted with Contributions from any person
 or entity ("You"). **You keep the copyright to Your Contributions — this is a license, not an
 assignment.**
@@ -12,9 +12,8 @@ Contributions to the Project.
 
 ## 1. Definitions
 - **"Contribution"** — any original work of authorship (code, documentation, or other material) that
-  You intentionally submit to the Project, in any form.
-- **"Submit"** — any form of communication sent to the Project (e.g. a pull request or comment),
-  except communication You conspicuously mark "Not a Contribution."
+  You intentionally submit to the Project, in any form (e.g. a pull request or comment) — except
+  anything You conspicuously mark "Not a Contribution."
 
 ## 2. Copyright license
 You grant the Maintainer (and the Maintainer's successors and assigns) and recipients of software
