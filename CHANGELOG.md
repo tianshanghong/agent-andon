@@ -3,7 +3,7 @@
 Notable changes to Agent Andon. Roughly follows [Keep a Changelog](https://keepachangelog.com/);
 the project is pre-1.0, so a minor version may bundle features and fixes together.
 
-## [Unreleased]
+## [0.2.2] — 2026-06-22
 
 ### Fixed
 - **Finished sub-agent / teammate tiles no longer pile up on the board.** When a Claude Code team is
@@ -11,6 +11,16 @@ the project is pre-1.0, so a minor version may bundle features and fixes togethe
   state used to linger for the full 6-hour TTL. Quiescent tiles (done/idle, no background work) now
   age out after **15 minutes** of inactivity (tunable via `ANDON_IDLE_TTL_SEC`), while active and
   "needs-you" tiles keep the 6h backstop. Applies to both the local board and the hosted relay.
+
+### Changed
+- **The relay is now described as "content-blind" (was "zero-knowledge").** The new term states the
+  verifiable property precisely — the relay can't read your content — across the README (7 languages),
+  the `andon relay` help, the relay startup banner, the image label, and the docs. The privacy claim
+  is also scoped: your status *content* (title, message, agent name) is end-to-end encrypted and the
+  relay stores only ciphertext it cannot decrypt (it never receives your key); it still sees coarse
+  metadata (active, roughly when, the high-level state, your IP).
+- Contributions are now accepted under a **Contributor License Agreement** (see `CLA.md`), signed once
+  by comment.
 
 ## [0.2.1] — 2026-06-20
 
