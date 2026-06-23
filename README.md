@@ -9,7 +9,7 @@
 ![runtime dependencies: 0](https://img.shields.io/badge/runtime%20deps-0-3aa86b)
 ![platforms: macOS · Linux · Windows](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-23262e)
 
-**⚡ Fastest start** — install, pair with our managed relay, then watch from your phone:
+**⚡ Fastest start** — three commands and you're watching your agents from your phone, anywhere. The relay only ever handles ciphertext it can't read, so your code stays yours:
 
 ```bash
 npm i -g agent-andon

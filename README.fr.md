@@ -9,7 +9,7 @@
 ![runtime dependencies: 0](https://img.shields.io/badge/runtime%20deps-0-3aa86b)
 ![platforms: macOS · Linux · Windows](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-23262e)
 
-**⚡ Démarrage le plus rapide** — installez, reliez-vous à notre relais géré, puis surveillez depuis votre téléphone :
+**⚡ Démarrage le plus rapide** — trois commandes et vous suivez vos agents depuis votre téléphone, où que vous soyez. Le relais ne traite que du texte chiffré qu'il ne peut pas lire ; votre code reste chez vous :
 
 ```bash
 npm i -g agent-andon

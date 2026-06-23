@@ -9,7 +9,7 @@
 ![runtime dependencies: 0](https://img.shields.io/badge/runtime%20deps-0-3aa86b)
 ![platforms: macOS · Linux · Windows](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-23262e)
 
-**⚡ Inicio más rápido** — instala, conéctate a nuestro relay gestionado y míralo desde el teléfono:
+**⚡ Inicio más rápido** — tres comandos y ya sigues tus agentes desde el teléfono, estés donde estés. El relay solo maneja texto cifrado que no puede leer; tu código sigue siendo tuyo:
 
 ```bash
 npm i -g agent-andon

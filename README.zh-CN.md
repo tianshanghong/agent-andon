@@ -9,7 +9,7 @@
 ![runtime dependencies: 0](https://img.shields.io/badge/runtime%20deps-0-3aa86b)
 ![platforms: macOS · Linux · Windows](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-23262e)
 
-**⚡ 最快上手** —— 装好、接入我们的托管中继,然后在手机上盯着看:
+**⚡ 最快上手** —— 三条命令,就能随时随地用手机看你的 agent 跑到哪了。中继只经手密文、读不到你的代码,你的东西始终是你的:
 
 ```bash
 npm i -g agent-andon

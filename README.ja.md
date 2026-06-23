@@ -9,7 +9,7 @@
 ![runtime dependencies: 0](https://img.shields.io/badge/runtime%20deps-0-3aa86b)
 ![platforms: macOS · Linux · Windows](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-23262e)
 
-**⚡ 最速で始める** — インストールしてマネージドリレーに接続、あとはスマホで見守るだけ:
+**⚡ 最速で始める** — たった 3 コマンドで、どこからでもスマホでエージェントを見守れます。リレーが扱うのは復号できない暗号文だけ——あなたのコードは外に出ません:
 
 ```bash
 npm i -g agent-andon

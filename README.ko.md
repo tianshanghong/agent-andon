@@ -9,7 +9,7 @@
 ![runtime dependencies: 0](https://img.shields.io/badge/runtime%20deps-0-3aa86b)
 ![platforms: macOS · Linux · Windows](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-23262e)
 
-**⚡ 가장 빠른 시작** — 설치하고 우리 매니지드 릴레이에 연결한 뒤, 휴대폰에서 지켜보세요:
+**⚡ 가장 빠른 시작** — 명령어 3개면 어디서든 휴대폰으로 에이전트를 지켜봅니다. 릴레이는 복호화할 수 없는 암호문만 거치니, 코드는 늘 당신 것입니다:
 
 ```bash
 npm i -g agent-andon
