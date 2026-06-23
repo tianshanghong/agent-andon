@@ -58,11 +58,13 @@ jobs:
             const loadSigs = async () => {
               try {
                 const f = (await github.rest.repos.getContent({ owner, repo, path: SIG_PATH })).data;
-                return { sha: f.sha, sigs: JSON.parse(Buffer.from(f.content, "base64").toString("utf8")) };
+                const sigs = JSON.parse(Buffer.from(f.content, "base64").toString("utf8"));
+                if (!Array.isArray(sigs.signedContributors)) sigs.signedContributors = []; // tolerate a hand-edited file
+                return { sha: f.sha, sigs };
               } catch (_) { return { sha: undefined, sigs: { signedContributors: [] } }; }
             };
             const has = (sigs, login) =>
-              sigs.signedContributors.some((c) => c.name.toLowerCase() === login.toLowerCase());
+              sigs.signedContributors.some((c) => c && c.name && c.name.toLowerCase() === login.toLowerCase());
 
             let { sigs: signatures } = await loadSigs();
 
