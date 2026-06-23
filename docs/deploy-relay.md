@@ -36,7 +36,7 @@ ANDON_RELAY_HOST=127.0.0.1 ANDON_RELAY_PORT=8788 ANDON_DATA_DIR=/var/lib/andon a
 | `ANDON_RELAY_PORT` / `--port` | `8788` | the HTTP port |
 | `ANDON_RELAY_HOST` | `0.0.0.0` | set `127.0.0.1` when behind a proxy |
 | `ANDON_DATA_DIR` / `--data-dir` | `~/.andon` | **persist this** — it holds `relay-tenants.json` (hashed tokens + subscriptions) and `relay-vapid.json`. Lose it and every board 404s + push breaks. |
-| `ANDON_IDLE_TTL_SEC` | `900` (15 min) | finished/idle sessions are dropped this long after their last event (so a torn-down team doesn't leave a wall of "ready" tiles). **Capped at the 6h hard TTL** — the effective wait is `min(this, 21600)`; it only shortens the wait, never extends past 6h |
+| `ANDON_IDLE_TTL_SEC` | `900` (15 min) | finished/idle sessions are dropped this long after their last event (so a torn-down team doesn't leave a wall of "ready" tiles); active/needs-you sessions use the 6h hard TTL instead |
 
 It handles `SIGINT`/`SIGTERM` gracefully (closes SSE streams so restarts don't hang).
 

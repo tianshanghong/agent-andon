@@ -21,10 +21,9 @@ import {
 /** Any session untouched for this long is swept (a process died without cleanup). */
 export const HARD_TTL_SEC = 6 * 3600;
 
-/** A quiescent tile (done/idle, no background work) untouched this long is swept,
- *  even before the hard TTL — finished sub-agents/teammates that never sent a
- *  SessionEnd (e.g. a team torn down with SIGTERM) shouldn't pile up on the board.
- *  Set ≥ HARD_TTL_SEC to disable. Override via ANDON_IDLE_TTL_SEC. */
+/** Finished/idle tiles (done/idle with no background work) use this TTL instead of the hard one:
+ *  a team torn down without a SessionEnd (e.g. teammates killed by SIGTERM) shouldn't pile up as a
+ *  wall of "ready" tiles. Default 15 min; override via ANDON_IDLE_TTL_SEC. */
 export const IDLE_TTL_SEC = 15 * 60;
 
 /** Hard cap so a misbehaving/abusive client can't grow the board unbounded. */
@@ -217,15 +216,14 @@ export class SessionStore {
   sweep(): number {
     const now = this.now();
     this.rollDay(now);
-    const hardCutoff = now - this.ttlSec;
-    const idleCutoff = now - this.idleTtlSec;
     let removed = 0;
     for (const [id, s] of this.sessions) {
-      // quiescent = finished/idle with no background work — these age out early so a
-      // torn-down team (whose teammates never sent a SessionEnd) doesn't leave a wall
-      // of stale "ready" tiles. Active/alerting tiles wait for the full hard TTL.
+      // One TTL per tile, chosen by state: a finished/idle tile with no background work is clutter
+      // (a torn-down team's teammates never send a SessionEnd), so it clears at the short idle TTL;
+      // everything else — working, needs-you, error — gets the long hard-TTL backstop.
       const quiescent = (s.state === "done" || s.state === "idle") && s.pending === 0;
-      if (s.updated_at < hardCutoff || (quiescent && s.updated_at < idleCutoff)) {
+      const ttl = quiescent ? this.idleTtlSec : this.ttlSec;
+      if (s.updated_at < now - ttl) {
         this.sessions.delete(id);
         // close any open working interval at the session's LAST-SEEN time, not
         // `now` — a process that died mid-"working" must not bank phantom
