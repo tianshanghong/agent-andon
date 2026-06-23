@@ -73,7 +73,7 @@ into chat; save it in a password manager. (A scan-to-pair QR is planned to remov
 
 ```bash
 andon hosted status                    # is hosted on? which relay + board id
-andon hosted pair                      # re-print the board link (to add another device)
+andon hosted pair                      # re-print your board link — add a device, or recover a lost link
 andon hosted off                       # stop forwarding — your agents go back to local-only
 andon verify  <relay-url>              # check the relay serves the exact open-source code (see below)
 ```
@@ -146,6 +146,11 @@ under that one URL. Isolation is two-layer and tested:
 
 ## Troubleshooting
 
+- **Lost your board link (the `#k=…`)?** It isn't on the relay — the relay never had your key. It lives on the
+  machine where you ran `andon hosted setup`: run `andon hosted pair` there to re-print the full link (or read
+  `~/.andon/hosted.json` and join `relayUrl` + `/b/` + `boardId` + `#k=` + `key`). A device that was *never*
+  paired can't recover the link from the relay — go back to that machine, get the link, and open it once on the
+  new device.
 - **"RE-PAIR — open your board link again on this device."** This device has no key (new device, cleared
   storage, or a home-screen launch where the `#k` was stripped). Re-open your full board link (with `#k=…`)
   once; it re-caches the key.
