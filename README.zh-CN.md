@@ -9,6 +9,15 @@
 ![runtime dependencies: 0](https://img.shields.io/badge/runtime%20deps-0-3aa86b)
 ![platforms: macOS · Linux · Windows](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-23262e)
 
+**⚡ 最快上手** —— 装好、接入我们的托管中继,然后在手机上盯着看:
+
+```bash
+npm i -g agent-andon
+andon hosted setup https://relay.agentandon.com
+andon install claude
+```
+*(随后重启你的 agent · 只想试试? `npx agent-andon serve --demo`)*
+
 把一台闲置的 iPad 立在桌边 —— 或者直接用手机/任意浏览器打开看板。给 **Claude Code** 或
 **OpenAI Codex** 提交一个任务，然后放心去干别的 —— 一瞥就知道 agent 是在 **运行、需要你、已完成，
 还是卡住了**。不用守着终端，也不会忘了回来看。

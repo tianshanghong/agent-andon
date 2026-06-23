@@ -9,6 +9,15 @@
 ![runtime dependencies: 0](https://img.shields.io/badge/runtime%20deps-0-3aa86b)
 ![platforms: macOS · Linux · Windows](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-23262e)
 
+**⚡ Schnellster Start** — installieren, mit unserem verwalteten Relay verbinden und vom Handy aus zusehen:
+
+```bash
+npm i -g agent-andon
+andon hosted setup https://relay.agentandon.com
+andon install claude
+```
+*(danach den Agent neu starten · nur ausprobieren? `npx agent-andon serve --demo`)*
+
 Stell ein altes iPad auf deinen Schreibtisch — oder öffne das Board auf deinem Handy oder in einem beliebigen
 Browser. Gib **Claude Code** oder **OpenAI Codex** eine Aufgabe und widme dich dann etwas anderem — ein Blick
 genügt, und du weißt, ob der Agent gerade **arbeitet, dich braucht, fertig ist oder feststeckt**. Kein

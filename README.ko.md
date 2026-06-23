@@ -9,6 +9,15 @@
 ![runtime dependencies: 0](https://img.shields.io/badge/runtime%20deps-0-3aa86b)
 ![platforms: macOS · Linux · Windows](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-23262e)
 
+**⚡ 가장 빠른 시작** — 설치하고 우리 매니지드 릴레이에 연결한 뒤, 휴대폰에서 지켜보세요:
+
+```bash
+npm i -g agent-andon
+andon hosted setup https://relay.agentandon.com
+andon install claude
+```
+*(그다음 에이전트 재시작 · 그냥 둘러보기? `npx agent-andon serve --demo`)*
+
 안 쓰는 iPad를 책상에 세워 두세요 — 아니면 휴대폰이나 아무 브라우저로 보드를 열어도 됩니다.
 **Claude Code**나 **OpenAI Codex**에 작업을 맡긴 다음, 마음 놓고 다른 일을 하세요 — 에이전트가
 **작업 중인지, 확인이 필요한지, 완료됐는지, 막혔는지** 한눈에 알 수 있습니다. 터미널을 붙잡고 지켜볼
