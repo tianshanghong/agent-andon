@@ -7,7 +7,7 @@ this page is the exact command for each.
 |---|---|---|---|
 | **`andon serve`** | 8787 | the board server (on your computer) | always — this *is* the board |
 | **Tailscale Serve** | — | exposes 8787 over HTTPS to *your* tailnet | reach the board / get phone push, just for you |
-| **`andon relay`** | 8788 | the zero-knowledge hosted relay | only if you run your **own** relay — see [deploy-relay.md](deploy-relay.md) |
+| **`andon relay`** | 8788 | the content-blind hosted relay | only if you run your **own** relay — see [deploy-relay.md](deploy-relay.md) |
 
 > Tailscale Serve and the relay are **alternatives** for remote/phone access — you don't run both.
 > Most people run only `andon serve`.
@@ -80,7 +80,7 @@ tailscale serve reset
 
 ## 3. Your own relay — `andon relay` (port 8788)
 
-Only if you host the zero-knowledge relay yourself (most people use the managed relay, or Tailscale,
+Only if you host the content-blind relay yourself (most people use the managed relay, or Tailscale,
 instead). Full production guide — HTTPS, capacity, auto-start: **[deploy-relay.md](deploy-relay.md)**.
 
 | Action | Command |

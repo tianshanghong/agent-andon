@@ -1,7 +1,7 @@
 # Deploying an Andon relay (the shared "unified entry")
 
 This is the operator guide: run **one** Andon relay at **one HTTPS URL**, and any number of people point at
-it with `andon hosted setup <your-url>` — each gets their own isolated, zero-knowledge board under that same
+it with `andon hosted setup <your-url>` — each gets their own isolated, content-blind board under that same
 URL. (Users' side: [hosted.md](hosted.md).)
 
 The relay **stores ciphertext only** and can't read anyone's content — but it's an internet-facing
@@ -181,7 +181,7 @@ What's **NOT** built yet — add before running a real public service:
 - **X-Forwarded-For** handling (see the proxy note above).
 - **Durable/backed-up `ANDON_DATA_DIR`** — it's a flat JSON file; back it up.
 
-None of these affect the zero-knowledge guarantee (the relay never holds keys or plaintext); they're
+None of these affect the content-blind guarantee (the relay never holds keys or plaintext); they're
 availability/abuse concerns.
 
 ---

@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 #
-# Agent Andon — the zero-knowledge hosted relay, as a container.
+# Agent Andon — the content-blind hosted relay, as a container.
 # Built reproducibly from the public source (the SAME code `andon verify` checks).
 # Default command runs the relay; it stores ciphertext only and never holds a key.
 
@@ -19,7 +19,7 @@ RUN npm run build
 # ---- runtime (no runtime deps — stdlib only) ----
 FROM node:22-slim AS runtime
 LABEL org.opencontainers.image.source="https://github.com/tianshanghong/agent-andon" \
-      org.opencontainers.image.description="Agent Andon — zero-knowledge hosted relay" \
+      org.opencontainers.image.description="Agent Andon — content-blind hosted relay" \
       org.opencontainers.image.licenses="AGPL-3.0-or-later"
 WORKDIR /app
 ENV NODE_ENV=production \

@@ -211,13 +211,15 @@ le vôtre** (le même code open source) :
 
 ```bash
 andon hosted setup https://relay.agentandon.com   # activer — une clé est générée et ne quitte jamais votre machine
-andon relay                                        # …ou faites tourner vous-même le relais à divulgation nulle
+andon relay                                        # …ou faites tourner vous-même le relais aveugle au contenu
 andon verify <relay-url>                           # vérifier qu'un relais sert exactement le code open source
 ```
 
-Chaque état est **chiffré de bout en bout sur votre machine** avant de partir ; le relais achemine
-et stocke **uniquement du texte chiffré** et ne peut pas lire vos prompts, votre code, vos titres ni
-vos messages — il voit seulement que vous êtes actif, à peu près quand, et votre adresse IP. *« Vérifiable,
+Le **contenu** de chaque état (son titre, son message et le nom de l'agent) est **chiffré de bout en bout sur votre
+machine** avant de partir ; le relais achemine et stocke uniquement **ce texte chiffré, qu'il ne peut pas
+déchiffrer** (il ne reçoit jamais votre clé) — il ne peut donc pas lire vos prompts, votre code, vos titres ni vos
+messages. Il ne voit que des métadonnées générales : que vous êtes actif, à peu près quand, l'état général, et votre
+adresse IP. *« Vérifiable,
 pas seulement digne de confiance » :* le code servi est open source et reproductible, et `andon
 verify` confirme qu'un relais sert exactement celui-ci. Guides complets :
 **[utiliser le tableau de bord hébergé](docs/hosted.md)** · **[déployer un relais](docs/deploy-relay.md)** (en anglais).
