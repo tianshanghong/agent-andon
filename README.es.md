@@ -137,6 +137,10 @@ Reinicia tu sesión de Claude Code y encenderá el tablero automáticamente. Eso
 
 ## ¿Qué configuración necesitas?
 
+### 🔧 ¿Prefieres autoalojar?
+
+Ejecuta todo el tablero en local con `andon serve` (gratis, alertas de escritorio, sin relay), o monta tu propio relay con `andon relay` (`andon verify <url>` verifica cualquier relay). → [guía completa de autoalojamiento](docs/deploy-relay.md)
+
 `andon serve` ya te da el tablero + **alertas de escritorio en el ordenador que lo ejecuta**: gratis,
 sin configuración y en **macOS / Linux / Windows**. Lo que cuesta un poco más es el **push a tu
 teléfono**: una vibración cuando un agente te necesita, *con el teléfono bloqueado y tú lejos del

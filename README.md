@@ -133,6 +133,10 @@ Restart your Claude Code session and it lights up the board automatically. That'
 
 ## Which setup do you need?
 
+### 🔧 Rather self-host?
+
+Run the whole board locally with `andon serve` (free, desktop alerts, no relay), or host your own relay with `andon relay` (`andon verify <url>` checks any relay). → [full self-host guide](docs/deploy-relay.md)
+
 `andon serve` already gives you the board + **desktop alerts on the computer running it** — free, zero
 setup, on **macOS / Linux / Windows**. The part that takes more is **push to your phone**: a buzz when an
 agent needs you, *phone locked, you away from the desk*. Phone push needs a relay reachable over **HTTPS**

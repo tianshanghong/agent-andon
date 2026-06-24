@@ -138,6 +138,10 @@ Redémarrez votre session Claude Code et elle allume le tableau de bord automati
 
 ## Quelle configuration vous faut-il ?
 
+### 🔧 Plutôt auto-héberger ?
+
+Lancez tout le tableau en local avec `andon serve` (gratuit, alertes bureau, sans relais), ou hébergez votre propre relais avec `andon relay` (`andon verify <url>` vérifie n'importe quel relais). → [guide d'auto-hébergement complet](docs/deploy-relay.md)
+
 `andon serve` vous donne déjà le tableau de bord + **les alertes sur le bureau de l'ordinateur qui
 l'exécute** — gratuit, sans configuration, sur **macOS / Linux / Windows**. Ce qui demande un peu
 plus d'efforts, c'est le **push vers votre téléphone** : une vibration quand un agent a besoin de

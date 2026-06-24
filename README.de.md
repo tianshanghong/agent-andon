@@ -137,6 +137,10 @@ Starte deine Claude-Code-Session neu, und sie lässt das Board automatisch aufle
 
 ## Welches Setup brauchst du?
 
+### 🔧 Lieber selbst hosten?
+
+Das ganze Board lokal mit `andon serve` (kostenlos, Desktop-Alerts, kein Relay), oder dein eigenes Relay mit `andon relay` (`andon verify <url>` prüft jedes Relay). → [vollständiger Self-Hosting-Guide](docs/deploy-relay.md)
+
 `andon serve` gibt dir bereits das Board + **Desktop-Alerts auf dem Computer, der es ausführt** — kostenlos,
 ohne Setup, auf **macOS / Linux / Windows**. Aufwendiger ist der **Push aufs Handy**: ein Brummen, wenn ein
 Agent dich braucht, *Handy gesperrt, du weg vom Schreibtisch*. Handy-Push braucht ein über **HTTPS** erreichbares
