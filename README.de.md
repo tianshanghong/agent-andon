@@ -9,6 +9,15 @@
 ![runtime dependencies: 0](https://img.shields.io/badge/runtime%20deps-0-3aa86b)
 ![platforms: macOS · Linux · Windows](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-23262e)
 
+**⚡ Schnellster Start** — drei Befehle, und du behältst deine Agents von überall am Handy im Blick. Das Relay verarbeitet nur Chiffretext, den es nicht lesen kann — dein Code bleibt bei dir:
+
+```bash
+npm i -g agent-andon
+andon hosted setup https://relay.agentandon.com
+andon install claude
+```
+*(danach den Agent neu starten · nur ausprobieren? `npx agent-andon serve --demo`)*
+
 Stell ein altes iPad auf deinen Schreibtisch — oder öffne das Board auf deinem Handy oder in einem beliebigen
 Browser. Gib **Claude Code** oder **OpenAI Codex** eine Aufgabe und widme dich dann etwas anderem — ein Blick
 genügt, und du weißt, ob der Agent gerade **arbeitet, dich braucht, fertig ist oder feststeckt**. Kein
@@ -127,6 +136,10 @@ Starte deine Claude-Code-Session neu, und sie lässt das Board automatisch aufle
 ---
 
 ## Welches Setup brauchst du?
+
+### 🔧 Lieber selbst hosten?
+
+Das ganze Board lokal mit `andon serve` (kostenlos, Desktop-Alerts, kein Relay), oder dein eigenes Relay mit `andon relay` (`andon verify <url>` prüft jedes Relay). → [vollständiger Self-Hosting-Guide](docs/deploy-relay.md)
 
 `andon serve` gibt dir bereits das Board + **Desktop-Alerts auf dem Computer, der es ausführt** — kostenlos,
 ohne Setup, auf **macOS / Linux / Windows**. Aufwendiger ist der **Push aufs Handy**: ein Brummen, wenn ein
