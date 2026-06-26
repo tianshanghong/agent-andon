@@ -28,6 +28,10 @@ Es una forma ligera y autoalojada de **vigilar varios agentes de programación c
 bloqueado**: en el tablero (cualquier dispositivo), en una notificación del escritorio o en la barra
 de menús. Sin app, sin cuenta, cero dependencias.
 
+<img src="docs/hero.png" width="880" alt="El escritorio de un desarrollador: a la izquierda un MacBook con Claude Code en una terminal, y a la derecha un teléfono en un soporte mostrando el tablero de Agent Andon — una tarjeta roja ATASCADO y otra ámbar TE NECESITA arriba, y más tranquilas debajo una azul TRABAJANDO y una verde TERMINADO. Un tablero de estado para tus agentes de programación con IA.">
+
+*Todos tus agentes de programación con IA en un solo tablero — lo que te necesita sube arriba del todo. Claude Code y Codex a la izquierda, su estado en vivo en tu teléfono.*
+
 ![Tablero de Agent Andon: los agentes pasan por trabajando → te necesita → atascado → terminado; las tarjetas ATASCADO y TE NECESITA se agrandan, muestran su mensaje completo y suben arriba del todo, mientras una barra de señalización en la parte superior toma el color más urgente](docs/demo.gif)
 
 > El *andon* (行灯) es el tablero de señalización de la fabricación lean: una luz que le indica a

@@ -28,6 +28,10 @@ und **in dem Moment benachrichtigt zu werden, in dem einer deine Freigabe brauch
 blockiert ist** — auf dem Board (jedes Gerät), per Desktop-Banner oder in deiner Menüleiste. Keine App, kein
 Konto, null Abhängigkeiten.
 
+<img src="docs/hero.png" width="880" alt="Der Schreibtisch eines Entwicklers: links ein MacBook mit Claude Code in einem Terminal, rechts ein Smartphone im Ständer mit dem Agent-Andon-Board — oben eine rote Karte STECKT FEST und eine bernsteinfarbene BRAUCHT DICH, darunter ruhiger eine blaue ARBEITET und eine grüne FERTIG. Ein Statusboard für deine KI-Coding-Agents.">
+
+*Alle deine KI-Coding-Agents auf einem Board — was dich braucht, wandert nach oben. Claude Code und Codex links, ihr Live-Status auf deinem Handy.*
+
 ![Agent-Andon-Board: Agents durchlaufen arbeitet → braucht-dich → steckt-fest → fertig; STECKT FEST und BRAUCHT DICH werden groß, zeigen ihre vollständige Nachricht und wandern nach oben, während ein Signalbalken am oberen Rand die dringendste Farbe annimmt](docs/demo.gif)
 
 > *Andon* (行灯) ist das Signalboard aus der schlanken Fertigung: eine Leuchte, die der ganzen Halle auf einen
