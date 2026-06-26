@@ -78,15 +78,17 @@
   .lede{color:var(--muted);font-size:19px;line-height:1.55;margin-top:24px;max-width:30em}
   .lede b{color:var(--text);font-weight:600}
 
-  .cmd{margin-top:34px;display:flex;align-items:stretch;max-width:430px;border:1px solid var(--hairline);
-    border-radius:10px;overflow:hidden;background:var(--surface-2);font-family:var(--mono);font-size:14.5px}
-  .cmd code{padding:14px 16px;flex:1;white-space:nowrap;overflow:auto}
-  .cmd code .p{color:var(--done)}
-  .cmd button{border:0;border-left:1px solid var(--hairline);background:transparent;color:var(--muted);
-    font-family:var(--mono);font-size:12px;letter-spacing:.08em;padding:0 16px;cursor:pointer;transition:.2s}
-  .cmd button:hover{background:var(--surface);color:var(--text)}
-  .cmd button.ok{color:var(--done)}
-  .hint{font-family:var(--mono);font-size:12.5px;color:var(--faint);margin-top:12px}
+  .cmd{position:relative;margin-top:13px;max-width:560px;border:1px solid var(--done);border-radius:11px;
+    background:var(--surface-2);font-family:var(--mono);font-size:13.5px;
+    box-shadow:0 0 0 4px color-mix(in srgb,var(--done) 9%,transparent)}
+  .cmd code{display:block;padding:16px 18px;white-space:pre;overflow-x:auto;line-height:2}
+  .cmd code .p{color:var(--done);user-select:none;margin-right:2px}
+  .cmd button{position:absolute;top:9px;right:9px;border:1px solid var(--hairline-soft);background:var(--surface);
+    color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:.08em;padding:6px 11px;
+    border-radius:6px;cursor:pointer;transition:.2s}
+  .cmd button:hover{color:var(--text);border-color:var(--muted)}
+  .cmd button.ok{color:var(--done);border-color:var(--done)}
+  .hint{font-family:var(--mono);font-size:12.5px;color:var(--faint);margin-top:12px;max-width:42em;line-height:1.7}
 
   .cta{margin-top:30px;display:flex;gap:14px;flex-wrap:wrap}
   .btn{font-family:var(--mono);font-size:13.5px;letter-spacing:.03em;text-decoration:none;padding:12px 18px;
@@ -136,20 +138,7 @@
   .step h3{font-size:18px;font-weight:600;margin-top:10px}
   .step p{color:var(--muted);font-size:14.5px;margin-top:8px}
 
-  /* features */
-  .feat{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:38px;background:var(--hairline-soft);
-    border:1px solid var(--hairline-soft);border-radius:14px;overflow:hidden}
-  .f{background:var(--bg);padding:26px 24px}
-  .f .ic{font-family:var(--mono);color:var(--done);font-size:13px;letter-spacing:.1em}
-  .f h3{font-size:17px;font-weight:600;margin-top:12px}
-  .f p{color:var(--muted);font-size:14px;margin-top:7px;line-height:1.55}
-  @media(max-width:760px){.steps,.feat{grid-template-columns:1fr}}
-
-  /* states legend */
-  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:34px;font-family:var(--mono);font-size:13px}
-  .legend span{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--hairline);
-    padding:9px 14px;border-radius:8px;color:var(--muted);letter-spacing:.04em}
-  .legend i{width:11px;height:11px;border-radius:3px;flex:none}
+  @media(max-width:760px){.steps{grid-template-columns:1fr}}
 
   /* hosted band */
   .band{border:1px solid var(--hairline);border-radius:16px;padding:40px;background:
@@ -188,7 +177,6 @@
   <div class="logo">🚦 ANDON<span class="dim"> /行灯</span></div>
   <div class="navlinks">
     <a href="#how">How it works</a>
-    <a href="#features">Features</a>
     <a href="#anywhere">Board from anywhere</a>
     <a class="star" href="https://github.com/tianshanghong/agent-andon">★ Star on GitHub</a>
   </div>
@@ -200,14 +188,17 @@
     <h1 class="rise" style="animation-delay:.08s">Your AI coding agents,<br><b>at a glance.</b></h1>
     <p class="lede rise" style="animation-delay:.16s">A status board &amp; alerts for <b>Claude Code</b> and <b>Codex</b>. Run several at once — the board lights up the instant one is <b>working, needs you, done,</b> or <b>stuck</b>. No babysitting the terminal.</p>
 
+    <div class="kicker rise" style="animation-delay:.20s;margin-top:32px;color:var(--done)">⚡ Zero setup — three commands, straight onto our relay</div>
     <div class="cmd rise" style="animation-delay:.24s">
-      <code id="cmd"><span class="p">$</span> npx agent-andon serve --demo</code>
-      <button id="copy" aria-label="Copy command">COPY</button>
+      <button id="copy" aria-label="Copy commands">COPY</button>
+      <code id="cmd"><span class="p">$</span> npm i -g agent-andon
+<span class="p">$</span> andon hosted setup https://relay.agentandon.com
+<span class="p">$</span> andon install claude</code>
     </div>
-    <div class="hint rise" style="animation-delay:.28s">↑ try it in 30 seconds — opens a board with fake agents</div>
+    <div class="hint rise" style="animation-delay:.28s">install the CLI · pair with our relay · wire your agent — then restart your session and open the board on your phone. Just trying it out? <code style="font-family:var(--mono);color:var(--muted)">npx agent-andon serve --demo</code></div>
 
     <div class="cta rise" style="animation-delay:.34s">
-      <a class="btn primary" href="#anywhere">Get phone alerts <span class="tag">managed · soon</span></a>
+      <a class="btn primary" href="#anywhere">Phone push from anywhere <span class="tag">managed</span></a>
       <a class="btn ghost" href="https://github.com/tianshanghong/agent-andon">★ Star on GitHub</a>
     </div>
   </div>
@@ -231,34 +222,14 @@
   </div>
 </section>
 
-<section id="features" class="wrap" style="padding-top:24px">
-  <div class="eyebrow">Why it's different</div>
-  <h2>Built like a tool, not a SaaS.</h2>
-  <div class="feat">
-    <div class="f"><div class="ic">multi-agent</div><h3>Several at once</h3><p>One full-width row per session; whatever needs you floats to the top. The whole floor at a glance.</p></div>
-    <div class="f"><div class="ic">0 deps</div><h3>Zero dependencies</h3><p>Pure Node.js standard library. No build chain, no account, no hardware — `npx` and you're live.</p></div>
-    <div class="f"><div class="ic">private</div><h3>Self-hosted &amp; quiet</h3><p>No telemetry, no analytics, no phone-home. It only ever holds high-level status — never your code or logs.</p></div>
-    <div class="f"><div class="ic">alerts</div><h3>Desktop + phone</h3><p>Desktop banners on by default; opt in to phone push for a buzz when an agent needs you, even away from the desk.</p></div>
-    <div class="f"><div class="ic">i18n</div><h3>7 languages</h3><p>English · 中文 · 日本語 · 한국어 · Español · Deutsch · Français, auto-detected per screen.</p></div>
-    <div class="f"><div class="ic">on a wall</div><h3>Old-iPad ready</h3><p>Stand a spare iPad on your desk for an always-on signal board. Or just open it in a tab.</p></div>
-  </div>
-  <div class="legend">
-    <span><i style="background:var(--working)"></i>working</span>
-    <span><i style="background:var(--waiting)"></i>needs you</span>
-    <span><i style="background:var(--done)"></i>done</span>
-    <span><i style="background:var(--error)"></i>stuck</span>
-    <span><i style="background:var(--idle)"></i>idle</span>
-  </div>
-</section>
-
 <section id="anywhere" class="wrap">
   <div class="band">
     <div class="eyebrow">Board from anywhere</div>
     <h2>Phone push, your way.</h2>
-    <p class="sec-lede">Local-first and free to self-host forever. To reach the board — and get push — from anywhere, route through a relay that <b style="color:var(--text)">stores ciphertext only and can't read your agents' content</b>.</p>
+    <p class="sec-lede">Local-first and free to self-host forever. To reach the board — and get push — from anywhere, route through a relay that's <b style="color:var(--text)">content-blind</b>: it stores only ciphertext it can't decrypt, so it never sees your prompts, code, or messages.</p>
     <div class="opts">
       <div class="opt managed">
-        <div class="h">☁️ Managed relay <span class="badge">launching</span></div>
+        <div class="h">☁️ Managed relay <span class="badge">live</span></div>
         <h3>The easy way — no server</h3>
         <p>Zero setup, no Tailscale, no HTTPS to configure. Opt in and get phone push from anywhere.</p>
         <code>$ andon hosted setup https://relay.agentandon.com</code>
@@ -270,7 +241,7 @@
         <code>$ andon relay   ·   andon verify &lt;url&gt;</code>
       </div>
     </div>
-    <div class="priv">🔒&nbsp;<span><b>Verifiable, not just trusted.</b> The relay is end-to-end encrypted and reproducible from source — <code style="font-family:var(--mono);color:var(--text)">andon verify</code> confirms it serves the exact open-source code.</span></div>
+    <div class="priv">🔒&nbsp;<span><b>Verifiable, not just trusted.</b> Your status content is end-to-end encrypted and the relay's code is reproducible from source — <code style="font-family:var(--mono);color:var(--text)">andon verify</code> confirms it serves the exact open-source code.</span></div>
   </div>
 </section>
 
@@ -293,7 +264,7 @@
   // copy the try-command
   var btn=document.getElementById('copy');
   btn.addEventListener('click',function(){
-    var t='npx agent-andon serve --demo';
+    var t='npm i -g agent-andon && andon hosted setup https://relay.agentandon.com && andon install claude';
     (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){
       btn.textContent='COPIED';btn.classList.add('ok');
       setTimeout(function(){btn.textContent='COPY';btn.classList.remove('ok');},1600);
