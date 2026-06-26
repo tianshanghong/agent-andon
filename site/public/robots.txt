@@ -4,4 +4,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://agentandon.com/sitemap.xml
+Sitemap: https://agentandon.com/sitemap-index.xml

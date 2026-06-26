@@ -1,0 +1,4 @@
+# Astro build output + tooling (the published artifact is the built dist/, via Dockerfile.site)
+dist/
+.astro/
+node_modules/
