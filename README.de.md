@@ -45,6 +45,18 @@ Konto, null Abhängigkeiten.
 
 ---
 
+## Benachrichtigt werden, wenn Claude Code oder Codex dich braucht, fertig ist oder hängt
+
+Agent Andon installiert die nativen Lifecycle-Hooks von **Claude Code** und **OpenAI Codex** und macht aus jedem Durchlauf ein Signal auf einen Blick — auf dem Board (jeder Bildschirm), als Desktop-Banner oder Handy-Push — damit du nicht mehr am Terminal auf eine Eingabe warten musst.
+
+## Mehrere Claude-Code-/Codex-Agenten gleichzeitig im Blick
+
+Lass viele Sitzungen parallel laufen und sieh eine Zeile pro Agent; was **dich braucht**, rückt nach oben. Betreibe eine ganze Flotte und schau nur hin, wenn wirklich einer dich braucht.
+
+## Standardmäßig selbst gehostet und privat
+
+Reine Node-Standardbibliothek, null Laufzeitabhängigkeiten, kein Konto, keine Telemetrie — es läuft auf deinem Rechner. Ein optionales inhaltsblindes Relay (speichert nur Chiffretext, den es nicht entschlüsseln kann) bringt Board und Handy-Push von überall, ohne deinen Code preiszugeben.
+
 ## Dokumentation
 
 Neu hier? **[Installation](#installation)** → **[Schnellstart](#schnellstart-60-sekunden)** → **[Welches Setup brauchst du?](#welches-setup-brauchst-du)**. Und dann, wenn du tiefer einsteigen willst (die Dokumentation ist auf Englisch):

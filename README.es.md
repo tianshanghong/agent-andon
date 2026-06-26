@@ -46,6 +46,18 @@ de menús. Sin app, sin cuenta, cero dependencias.
 
 ---
 
+## Recibe un aviso cuando Claude Code o Codex te necesita, termina o se atasca
+
+Agent Andon instala los hooks de ciclo de vida nativos de **Claude Code** y **OpenAI Codex** y convierte cada turno en una señal de un vistazo — en el tablero (cualquier pantalla), un aviso de escritorio o una notificación al móvil — para que dejes de vigilar la terminal esperando una confirmación.
+
+## Vigila varios agentes de Claude Code / Codex a la vez
+
+Ejecuta muchas sesiones en paralelo y ve una fila por agente; lo que **te necesita** sube arriba del todo. Lleva una flota entera y mira solo cuando uno de verdad te necesita.
+
+## Autoalojado y privado por defecto
+
+Biblioteca estándar de Node pura, cero dependencias en tiempo de ejecución, sin cuenta y sin telemetría — se ejecuta en tu máquina. Un relay opcional ciego al contenido (solo guarda texto cifrado que no puede descifrar) añade tablero y notificaciones al móvil desde cualquier lugar sin exponer tu código.
+
 ## Documentación
 
 ¿Es tu primera vez? **[Instalación](#instalación)** → **[Inicio rápido](#inicio-rápido-60-segundos)** → **[¿Qué configuración necesitas?](#qué-configuración-necesitas)**. Después, para profundizar (la documentación está en inglés):
