@@ -28,6 +28,10 @@ de **recevoir une notification dès que l'un d'eux attend votre approbation, ter
 retrouve bloqué** — sur le tableau de bord (n'importe quel appareil), via une bannière sur le
 bureau, ou dans la barre de menus. Aucune application, aucun compte, zéro dépendance.
 
+<img src="docs/hero.png" width="880" alt="Le bureau d'un développeur : à gauche un MacBook exécutant Claude Code dans un terminal, à droite un téléphone sur un support affichant le tableau Agent Andon — une carte rouge BLOQUÉ et une ambre A BESOIN DE VOUS en haut, puis plus calmes une bleue EN COURS et une verte TERMINÉ. Un tableau de bord d'état pour vos agents de code IA.">
+
+*Tous vos agents de code IA sur un seul tableau — celui qui a besoin de vous remonte en haut. Claude Code et Codex à gauche, leur état en direct sur votre téléphone.*
+
 ![Tableau de bord Agent Andon : les agents passent par travail → a besoin de vous → bloqué → terminé ; les cartes BLOQUÉ et A BESOIN DE VOUS grandissent, affichent leur message complet et remontent en haut, tandis qu'une barre de signalisation en haut prend la couleur la plus urgente](docs/demo.gif)
 
 > L'*andon* (行灯) est le tableau de signalisation de la production allégée (lean) : une lampe qui

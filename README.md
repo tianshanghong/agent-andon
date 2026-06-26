@@ -26,6 +26,10 @@ It's a lightweight, self-hosted way to **monitor several AI coding agents at onc
 the instant one needs your approval, finishes its turn, or gets blocked** — on the board (any device),
 a desktop banner, or your menu bar. No app, no account, zero dependencies.
 
+<img src="docs/hero.png" width="880" alt="A developer's desk: a MacBook running Claude Code in a terminal on the left, and a phone in a stand on the right showing the Agent Andon board — a red STUCK card and an amber NEEDS YOU card on top, calmer blue WORKING and green READY cards below. A status board for your AI coding agents.">
+
+*All your AI coding agents on one board — whatever needs you floats to the top. Claude Code and Codex on the left, their live status on your phone.*
+
 ![Agent Andon board: agents cycle through working → needs-you → stuck → done; STUCK and NEEDS YOU grow large, show their full message, and float to the top, while a signal bar across the top takes the most-urgent colour](docs/demo.gif)
 
 > *Andon* (行灯) is the lean-manufacturing signal board: a light that tells the
