@@ -18,10 +18,14 @@
 <meta name="twitter:description" content="A signal board for Claude Code & Codex. Working · needs you · done · stuck. Self-hosted, zero dependencies.">
 <meta name="twitter:image" content="https://agentandon.com/social-card.png">
 <meta name="theme-color" content="#0c0d10">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="canonical" href="https://agentandon.com/">
 <style>
+  /* Self-hosted IBM Plex (latin subset, woff2) in site/fonts/ — no external font CDN.
+     Sans is a variable file (weight range); Mono ships one file per weight. */
+  @font-face{font-family:'IBM Plex Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(/fonts/ibm-plex-sans.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  @font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/ibm-plex-mono-400.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  @font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:600;font-display:swap;src:url(/fonts/ibm-plex-mono-600.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  @font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:700;font-display:swap;src:url(/fonts/ibm-plex-mono-700.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
   :root{
     --bg:#0c0d10; --surface:#15171c; --surface-2:#101217;
     --hairline:#23262e; --hairline-soft:#1b1e25;
@@ -168,6 +172,45 @@
   footer a:hover{color:var(--text)}
   footer .fine{color:var(--faint);font-size:12.5px;margin-top:18px;font-family:var(--mono);line-height:1.7}
 </style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Agent Andon",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "macOS, Linux, Windows",
+  "description": "Open-source status board and alerts for Claude Code and OpenAI Codex. Run several AI coding agents at once and see at a glance which is working, needs you, done, or stuck — on any screen, with optional desktop and phone alerts.",
+  "url": "https://agentandon.com/",
+  "downloadUrl": "https://www.npmjs.com/package/agent-andon",
+  "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+  "isAccessibleForFree": true,
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "sameAs": ["https://github.com/tianshanghong/agent-andon"]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I get notified when Claude Code or Codex finishes or needs input?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Agent Andon installs lifecycle hooks for Claude Code and OpenAI Codex and shows each session's state — working, needs you, done, or stuck — on a board you can open on any screen, with optional desktop and phone alerts the moment an agent needs you." }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I monitor several AI coding agents at once?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. Agent Andon shows one row per session and floats whichever needs you to the top, so you can watch several Claude Code or Codex agents at a glance on a wall-mounted iPad, phone, or browser tab." }
+    },
+    {
+      "@type": "Question",
+      "name": "Is Agent Andon self-hosted and private?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Agent Andon is open-source and self-hosted with zero runtime dependencies; it runs locally with no account and no telemetry. An optional content-blind relay lets you reach the board and get phone push from anywhere, storing only ciphertext it can't decrypt." }
+    }
+  ]
+}
+</script>
 </head>
 <body>
 <div class="strip"><i class="e"></i><i class="w"></i><i class="d"></i><i class="k"></i></div>
