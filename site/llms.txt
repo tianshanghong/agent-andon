@@ -1,0 +1,16 @@
+# Agent Andon
+
+> Open-source status board and alerts for Claude Code and OpenAI Codex. Run several AI coding agents at once and see at a glance which one is working, needs you, done, or stuck — on any screen, with optional desktop and phone alerts. Self-hosted, zero runtime dependencies.
+
+Agent Andon turns AI-coding-agent lifecycle hooks into an ambient signal board: one full-width row per session, and whichever needs you floats to the top. It is local-first with no account and no telemetry; an optional content-blind relay (it stores only ciphertext it can't decrypt) lets you reach the board and get phone push from anywhere.
+
+## Docs
+- [README & install](https://github.com/tianshanghong/agent-andon): one-line install, quick start, and how it works.
+- [Notifications](https://github.com/tianshanghong/agent-andon/blob/main/docs/notifications.md): desktop banners and phone push.
+- [Hosted relay](https://github.com/tianshanghong/agent-andon/blob/main/docs/hosted.md): reach the board from anywhere; content-blind by design.
+- [Configuration](https://github.com/tianshanghong/agent-andon/blob/main/docs/configuration.md): options and environment variables.
+- [Troubleshooting](https://github.com/tianshanghong/agent-andon/blob/main/docs/troubleshooting.md): common issues and fixes.
+
+## Project
+- [Source (AGPL-3.0)](https://github.com/tianshanghong/agent-andon)
+- [npm package](https://www.npmjs.com/package/agent-andon)

@@ -1,0 +1,7 @@
+# Agent Andon — https://agentandon.com/
+# Public site, meant to be indexed and cited — including by AI answer engines
+# (GPTBot, ClaudeBot, PerplexityBot, Google-Extended, CCBot, Applebot-Extended).
+User-agent: *
+Allow: /
+
+Sitemap: https://agentandon.com/sitemap.xml
