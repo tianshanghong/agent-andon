@@ -1,16 +1,25 @@
 # syntax=docker/dockerfile:1
 #
-# Agent Andon — the landing page (agentandon.com) as a static nginx image.
+# Agent Andon — the marketing site + docs (agentandon.com) as a static nginx image.
+# Multi-stage: a Node stage builds the Astro site; nginx serves the static dist/.
 # Built from site/ by CI and published to ghcr.io/<owner>/agent-andon-site, so
-# deployments pull the image instead of copying the HTML into each stack repo
+# deployments pull the image instead of copying HTML into each stack repo
 # (keeps the public repo the single source of truth — GitOps-clean).
+
+FROM node:22-alpine AS build
+WORKDIR /app
+COPY site/package.json site/package-lock.json ./
+RUN npm ci
+COPY site/ ./
+RUN npm run build
+
 FROM nginx:1.27-alpine
 LABEL org.opencontainers.image.source="https://github.com/tianshanghong/agent-andon" \
-      org.opencontainers.image.description="Agent Andon — landing page (agentandon.com)" \
+      org.opencontainers.image.description="Agent Andon — marketing site + docs (agentandon.com)" \
       org.opencontainers.image.licenses="AGPL-3.0-or-later"
 # don't leak the nginx version in the Server header / error pages
 RUN printf 'server_tokens off;\n' > /etc/nginx/conf.d/hardening.conf
-COPY site/ /usr/share/nginx/html/
+COPY --from=build /app/dist /usr/share/nginx/html/
 # static-serving liveness (alpine ships wget via busybox)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s \
   CMD wget -q -O /dev/null http://127.0.0.1/ || exit 1

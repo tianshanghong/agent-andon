@@ -3,6 +3,10 @@
 node_modules
 dist
 build
+# site/ (Astro) build artifacts — the image rebuilds these from source in its build stage
+site/node_modules
+site/dist
+site/.astro
 .git
 .github
 test
@@ -11,6 +15,6 @@ examples
 *.log
 *.andon-backup
 .DS_Store
-.env*
+**/.env*
 Dockerfile
 .dockerignore
