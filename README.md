@@ -44,6 +44,18 @@ a desktop banner, or your menu bar. No app, no account, zero dependencies.
 
 ---
 
+## Get notified when Claude Code or Codex needs you, finishes, or gets stuck
+
+Agent Andon installs the native lifecycle hooks for **Claude Code** and **OpenAI Codex** and turns each turn into a glanceable signal — on the board (any screen), a desktop banner, or phone push — so you stop watching the terminal waiting for a prompt.
+
+## Watch several Claude Code / Codex agents at once
+
+Run many sessions in parallel and see one row per agent; whatever **needs you** floats to the top. Run a whole fleet and only look when one actually needs you.
+
+## Self-hosted and private by default
+
+Pure Node standard library, zero runtime dependencies, no account, no telemetry — it runs on your machine. An optional content-blind relay (it stores only ciphertext it can't decrypt) adds board-from-anywhere and phone push without exposing your code.
+
 ## Docs
 
 New here? **[Install](#install)** → **[Quickstart](#quickstart-60-seconds)** → **[Which setup do you need?](#which-setup-do-you-need)**. Then, for depth:
