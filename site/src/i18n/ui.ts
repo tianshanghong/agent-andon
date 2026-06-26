@@ -1,6 +1,6 @@
 // Per-locale strings for the landing. Some values contain inline HTML (<b>, <code>,
 // <a>, <br>) and are rendered with set:html in Landing.astro. The board mock and code
-// commands stay English (decorative / literal). en must match the approved EN page byte-for-byte.
+// commands stay English (decorative / literal). The `en` block is the reference the six translations mirror.
 export const LOCALES = ["en", "zh-CN", "ja", "ko", "es", "de", "fr"] as const;
 export type Locale = (typeof LOCALES)[number];
 
