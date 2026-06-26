@@ -83,6 +83,10 @@ tailscale serve reset
 
 ## 3. Your own relay — `andon relay` (port 8788)
 
+> **Don't want to run a relay at all?** You don't have to — use ours. `andon hosted setup https://relay.agentandon.com`
+> points you at our managed content-blind relay: the board from anywhere, zero setup, nothing to host.
+> See [Hosted Andon](/docs/hosted/).
+
 Only if you host the content-blind relay yourself (most people use the managed relay, or Tailscale,
 instead). Full production guide — HTTPS, capacity, auto-start: **[deploy-relay.md](/docs/deploy-relay/)**.
 
