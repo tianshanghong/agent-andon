@@ -22,6 +22,8 @@
     "start": "node dist/cli.js serve",
     "demo": "node dist/cli.js serve --demo",
     "test": "tsc -p tsconfig.test.json && node --test \"build/test/**/*.test.js\"",
+    "seo:verify": "node scripts/seo-verify.mjs site",
+    "seo:verify:selftest": "node scripts/seo-verify.mjs --selftest",
     "prepublishOnly": "npm run build"
   },
   "engines": {

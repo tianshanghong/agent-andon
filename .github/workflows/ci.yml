@@ -28,3 +28,18 @@ jobs:
         run: npm test
       - name: Smoke (CLI help)
         run: node dist/cli.js help
+
+  seo-verify:
+    runs-on: ubuntu-latest
+    name: seo verify
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # Self-test proves the SEO net can actually FAIL (positive control passes,
+      # every one-property-broken negative is rejected) — so a green site check
+      # means something. The site check itself (node scripts/seo-verify.mjs site)
+      # is wired in once the site is made to pass (see the SEO hygiene PR).
+      - name: SEO net self-test
+        run: node scripts/seo-verify.mjs --selftest
