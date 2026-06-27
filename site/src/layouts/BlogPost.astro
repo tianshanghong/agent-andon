@@ -1,7 +1,7 @@
 ---
 // Branded layout for a blog post — same dark palette + self-hosted IBM Plex as the landing,
 // tuned for long-form reading. Emits BlogPosting JSON-LD + canonical + hreflang (en + x-default).
-const { title, description, pubDate, updated, author, slug } = Astro.props;
+const { title, description, pubDate, updated, slug } = Astro.props;
 const BASE = "https://agentandon.com";
 const canonical = `${BASE}/blog/${slug}/`;
 const iso = (d) => new Date(d).toISOString().slice(0, 10);
@@ -14,7 +14,7 @@ const ld = {
   description,
   datePublished: iso(pubDate),
   dateModified: iso(updated || pubDate),
-  author: { "@type": "Person", name: author },
+  author: { "@type": "Organization", name: "Agent Andon" },
   publisher: { "@type": "Organization", name: "Agent Andon" },
   mainEntityOfPage: canonical,
   image: `${BASE}/social-card.png`,
@@ -95,7 +95,7 @@ const ld = {
 <article class="wrap">
   <div class="eyebrow">Agent Andon · Blog</div>
   <h1>{title}</h1>
-  <div class="meta">{human(pubDate)} · {author}{updated ? ` · updated ${human(updated)}` : ""}</div>
+  <div class="meta">{human(pubDate)}{updated ? ` · updated ${human(updated)}` : ""}</div>
   <div class="prose"><slot /></div>
 </article>
 <footer><div class="wrap">

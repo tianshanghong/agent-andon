@@ -2,7 +2,6 @@
 title: "Content-blind by design: reaching your board without reading it"
 description: "How Agent Andon lets you watch your AI coding agents from anywhere through a relay that seals your project names and messages it can never decrypt — and how you can check that claim instead of trusting it."
 pubDate: 2026-06-26
-author: "wwang"
 ---
 
 Agent Andon is local-first. By default, nothing about your agents is sent anywhere — no account, no telemetry, no "phone home." The board server runs on your computer, and the board it serves only ever holds **high-level status**: a state (working, needs you, done, stuck), a project name, and a one-line status — which might name a tool the agent is running, a file it touched, or a short line of its reply. Never your code's contents, your logs, or your prompts.

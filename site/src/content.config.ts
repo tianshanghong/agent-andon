@@ -15,7 +15,6 @@ export const collections = {
       description: z.string(),
       pubDate: z.coerce.date(),
       updated: z.coerce.date().optional(),
-      author: z.string().default("wwang"),
     }),
   }),
 };
