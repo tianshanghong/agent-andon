@@ -1,6 +1,6 @@
 ---
-title: "Commands & event mapping"
-description: "Every Agent Andon CLI command and how Claude Code / Codex lifecycle events map to board states — install, serve, doctor, hosted, and more."
+title: "Commands, hooks & event mapping"
+description: "Every Agent Andon CLI command, and how the Claude Code / Codex lifecycle hooks and events map to board states — install, serve, doctor, hosted, and more."
 ---
 
 The full CLI reference, how agent events become board states, background-task counting, Codex

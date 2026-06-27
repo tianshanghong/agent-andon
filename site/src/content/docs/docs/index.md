@@ -8,7 +8,7 @@ Agent Andon is a status board for your AI coding agents. New here? Start with **
 ## Guide
 
 - [Running Andon](/docs/running/) — start, check, and stop each piece
-- [Commands & event mapping](/docs/commands/)
+- [Commands & events](/docs/commands/)
 - [Configuration & security](/docs/configuration/)
 - [Notifications](/docs/notifications/) — desktop alerts & the menu-bar indicator
 

@@ -1,6 +1,6 @@
 ---
-title: "Notifications: desktop alerts & menu bar"
-description: "Set up Agent Andon desktop alerts and the menu-bar indicator so you are pinged the moment an agent needs you or gets stuck."
+title: "Claude Code & Codex notifications: desktop alerts & menu bar"
+description: "Set up desktop alerts and the menu-bar indicator for your Claude Code and Codex agents, so you are pinged the moment one needs you, finishes, or gets stuck."
 ---
 
 Andon's whole job is to **grab your attention at the right moment** — when an
