@@ -1,5 +1,5 @@
 ---
-import { ui, LOCALES, type Locale } from "../i18n/ui";
+import { ui, LOCALES, LANG, type Locale } from "../i18n/ui";
 const { locale } = Astro.props as { locale: Locale };
 const t = ui[locale];
 const BASE = "https://agentandon.com";
@@ -7,7 +7,7 @@ const urlFor = (l: string): string => (l === "en" ? `${BASE}/` : `${BASE}/${l}/`
 const canonical = urlFor(locale);
 ---
 <!doctype html>
-<html lang={locale}>
+<html lang={LANG[locale]}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -27,7 +27,7 @@ const canonical = urlFor(locale);
 <meta name="twitter:image" content="https://agentandon.com/social-card.png">
 <meta name="theme-color" content="#0c0d10">
 <link rel="canonical" href={canonical}>
-{LOCALES.map((l) => (<link rel="alternate" hreflang={l} href={urlFor(l)} />))}
+{LOCALES.map((l) => (<link rel="alternate" hreflang={LANG[l]} href={urlFor(l)} />))}
 <link rel="alternate" hreflang="x-default" href={urlFor("en")} />
 <style is:inline>
   /* Self-hosted IBM Plex (latin subset, woff2) in site/fonts/ — no external font CDN.

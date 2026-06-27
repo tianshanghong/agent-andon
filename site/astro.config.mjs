@@ -9,11 +9,6 @@ import starlight from "@astrojs/starlight";
 export default defineConfig({
   site: "https://agentandon.com",
   trailingSlash: "always",
-  i18n: {
-    defaultLocale: "en",
-    locales: ["en", "zh-CN", "ja", "ko", "es", "de", "fr"],
-    routing: { prefixDefaultLocale: false },
-  },
   integrations: [
     starlight({
       title: "Agent Andon",
@@ -24,9 +19,19 @@ export default defineConfig({
       // matching the dark-only landing — ExpressiveCode's light variant is keyed to the OS
       // theme and the --sl-color overrides don't reach it.
       expressiveCode: { themes: ["github-dark"] },
-      // Docs are English-only for now. Astro's i18n still emits locale-prefixed doc URLs that
-      // fall back to this English content; Starlight has no `locales` here yet, so sidebar links
-      // are root-relative (/docs/…). PR-4 adds docs i18n + locale-aware nav.
+      // Docs i18n: `root` = English at /docs/ (no prefix); the six translations at /{locale}/docs/.
+      // Untranslated pages fall back to English (Starlight's built-in fallback). Mirrors the
+      // top-level Astro i18n locales above; makes the sidebar + in-page links locale-aware.
+      defaultLocale: "root",
+      locales: {
+        root: { label: "English", lang: "en" },
+        "zh-cn": { label: "简体中文", lang: "zh-CN" },
+        ja: { label: "日本語", lang: "ja" },
+        ko: { label: "한국어", lang: "ko" },
+        es: { label: "Español", lang: "es" },
+        de: { label: "Deutsch", lang: "de" },
+        fr: { label: "Français", lang: "fr" },
+      },
       sidebar: [
         {
           label: "Guide",

@@ -1,8 +1,13 @@
 // Per-locale strings for the landing. Some values contain inline HTML (<b>, <code>,
 // <a>, <br>) and are rendered with set:html in Landing.astro. The board mock and code
 // commands stay English (decorative / literal). The `en` block is the reference the six translations mirror.
-export const LOCALES = ["en", "zh-CN", "ja", "ko", "es", "de", "fr"] as const;
+export const LOCALES = ["en", "zh-cn", "ja", "ko", "es", "de", "fr"] as const;
 export type Locale = (typeof LOCALES)[number];
+
+// URL segment (lowercase, shared with the Starlight docs) → the BCP-47 value for <html lang> + hreflang.
+export const LANG: Record<Locale, string> = {
+  en: "en", "zh-cn": "zh-CN", ja: "ja", ko: "ko", es: "es", de: "de", fr: "fr",
+};
 
 const CODE = 'style="font-family:var(--mono);color:var(--text)"';
 const DEMO = '<code style="font-family:var(--mono);color:var(--muted)">npx agent-andon serve --demo</code>';
@@ -29,7 +34,7 @@ export const ui = {
     ftFine: `Open source under AGPL-3.0 · © 2026 wwang<br>"Andon" (行灯) — the factory signal light that tells the floor, at a glance, whether a line is running or needs a human.`,
     ftDocs: "Docs",
   },
-  "zh-CN": {
+  "zh-cn": {
     title: "Agent Andon —— 给 AI coding agent 的状态看板与提醒",
     desc: "面向 Claude Code 与 Codex 的开源状态看板。同时跑好几个 agent，一眼看出哪个在工作、要你确认、完成或卡住——任意屏幕、桌面或手机。自托管、零依赖。",
     ogTitle: "Agent Andon —— 一眼看全所有 AI coding agent",
