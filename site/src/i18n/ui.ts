@@ -15,7 +15,7 @@ const HOSTED = "https://github.com/tianshanghong/agent-andon/blob/main/docs/host
 
 export const ui = {
   "en": {
-    title: "Agent Andon — a status board & alerts for your AI coding agents",
+    title: "Agent Andon — status board & alerts for Claude Code & Codex agents",
     desc: "Open-source status board for Claude Code & Codex. Run several agents at once; one glance shows working, needs you, done, or stuck — on any screen, desktop, or phone. Self-hosted, zero dependencies.",
     ogTitle: "Agent Andon — see every AI coding agent at a glance",
     ogDesc: "A signal board for Claude Code & Codex. Working · needs you · done · stuck. Self-hosted, zero dependencies.",
@@ -35,7 +35,7 @@ export const ui = {
     ftDocs: "Docs",
   },
   "zh-cn": {
-    title: "Agent Andon —— 给 AI coding agent 的状态看板与提醒",
+    title: "Agent Andon —— 给 Claude Code 与 Codex 的状态看板与提醒",
     desc: "面向 Claude Code 与 Codex 的开源状态看板。同时跑好几个 agent，一眼看出哪个在工作、要你确认、完成或卡住——任意屏幕、桌面或手机。自托管、零依赖。",
     ogTitle: "Agent Andon —— 一眼看全所有 AI coding agent",
     ogDesc: "给 Claude Code 与 Codex 的信号看板。工作中 · 要你确认 · 完成 · 卡住。自托管、零依赖。",
@@ -55,7 +55,7 @@ export const ui = {
     ftDocs: "文档",
   },
   "ja": {
-    title: "Agent Andon — AI コーディングエージェントのステータスボードと通知",
+    title: "Agent Andon — Claude Code と Codex のステータスボードと通知",
     desc: "Claude Code と Codex 向けのオープンソースなステータスボード。複数のエージェントを同時に動かし、どれが作業中・確認待ち・完了・停止かを一目で把握 —— どの画面でも、デスクトップでもスマホでも。セルフホスト、依存ゼロ。",
     ogTitle: "Agent Andon — すべての AI エージェントを一目で",
     ogDesc: "Claude Code と Codex のためのシグナルボード。作業中 · 確認待ち · 完了 · 停止。セルフホスト、依存ゼロ。",
@@ -75,7 +75,7 @@ export const ui = {
     ftDocs: "ドキュメント",
   },
   "ko": {
-    title: "Agent Andon — AI 코딩 에이전트를 위한 상태 보드와 알림",
+    title: "Agent Andon — Claude Code와 Codex를 위한 상태 보드와 알림",
     desc: "Claude Code와 Codex를 위한 오픈소스 상태 보드. 여러 에이전트를 동시에 돌리고, 어느 것이 작업 중·확인 필요·완료·막힘인지 한눈에 —— 어떤 화면에서든, 데스크톱이든 휴대폰이든. 셀프 호스팅, 의존성 0.",
     ogTitle: "Agent Andon — 모든 AI 에이전트를 한눈에",
     ogDesc: "Claude Code와 Codex를 위한 신호 보드. 작업 중 · 확인 필요 · 완료 · 막힘. 셀프 호스팅, 의존성 0.",
@@ -95,7 +95,7 @@ export const ui = {
     ftDocs: "문서",
   },
   "es": {
-    title: "Agent Andon — un tablero de estado y avisos para tus agentes de IA",
+    title: "Agent Andon — tablero de estado y avisos para Claude Code y Codex",
     desc: "Tablero de estado de código abierto para Claude Code y Codex. Ejecuta varios agentes a la vez; de un vistazo ves cuál trabaja, te necesita, terminó o se atascó — en cualquier pantalla, escritorio o móvil. Autoalojado, cero dependencias.",
     ogTitle: "Agent Andon — ve todos tus agentes de IA de un vistazo",
     ogDesc: "Un tablero de señales para Claude Code y Codex. Trabajando · te necesita · listo · atascado. Autoalojado, cero dependencias.",
@@ -115,7 +115,7 @@ export const ui = {
     ftDocs: "Docs",
   },
   "de": {
-    title: "Agent Andon — ein Statusboard und Alerts für deine KI-Coding-Agenten",
+    title: "Agent Andon — Statusboard und Alerts für Claude Code & Codex",
     desc: "Open-Source-Statusboard für Claude Code & Codex. Lass mehrere Agenten gleichzeitig laufen; ein Blick zeigt, welcher arbeitet, dich braucht, fertig ist oder hängt — auf jedem Bildschirm, Desktop oder Handy. Selbst gehostet, null Abhängigkeiten.",
     ogTitle: "Agent Andon — alle KI-Agenten auf einen Blick",
     ogDesc: "Ein Signalboard für Claude Code & Codex. Arbeitet · braucht dich · fertig · hängt. Selbst gehostet, null Abhängigkeiten.",
@@ -135,7 +135,7 @@ export const ui = {
     ftDocs: "Doku",
   },
   "fr": {
-    title: "Agent Andon — un tableau d'état et des alertes pour vos agents de code IA",
+    title: "Agent Andon — tableau d'état et alertes pour Claude Code et Codex",
     desc: "Tableau d'état open source pour Claude Code et Codex. Lancez plusieurs agents à la fois ; d'un coup d'œil, voyez lequel travaille, vous demande, a fini ou est bloqué — sur n'importe quel écran, bureau ou téléphone. Auto-hébergé, zéro dépendance.",
     ogTitle: "Agent Andon — voyez tous vos agents IA d'un coup d'œil",
     ogDesc: "Un tableau de signaux pour Claude Code et Codex. Travaille · vous demande · prêt · bloqué. Auto-hébergé, zéro dépendance.",
