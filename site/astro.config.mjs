@@ -12,6 +12,19 @@ export default defineConfig({
   integrations: [
     starlight({
       title: "Agent Andon",
+      // Cloudflare Web Analytics on the docs pages — the same beacon as the landing + blog
+      // (src/components/Analytics.astro); keep the token in sync. Marketing pages only, never
+      // the board: Starlight injects this into every docs <head>, and the board isn't a docs page.
+      head: [
+        {
+          tag: "script",
+          attrs: {
+            defer: true,
+            src: "https://static.cloudflareinsights.com/beacon.min.js",
+            "data-cf-beacon": '{"token": "face8bfb7b284ce2acd8fec0bb9c206b"}',
+          },
+        },
+      ],
       disable404Route: true,
       pagination: false,
       customCss: ["./src/styles/docs.css"],

@@ -1,0 +1,15 @@
+---
+// Cloudflare Web Analytics — MARKETING PAGES ONLY (landing, docs, blog).
+//
+// Deliberately NOT in assets/dashboard.html (the board). The board ships in the npm
+// package + relay image and is served to every self-hoster, and `andon verify` hashes
+// it byte-for-byte. A beacon there would (a) make verify mismatch for everyone and
+// (b) phone self-hosters' usage home to us. The board stays beacon-free; only our own
+// informational pages carry analytics.
+//
+// The token is a public site identifier (it sits in the page HTML for every visitor),
+// not a secret — so it lives in the source. Cloudflare Web Analytics is set to "JS
+// snippet installation" (no edge auto-injection), so the beacon appears only where this
+// component is rendered.
+---
+<script is:inline defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "face8bfb7b284ce2acd8fec0bb9c206b"}'></script>

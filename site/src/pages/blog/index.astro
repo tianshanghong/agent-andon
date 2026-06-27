@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import Analytics from "../../components/Analytics.astro";
 const posts = (await getCollection("blog")).sort(
   (a, b) => +new Date(b.data.pubDate) - +new Date(a.data.pubDate),
 );
@@ -67,6 +68,7 @@ const human = (d) =>
   .post p{color:var(--muted);font-size:15.5px;margin-top:8px;max-width:46em}
   .post .more{color:var(--done);font-family:var(--mono);font-size:13px;margin-top:12px;display:inline-block}
 </style>
+<Analytics />
 </head>
 <body>
 <div class="strip"><i class="e"></i><i class="w"></i><i class="d"></i><i class="k"></i></div>

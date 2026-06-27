@@ -40,6 +40,7 @@ A privacy claim is only as good as the things it admits it doesn't cover.
 - Because it routes on that coarse state, the relay **can act on metadata** — it could delay or withhold an event, or re-show one of your real past push notifications. It can't forge a new one (those are sealed) or learn what's inside them.
 - Phone push and the hosted relay are **strictly opt-in** and off by default; each spells out exactly what leaves your machine. The local-first default never changes underneath you.
 - One honest footnote: the board page loads its fonts from Google Fonts unless you self-host them — a normal browser font fetch that carries no agent data, but a request that does leave your browser.
+- And the page you're reading now — the project's website, not the tool — uses Cloudflare's cookieless Web Analytics to count visits: no cookies, no cross-site tracking, no agent data. Your board and the relay never load it; that's exactly the kind of difference `andon verify` is there to catch.
 
 None of this asks you to take the cryptography on faith — it's all open source, and `andon verify` is there to check the code your relay serves. That's the point: a board you can reach from anywhere shouldn't cost you the privacy of a board that never left your desk.
 

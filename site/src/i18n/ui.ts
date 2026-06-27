@@ -31,7 +31,7 @@ export const ui = {
     howP: `Each tool's native hook reports state changes — <code ${CODE}>andon install claude</code> wires it up, no workflow change. Each change is sealed on your machine and forwarded to a <b style="color:var(--text)">content-blind</b> relay that only ever holds ciphertext it can't decrypt — so you open the board, and get phone push, on any screen anywhere in well under a second. No server to run, no network to configure.`,
     selfH2: "Prefer no third party? Self-host.",
     selfP: `Skip the hosted step and run <code ${CODE}>andon serve</code> — the board stays on your own machine and network, nothing leaves it. Or run your own relay. It's the same open-source code either way, and <code ${CODE}>andon verify</code> proves the managed relay serves exactly that. <a href="${HOSTED}" style="color:var(--done);white-space:nowrap">Self-host guide →</a>`,
-    ftFine: `Open source under AGPL-3.0 · © 2026 wwang<br>"Andon" (行灯) — the factory signal light that tells the floor, at a glance, whether a line is running or needs a human.`,
+    ftFine: `Open source under AGPL-3.0 · © 2026 wwang · cookieless analytics on this site<br>"Andon" (行灯) — the factory signal light that tells the floor, at a glance, whether a line is running or needs a human.`,
     ftDocs: "Docs",
   },
   "zh-cn": {
@@ -51,7 +51,7 @@ export const ui = {
     howP: `每个工具的原生 hook 上报状态变化 —— <code ${CODE}>andon install claude</code> 帮你接好,不改工作流。每次变化在你机器上加密后转发给一个<b style="color:var(--text)">内容盲</b>中继,它只持有自己无法解密的密文 —— 于是你能在任意屏幕、随处打开看板并收到手机推送,用时远不到一秒。无需运行服务器,无需配置网络。`,
     selfH2: "不想经过第三方?自托管。",
     selfP: `跳过托管那步,运行 <code ${CODE}>andon serve</code> —— 看板就留在你自己的机器和网络里,什么都不外传。或者自己跑一个中继。两种方式都是同一套开源代码,而 <code ${CODE}>andon verify</code> 能证明托管中继跑的正是这套代码。<a href="${HOSTED}" style="color:var(--done);white-space:nowrap">自托管指南 →</a>`,
-    ftFine: `基于 AGPL-3.0 开源 · © 2026 wwang<br>"Andon"(行灯)—— 工厂里的信号灯,一眼告诉车间某条线是在跑还是需要人。`,
+    ftFine: `基于 AGPL-3.0 开源 · © 2026 wwang · 本站使用无 cookie 的访问统计<br>"Andon"(行灯)—— 工厂里的信号灯,一眼告诉车间某条线是在跑还是需要人。`,
     ftDocs: "文档",
   },
   "ja": {
@@ -71,7 +71,7 @@ export const ui = {
     howP: `各ツールのネイティブフックが状態変化を報告 —— <code ${CODE}>andon install claude</code> が繋いでくれます（ワークフローは変わりません）。各変化はあなたのマシンで封印され、復号できない暗号文だけを保持する<b style="color:var(--text)">コンテンツブラインド</b>中継へ転送されます —— だからどの画面でも、どこからでもボードを開き、スマホ通知を受け取れます。一秒もかかりません。サーバー不要、ネットワーク設定も不要。`,
     selfH2: "第三者を通したくない? セルフホスト。",
     selfP: `ホスト手順を飛ばして <code ${CODE}>andon serve</code> を実行 —— ボードはあなた自身のマシンとネットワークに留まり、何も外に出ません。あるいは自分で中継を動かすことも。どちらも同じオープンソースのコードで、<code ${CODE}>andon verify</code> がマネージド中継がまさにそれを配信していることを証明します。<a href="${HOSTED}" style="color:var(--done);white-space:nowrap">セルフホストガイド →</a>`,
-    ftFine: `AGPL-3.0 のもとでオープンソース · © 2026 wwang<br>「Andon」（行灯）—— 工場の信号灯。ラインが動いているか人手が要るかを、一目で現場に伝える。`,
+    ftFine: `AGPL-3.0 のもとでオープンソース · © 2026 wwang · 本サイトは Cookie を使わないアクセス解析を利用<br>「Andon」（行灯）—— 工場の信号灯。ラインが動いているか人手が要るかを、一目で現場に伝える。`,
     ftDocs: "ドキュメント",
   },
   "ko": {
@@ -91,7 +91,7 @@ export const ui = {
     howP: `각 도구의 네이티브 훅이 상태 변화를 보고합니다 —— <code ${CODE}>andon install claude</code>가 연결해 줍니다(워크플로 변경 없음). 각 변화는 당신의 머신에서 봉인되어, 복호화할 수 없는 암호문만 보관하는 <b style="color:var(--text)">콘텐츠 블라인드</b> 릴레이로 전달됩니다 —— 그래서 어떤 화면에서든, 어디서든 보드를 열고 휴대폰 푸시를 받을 수 있습니다. 1초도 걸리지 않습니다. 서버를 돌릴 필요도, 네트워크를 설정할 필요도 없습니다.`,
     selfH2: "제3자를 거치고 싶지 않다면? 셀프 호스팅.",
     selfP: `호스팅 단계를 건너뛰고 <code ${CODE}>andon serve</code>를 실행하세요 —— 보드는 당신의 머신과 네트워크에 머물고, 아무것도 밖으로 나가지 않습니다. 또는 직접 릴레이를 돌릴 수도 있습니다. 어느 쪽이든 같은 오픈소스 코드이며, <code ${CODE}>andon verify</code>가 매니지드 릴레이가 바로 그 코드를 제공함을 증명합니다. <a href="${HOSTED}" style="color:var(--done);white-space:nowrap">셀프 호스팅 가이드 →</a>`,
-    ftFine: `AGPL-3.0로 오픈소스 · © 2026 wwang<br>"Andon"(行灯) —— 라인이 돌아가는지 사람이 필요한지를 한눈에 현장에 알리는 공장의 신호등.`,
+    ftFine: `AGPL-3.0로 오픈소스 · © 2026 wwang · 이 사이트는 쿠키 없는 방문 통계를 사용<br>"Andon"(行灯) —— 라인이 돌아가는지 사람이 필요한지를 한눈에 현장에 알리는 공장의 신호등.`,
     ftDocs: "문서",
   },
   "es": {
@@ -111,7 +111,7 @@ export const ui = {
     howP: `El hook nativo de cada herramienta informa los cambios de estado — <code ${CODE}>andon install claude</code> lo conecta, sin cambiar tu flujo. Cada cambio se sella en tu máquina y se reenvía a un relay <b style="color:var(--text)">ciego al contenido</b> que solo guarda texto cifrado que no puede descifrar — así abres el tablero, y recibes avisos en el móvil, en cualquier pantalla y lugar en menos de un segundo. Sin servidor que ejecutar, sin red que configurar.`,
     selfH2: "¿Prefieres sin terceros? Autoaloja.",
     selfP: `Salta el paso alojado y ejecuta <code ${CODE}>andon serve</code> — el tablero se queda en tu propia máquina y red, nada sale de ahí. O ejecuta tu propio relay. Es el mismo código abierto en ambos casos, y <code ${CODE}>andon verify</code> prueba que el relay gestionado sirve exactamente eso. <a href="${HOSTED}" style="color:var(--done);white-space:nowrap">Guía de autoalojamiento →</a>`,
-    ftFine: `Código abierto bajo AGPL-3.0 · © 2026 wwang<br>«Andon» (行灯) — la luz de señal de fábrica que dice al taller, de un vistazo, si una línea funciona o necesita a alguien.`,
+    ftFine: `Código abierto bajo AGPL-3.0 · © 2026 wwang · analítica sin cookies en este sitio<br>«Andon» (行灯) — la luz de señal de fábrica que dice al taller, de un vistazo, si una línea funciona o necesita a alguien.`,
     ftDocs: "Docs",
   },
   "de": {
@@ -131,7 +131,7 @@ export const ui = {
     howP: `Der native Hook jedes Tools meldet Statusänderungen — <code ${CODE}>andon install claude</code> richtet es ein, ohne deinen Workflow zu ändern. Jede Änderung wird auf deinem Rechner versiegelt und an ein <b style="color:var(--text)">inhaltsblindes</b> Relay weitergeleitet, das nur Chiffretext speichert, den es nicht entschlüsseln kann — so öffnest du das Board und bekommst Handy-Push auf jedem Bildschirm, überall, in weit unter einer Sekunde. Kein Server zu betreiben, kein Netzwerk zu konfigurieren.`,
     selfH2: "Lieber ohne Dritte? Selbst hosten.",
     selfP: `Überspring den Hosted-Schritt und führe <code ${CODE}>andon serve</code> aus — das Board bleibt auf deinem eigenen Rechner und Netzwerk, nichts verlässt es. Oder betreib dein eigenes Relay. Es ist in beiden Fällen derselbe Open-Source-Code, und <code ${CODE}>andon verify</code> beweist, dass das gehostete Relay genau das ausliefert. <a href="${HOSTED}" style="color:var(--done);white-space:nowrap">Self-Hosting-Anleitung →</a>`,
-    ftFine: `Open Source unter AGPL-3.0 · © 2026 wwang<br>„Andon" (行灯) — die Fabrik-Signalleuchte, die der Werkstatt auf einen Blick sagt, ob eine Linie läuft oder einen Menschen braucht.`,
+    ftFine: `Open Source unter AGPL-3.0 · © 2026 wwang · cookielose Webanalyse auf dieser Website<br>„Andon" (行灯) — die Fabrik-Signalleuchte, die der Werkstatt auf einen Blick sagt, ob eine Linie läuft oder einen Menschen braucht.`,
     ftDocs: "Doku",
   },
   "fr": {
@@ -151,7 +151,7 @@ export const ui = {
     howP: `Le hook natif de chaque outil signale les changements d'état — <code ${CODE}>andon install claude</code> le branche, sans changer votre flux. Chaque changement est scellé sur votre machine puis transmis à un relais <b style="color:var(--text)">aveugle au contenu</b> qui ne détient que du chiffré qu'il ne peut pas déchiffrer — vous ouvrez donc le tableau, et recevez des notifs mobiles, sur n'importe quel écran, partout, en bien moins d'une seconde. Aucun serveur à faire tourner, aucun réseau à configurer.`,
     selfH2: "Vous préférez sans tiers ? Auto-hébergez.",
     selfP: `Sautez l'étape hébergée et lancez <code ${CODE}>andon serve</code> — le tableau reste sur votre propre machine et réseau, rien n'en sort. Ou faites tourner votre propre relais. C'est le même code open source dans les deux cas, et <code ${CODE}>andon verify</code> prouve que le relais géré sert exactement celui-ci. <a href="${HOSTED}" style="color:var(--done);white-space:nowrap">Guide d'auto-hébergement →</a>`,
-    ftFine: `Open source sous AGPL-3.0 · © 2026 wwang<br>« Andon » (行灯) — la lampe-signal d'usine qui dit à l'atelier, d'un coup d'œil, si une ligne tourne ou a besoin d'un humain.`,
+    ftFine: `Open source sous AGPL-3.0 · © 2026 wwang · mesure d'audience sans cookie sur ce site<br>« Andon » (行灯) — la lampe-signal d'usine qui dit à l'atelier, d'un coup d'œil, si une ligne tourne ou a besoin d'un humain.`,
     ftDocs: "Docs",
   },
 } satisfies Record<Locale, Record<string, string>>;

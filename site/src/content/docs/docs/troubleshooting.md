@@ -38,8 +38,10 @@ No — by default nothing about your agents leaves your machine. Andon is fully 
 telemetry, no analytics, no "phone home." It only ever holds high-level status (state, project name, a
 one-line message) — never your code, logs, or secrets.
 
-Two honest caveats: (1) the board loads its web fonts from Google Fonts unless you self-host them — that
+Three honest caveats: (1) the board loads its web fonts from Google Fonts unless you self-host them — that
 request carries no agent data, just your browser's normal font fetch. (2) Optional features (phone push,
 and the hosted relay) are **strictly opt-in** and each spells out exactly what leaves your machine
 — the hosted relay is designed so even *it* can't read your agents' messages. They never change this
-local-first default.
+local-first default. (3) This documentation site itself (not Andon the tool) uses Cloudflare's cookieless
+Web Analytics to count visits — no cookies, no cross-site tracking, no agent data; the board you run and
+the relay never load it.
