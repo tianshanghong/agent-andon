@@ -1,5 +1,6 @@
 ---
 import { ui, LOCALES, LANG, type Locale } from "../i18n/ui";
+import Analytics from "../components/Analytics.astro";
 const { locale } = Astro.props as { locale: Locale };
 const t = ui[locale];
 const BASE = "https://agentandon.com";
@@ -29,6 +30,7 @@ const canonical = urlFor(locale);
 <link rel="canonical" href={canonical}>
 {LOCALES.map((l) => (<link rel="alternate" hreflang={LANG[l]} href={urlFor(l)} />))}
 <link rel="alternate" hreflang="x-default" href={urlFor("en")} />
+<Analytics />
 <style is:inline>
   /* Self-hosted IBM Plex (latin subset, woff2) in site/fonts/ — no external font CDN.
      Sans is a variable file (weight range); Mono ships one file per weight. */
