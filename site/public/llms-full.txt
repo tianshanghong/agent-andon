@@ -1,0 +1,69 @@
+# Agent Andon — full reference
+
+> Open-source status board and alerts for AI coding agents (Claude Code and OpenAI Codex). Run several agents at once and see at a glance which one is working, needs you, done, or stuck — on any screen, with optional desktop and phone alerts. Self-hosted, zero runtime dependencies, AGPL-3.0.
+
+This is the expanded reference, a companion to /llms.txt. Everything here is open source at https://github.com/tianshanghong/agent-andon and verifiable.
+
+## What Agent Andon is
+
+Agent Andon watches your AI coding agents and tells you, at a glance, which one needs you. It reads each tool's native lifecycle hooks — it does not wrap or proxy your agent — and shows one row per session on a board you can open in any browser, on a phone, or on a wall-mounted iPad. Whichever session needs you floats to the top; everything else stays quiet. It is local-first, with no account and no telemetry.
+
+The name "Andon" (行灯) is the factory signal light that tells the floor, at a glance, whether a line is running or needs a human.
+
+## Install and core commands
+
+```
+npm i -g agent-andon     # zero-dependency CLI, runs on your machine
+andon install claude     # wire Claude Code's lifecycle hooks (no workflow change)
+andon install codex      # wire OpenAI Codex's lifecycle hooks (run /hooks once to trust)
+andon serve              # run the board; open the printed URL on any screen
+andon doctor             # health check: what's wired + the board URL
+andon uninstall claude   # remove only what Andon added
+```
+
+`andon install --dry-run claude` prints the resulting settings.json without writing it.
+
+## Board states
+
+Each session shows one of four states, mapped from the agent's lifecycle events:
+
+- **working** (blue) — the agent is busy.
+- **needs you** (amber, pulses) — waiting on a prompt, permission, or decision. The one worth catching fast.
+- **done / ready** (green) — the agent handed the turn back to you (not necessarily "all done").
+- **stuck** (red) — the turn failed or stalled.
+
+## Notifications
+
+The board itself works on any device. On top of it: desktop banners on by default, plus a menu-bar summary (a plain-text status at /menubar that you point SwiftBar, xbar, or Waybar at). For phone push from anywhere, connect a content-blind relay.
+
+## The content-blind relay
+
+To reach the board and get phone push from outside your network, Agent Andon can forward sealed events through a relay. The relay is content-blind: your project names and messages are end-to-end encrypted, and it stores only ciphertext it cannot decrypt (it never receives your key). It still sees coarse metadata — how many sessions you have, each one's high-level state and roughly when it changes, and your IP. You can run your own relay with `andon relay`, or use the managed one (launching soon), and point Andon at whichever you choose with `andon hosted setup <relay-url>`. `andon verify <relay-url>` checks that a relay serves the exact open-source board code you have, instead of asking you to trust it. Prefer no third party at all? `andon serve` keeps everything on your own machine and network.
+
+## Docs (https://agentandon.com/docs/)
+
+- Running Andon — /docs/running/ — start, check, and stop each piece: the board server, Tailscale Serve for phone access, the optional relay.
+- Commands, hooks & event mapping — /docs/commands/ — every CLI command, and how Claude Code / Codex lifecycle hooks and events map to board states.
+- Configuration & security — /docs/configuration/ — ports, auth tokens, idle age-out (TTL), and the security model.
+- Claude Code & Codex notifications — /docs/notifications/ — desktop alerts and the menu-bar indicator.
+- Hosted Andon — /docs/hosted/ — reach the board, and get phone push, from anywhere.
+- Deploying a relay — /docs/deploy-relay/ — self-host the content-blind relay.
+- Troubleshooting & FAQ — /docs/troubleshooting/ — common issues and fixes.
+
+## Guides (https://agentandon.com/guides/)
+
+- How to get notified when Claude Code finishes or needs you — /guides/get-notified-when-claude-code-finishes/ — install Andon, wire the hook, open the board, and turn on desktop + phone alerts.
+- Claude Code Stop-hook notification example — /guides/claude-code-stop-hook-notification-example/ — a copy-pasteable Stop hook for ~/.claude/settings.json, what the Stop event actually means, and the fuller Agent Andon setup.
+- Turn an old iPad into a dashboard for your coding agents — /guides/old-ipad-dashboard-for-coding-agents/ — mount a spare iPad as an always-on, ambient status board.
+
+## Blog (https://agentandon.com/blog/)
+
+- Content-blind by design: reaching your board without reading it — /blog/zk/ — how the relay seals your project names and messages it can never decrypt, and how `andon verify` lets you check that instead of trusting it.
+
+## Key facts
+
+- Open source under AGPL-3.0: https://github.com/tianshanghong/agent-andon
+- npm package: https://www.npmjs.com/package/agent-andon (`npm i -g agent-andon`)
+- Zero runtime dependencies; runs on macOS, Linux, and Windows.
+- Works with Claude Code and OpenAI Codex.
+- Local-first: no account, no telemetry. Your agents' data never leaves your machine unless you opt into the relay — which is content-blind and verifiable.
