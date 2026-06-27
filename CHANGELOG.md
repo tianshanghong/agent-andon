@@ -3,6 +3,15 @@
 Notable changes to Agent Andon. Roughly follows [Keep a Changelog](https://keepachangelog.com/);
 the project is pre-1.0, so a minor version may bundle features and fixes together.
 
+## [0.3.0] — 2026-06-26
+
+### Added
+- **A scannable QR code for the hosted board link, right in the terminal.** `andon hosted setup` and
+  `andon hosted pair` now print a QR beneath the board URL — scan it to open the board on your phone
+  without copy-pasting the link (which carries your decryption key). The text link is always printed
+  first, so the QR is purely additive; pass `--no-qr`, or run without a TTY, to skip it. It's drawn by
+  a vendored, dependency-free encoder, so the zero-runtime-dependency guarantee is unchanged.
+
 ## [0.2.2] — 2026-06-22
 
 ### Fixed
