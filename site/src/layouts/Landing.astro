@@ -6,6 +6,8 @@ const t = ui[locale];
 const BASE = "https://agentandon.com";
 const urlFor = (l: string): string => (l === "en" ? `${BASE}/` : `${BASE}/${l}/`);
 const canonical = urlFor(locale);
+// Footer nav points at our own rendered pages — docs are localized; guides + blog are English-only for now.
+const docsHref = locale === "en" ? "/docs/" : `/${locale}/docs/`;
 ---
 <!doctype html>
 <html lang={LANG[locale]}>
@@ -250,9 +252,11 @@ const canonical = urlFor(locale);
       <div class="fine" set:html={t.ftFine}></div>
     </div>
     <div class="lk">
+      <a href={docsHref}>{t.ftDocs}</a>
+      <a href="/guides/">{t.ftGuides}</a>
+      <a href="/blog/">{t.ftBlog}</a>
       <a href="https://github.com/tianshanghong/agent-andon">GitHub</a>
       <a href="https://www.npmjs.com/package/agent-andon">npm</a>
-      <a href="https://github.com/tianshanghong/agent-andon/blob/main/docs/running.md">{t.ftDocs}</a>
       <a href="https://github.com/tianshanghong/agent-andon/blob/main/LICENSE">License</a>
     </div>
   </div>
