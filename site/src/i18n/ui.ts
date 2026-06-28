@@ -38,9 +38,9 @@ export const ui = {
   },
   "zh-cn": {
     title: "Agent Andon —— 给 Claude Code 与 Codex 的状态看板与提醒",
-    desc: "面向 Claude Code 与 Codex 的开源状态看板。同时跑好几个 agent，一眼看出哪个在工作、要你确认、完成或卡住——任意屏幕、桌面或手机。自托管、零依赖。",
+    desc: "面向 Claude Code 与 Codex 的开源状态看板。同时跑好几个 agent，一眼看出哪个在工作、需要你、完成或卡住——任意屏幕、桌面或手机。自托管、零依赖。",
     ogTitle: "Agent Andon —— 一眼看全所有 AI coding agent",
-    ogDesc: "给 Claude Code 与 Codex 的信号看板。工作中 · 要你确认 · 完成 · 卡住。自托管、零依赖。",
+    ogDesc: "给 Claude Code 与 Codex 的信号看板。工作中 · 需要你 · 完成 · 卡住。自托管、零依赖。",
     ogAlt: "Agent Andon —— 给 AI coding agent 的状态看板",
     navHow: "工作原理", navSelf: "自托管", navStar: "在 GitHub 加星",
     kicker: "开源 · 零依赖 · <b>自托管</b>",

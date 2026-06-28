@@ -1,6 +1,6 @@
 ---
 title: "設定とセキュリティ"
-description: "Agent Andon を設定する — ポート、トークン認証、アイドルタイルの自動削除（TTL）、そしてローカルのボードサーバーとリレーのセキュリティモデル。"
+description: "Agent Andon を設定する — ポート、トークン認証、アイドルタイルの自動削除（TTL）、そしてローカルのボードサーバーと中継のセキュリティモデル。"
 ---
 
 セルフホストするボードのための、環境変数、トークン認証、そしてネットワーク／セキュリティモデル。
@@ -25,7 +25,7 @@ ANDON_TOKEN=somesecret andon serve
 コードや完全なログは一切含みません。イベント本文は 64 KB に制限されています。
 
 > ボードを LAN の外に公開しますか？ ポートフォワードはしないでください — [running.md](/ja/docs/running/)
-> （Tailscale Serve）にある HTTPS の方法か、[リレー](/ja/docs/deploy-relay/) を使ってください。
+> （Tailscale Serve）にある HTTPS の方法か、[中継](/ja/docs/deploy-relay/) を使ってください。
 
 ## 環境変数
 
@@ -38,5 +38,5 @@ ANDON_TOKEN=somesecret andon serve
 | `ANDON_SESSION` | — | タイルのセッション ID を上書きする（例：バックグラウンドジョブの場合） |
 | `ANDON_IDLE_TTL_SEC` | `900`（15 分） | 完了／アイドルのタイルが自動削除されるまで残る時間。終了したサブエージェント／チームメイトが溜まらないようにするためのものです。アクティブなタイルと「確認待ち」のタイルは、代わりに 6 時間のハード TTL を使います。 |
 
-（リレー固有の環境変数 — `ANDON_RELAY_PORT`、`ANDON_DATA_DIR`、`ANDON_PUSH_SUBJECT`、… — は
+（中継固有の環境変数 — `ANDON_RELAY_PORT`、`ANDON_DATA_DIR`、`ANDON_PUSH_SUBJECT`、… — は
 [deploy-relay.md](/ja/docs/deploy-relay/) にあります。）

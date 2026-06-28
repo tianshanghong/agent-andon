@@ -13,7 +13,7 @@ npm run dev       # tsc --watch
 - `src/store.ts` — 純粋で、テスト済みの状態モデル。
 - `src/server.ts` — セルフホストの HTTP レイヤー。`src/commands/*` が CLI のサブコマンドです。
 - `assets/dashboard.html` — 自己完結したボード（1 ファイル。セルフホストとホスト型の**両方**が、これをそのまま配信します）。
-- `src/hosted/*` — オプションのコンテンツを読み取れないリレー（ローカル製品とはきれいに分離された境界）。`src/sounds.ts` — 配信されるチャイム。
+- `src/hosted/*` — オプションのコンテンツブラインドな中継（中継はコンテンツを読み取れない。ローカル製品とはきれいに分離された境界）。`src/sounds.ts` — 配信されるチャイム。
 
 コントリビュートの流れについては [CONTRIBUTING.md](https://github.com/tianshanghong/agent-andon/blob/main/CONTRIBUTING.md) を、
-リレーの動かし方については [deploy-relay.md](/ja/docs/deploy-relay/) を参照してください。
+中継の動かし方については [deploy-relay.md](/ja/docs/deploy-relay/) を参照してください。
