@@ -1,0 +1,22 @@
+---
+import { getCollection } from "astro:content";
+import GuidesIndex from "../../../layouts/GuidesIndex.astro";
+import { LOCALES } from "../../../i18n/ui";
+
+export async function getStaticPaths() {
+  const all = await getCollection("guides");
+  // One index per non-English locale; always built even with zero locale guides.
+  return LOCALES.filter((l) => l !== "en").map((locale) => ({
+    params: { locale },
+    props: {
+      guides: all
+        .filter((g) => g.id.startsWith(`${locale}/`))
+        .sort((a, b) => a.data.title.localeCompare(b.data.title)),
+    },
+  }));
+}
+
+const { locale } = Astro.params;
+const { guides } = Astro.props;
+---
+<GuidesIndex locale={locale} guides={guides} />

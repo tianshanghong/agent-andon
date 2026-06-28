@@ -104,6 +104,17 @@ export default defineConfig({
             },
           ],
         },
+        {
+          // Evergreen how-to guides (a custom collection, localized into all 6 languages). Starlight
+          // rewrites these links per-locale (/<locale>/guides/<slug>/), which now resolve.
+          label: "How-to guides",
+          translations: { "zh-CN": "操作指南", ja: "ハウツーガイド", ko: "사용 가이드", es: "Guías prácticas", de: "Praktische Anleitungen", fr: "Guides pratiques" },
+          items: [
+            { label: "Get notified when Claude Code finishes", link: "/guides/get-notified-when-claude-code-finishes/" },
+            { label: "Claude Code Stop-hook example", link: "/guides/claude-code-stop-hook-notification-example/" },
+            { label: "Old iPad dashboard", link: "/guides/old-ipad-dashboard-for-coding-agents/" },
+          ],
+        },
       ],
     }),
     sitemap(),
