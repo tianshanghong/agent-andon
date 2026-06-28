@@ -29,7 +29,7 @@ tâches en arrière-plan, les spécificités de Codex et le nommage des tuiles. 
 | `SessionStart` | inactif (ardoise) | session lancée — la tuile apparaît immédiatement |
 | `UserPromptSubmit` | travaille (bleu) | vous venez de soumettre un prompt |
 | `PostToolUse` | travaille (bleu) | un outil vient de s'exécuter — efface l'ambre dès que vous approuvez |
-| `Notification` | a besoin de vous (ambre, pulse) | en attente d'une autorisation / de votre saisie |
+| `Notification` | vous demande (ambre, pulse) | en attente d'une autorisation / de votre saisie |
 | `Stop` | **prêt** (vert) | le tour vous est rendu — à vous de jouer, *pas* « tout est terminé » |
 | `StopFailure` | bloqué (rouge, pulse) | le tour a échoué (uniquement les versions récentes de Claude Code) |
 | `SessionEnd` | *retiré* | session terminée ; la tuile disparaît |
@@ -69,7 +69,7 @@ andon install codex      # wires lifecycle hooks → ~/.codex/hooks.json
 |---|---|
 | `SessionStart` | inactif (la tuile apparaît au lancement) |
 | `UserPromptSubmit` / `PostToolUse` | travaille (bleu) |
-| `PermissionRequest` | **a besoin de vous (ambre)** |
+| `PermissionRequest` | **vous demande (ambre)** |
 | `Stop` | prêt (vert) |
 | `SessionEnd` | *retiré* |
 

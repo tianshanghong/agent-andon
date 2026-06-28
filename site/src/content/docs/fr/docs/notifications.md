@@ -14,7 +14,7 @@ dégradation élégante sur macOS / Linux / Windows.
 Une bannière sur l'ordinateur qui exécute le serveur, **activée par défaut**. Sonore pour les états qui ont besoin de vous,
 discrète à la fin :
 
-- **a besoin de vous (ambre)** / **bloqué (rouge)** → bannière + son (immédiat).
+- **vous demande (ambre)** / **bloqué (rouge)** → bannière + son (immédiat).
 - **prêt (vert)** → une bannière *discrète* (sans son), avec un anti-rebond de 4 s pour qu'un
   vert transitoire ne déclenche jamais un faux « prêt ».
 
