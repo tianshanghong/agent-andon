@@ -1,15 +1,25 @@
 ---
 import { getCollection, render } from "astro:content";
 import Guide from "../../layouts/Guide.astro";
+import { LOCALES } from "../../i18n/ui";
 
 export async function getStaticPaths() {
-  const guides = await getCollection("guides");
-  return guides.map((guide) => ({ params: { slug: guide.id }, props: { guide } }));
+  const all = await getCollection("guides");
+  const ids = new Set(all.map((g) => g.id));
+  // English guides have a plain slug id (no locale prefix → no slash).
+  const enGuides = all.filter((g) => !g.id.includes("/"));
+  return enGuides.map((guide) => ({
+    params: { slug: guide.id },
+    props: {
+      guide,
+      langs: ["en", ...LOCALES.filter((l) => l !== "en" && ids.has(`${l}/${guide.id}`))],
+    },
+  }));
 }
 
-const { guide } = Astro.props;
+const { guide, langs } = Astro.props;
 const { Content } = await render(guide);
 ---
-<Guide {...guide.data} slug={guide.id}>
+<Guide {...guide.data} slug={guide.id} locale="en" langs={langs}>
   <Content />
 </Guide>

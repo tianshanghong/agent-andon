@@ -2,9 +2,17 @@
 // Branded layout for an evergreen intent guide — same dark palette + self-hosted IBM Plex as the
 // blog, tuned for long-form reading. Emits Article (+ optional HowTo) JSON-LD + canonical + hreflang.
 import Analytics from "../components/Analytics.astro";
-const { title, description, updated, howto, slug } = Astro.props;
+import { LANG, ui } from "../i18n/ui";
+const { title, description, updated, howto, slug, locale = "en", langs = ["en"] } = Astro.props;
 const BASE = "https://agentandon.com";
-const canonical = `${BASE}/guides/${slug}/`;
+const path = locale === "en" ? `/guides/${slug}/` : `/${locale}/guides/${slug}/`;
+const canonical = `${BASE}${path}`;
+const enHref = `${BASE}/guides/${slug}/`;
+const hrefFor = (code) => `${BASE}${code === "en" ? `/guides/${slug}/` : `/${code}/guides/${slug}/`}`;
+const guidesHref = locale === "en" ? "/guides/" : `/${locale}/guides/`;
+const guidesLabel = ui[locale]?.ftGuides ?? ui.en.ftGuides;
+const docsHref = locale === "en" ? "/docs/running/" : `/${locale}/docs/running/`;
+const docsLabel = ui[locale]?.ftDocs ?? ui.en.ftDocs;
 const iso = (d) => new Date(d).toISOString().slice(0, 10);
 const human = (d) =>
   new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
@@ -30,7 +38,7 @@ const howtoLd = howto && howto.length
   : null;
 ---
 <!doctype html>
-<html lang="en">
+<html lang={LANG[locale]}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -47,8 +55,8 @@ const howtoLd = howto && howto.length
 <meta name="twitter:image" content={`${BASE}/social-card.png`}>
 <meta name="theme-color" content="#0c0d10">
 <link rel="canonical" href={canonical}>
-<link rel="alternate" hreflang="en" href={canonical}>
-<link rel="alternate" hreflang="x-default" href={canonical}>
+{langs.map((code) => <link rel="alternate" hreflang={LANG[code]} href={hrefFor(code)} />)}
+{langs.includes("en") && <link rel="alternate" hreflang="x-default" href={enHref} />}
 <script type="application/ld+json" is:inline set:html={JSON.stringify(ld)} />
 {howtoLd && <script type="application/ld+json" is:inline set:html={JSON.stringify(howtoLd)} />}
 <Analytics />
@@ -102,7 +110,7 @@ const howtoLd = howto && howto.length
 <div class="strip"><i class="e"></i><i class="w"></i><i class="d"></i><i class="k"></i></div>
 <nav><div class="wrap">
   <a href="/" class="logo">🚦 ANDON<span class="dim"> /行灯</span></a>
-  <div class="navlinks"><a href="/guides/">Guides</a><a href="/docs/running/">Docs</a><a href="https://github.com/tianshanghong/agent-andon">GitHub</a></div>
+  <div class="navlinks"><a href={guidesHref}>{guidesLabel}</a><a href={docsHref}>{docsLabel}</a><a href="https://github.com/tianshanghong/agent-andon">GitHub</a></div>
 </div></nav>
 <article class="wrap">
   <div class="eyebrow">Agent Andon · Guide</div>
