@@ -33,6 +33,8 @@ export const ui = {
     selfP: `Skip the hosted step and run <code ${CODE}>andon serve</code> — the board stays on your own machine and network, nothing leaves it. Or run your own relay. It's the same open-source code either way, and <code ${CODE}>andon verify</code> proves the managed relay serves exactly that. <a href="${HOSTED}" style="color:var(--done);white-space:nowrap">Self-host guide →</a>`,
     ftFine: `Open source under AGPL-3.0 · © 2026 wwang · cookieless analytics on this site<br>"Andon" (行灯) — the factory signal light that tells the floor, at a glance, whether a line is running or needs a human.`,
     ftDocs: "Docs",
+    ftGuides: "Guides",
+    ftBlog: "Blog",
   },
   "zh-cn": {
     title: "Agent Andon —— 给 Claude Code 与 Codex 的状态看板与提醒",
@@ -53,6 +55,8 @@ export const ui = {
     selfP: `跳过托管那步,运行 <code ${CODE}>andon serve</code> —— 看板就留在你自己的机器和网络里,什么都不外传。或者自己跑一个中继。两种方式都是同一套开源代码,而 <code ${CODE}>andon verify</code> 能证明托管中继跑的正是这套代码。<a href="${HOSTED}" style="color:var(--done);white-space:nowrap">自托管指南 →</a>`,
     ftFine: `基于 AGPL-3.0 开源 · © 2026 wwang · 本站使用无 cookie 的访问统计<br>"Andon"(行灯)—— 工厂里的信号灯,一眼告诉车间某条线是在跑还是需要人。`,
     ftDocs: "文档",
+    ftGuides: "指南",
+    ftBlog: "博客",
   },
   "ja": {
     title: "Agent Andon — Claude Code と Codex のステータスボードと通知",
@@ -73,6 +77,8 @@ export const ui = {
     selfP: `ホスト手順を飛ばして <code ${CODE}>andon serve</code> を実行 —— ボードはあなた自身のマシンとネットワークに留まり、何も外に出ません。あるいは自分で中継を動かすことも。どちらも同じオープンソースのコードで、<code ${CODE}>andon verify</code> がマネージド中継がまさにそれを配信していることを証明します。<a href="${HOSTED}" style="color:var(--done);white-space:nowrap">セルフホストガイド →</a>`,
     ftFine: `AGPL-3.0 のもとでオープンソース · © 2026 wwang · 本サイトは Cookie を使わないアクセス解析を利用<br>「Andon」（行灯）—— 工場の信号灯。ラインが動いているか人手が要るかを、一目で現場に伝える。`,
     ftDocs: "ドキュメント",
+    ftGuides: "ガイド",
+    ftBlog: "ブログ",
   },
   "ko": {
     title: "Agent Andon — Claude Code와 Codex를 위한 상태 보드와 알림",
@@ -93,6 +99,8 @@ export const ui = {
     selfP: `호스팅 단계를 건너뛰고 <code ${CODE}>andon serve</code>를 실행하세요 —— 보드는 당신의 머신과 네트워크에 머물고, 아무것도 밖으로 나가지 않습니다. 또는 직접 릴레이를 돌릴 수도 있습니다. 어느 쪽이든 같은 오픈소스 코드이며, <code ${CODE}>andon verify</code>가 매니지드 릴레이가 바로 그 코드를 제공함을 증명합니다. <a href="${HOSTED}" style="color:var(--done);white-space:nowrap">셀프 호스팅 가이드 →</a>`,
     ftFine: `AGPL-3.0로 오픈소스 · © 2026 wwang · 이 사이트는 쿠키 없는 방문 통계를 사용<br>"Andon"(行灯) —— 라인이 돌아가는지 사람이 필요한지를 한눈에 현장에 알리는 공장의 신호등.`,
     ftDocs: "문서",
+    ftGuides: "가이드",
+    ftBlog: "블로그",
   },
   "es": {
     title: "Agent Andon — tablero de estado y avisos para Claude Code y Codex",
@@ -113,6 +121,8 @@ export const ui = {
     selfP: `Salta el paso alojado y ejecuta <code ${CODE}>andon serve</code> — el tablero se queda en tu propia máquina y red, nada sale de ahí. O ejecuta tu propio relay. Es el mismo código abierto en ambos casos, y <code ${CODE}>andon verify</code> prueba que el relay gestionado sirve exactamente eso. <a href="${HOSTED}" style="color:var(--done);white-space:nowrap">Guía de autoalojamiento →</a>`,
     ftFine: `Código abierto bajo AGPL-3.0 · © 2026 wwang · analítica sin cookies en este sitio<br>«Andon» (行灯) — la luz de señal de fábrica que dice al taller, de un vistazo, si una línea funciona o necesita a alguien.`,
     ftDocs: "Docs",
+    ftGuides: "Guías",
+    ftBlog: "Blog",
   },
   "de": {
     title: "Agent Andon — Statusboard und Alerts für Claude Code & Codex",
@@ -133,6 +143,8 @@ export const ui = {
     selfP: `Überspring den Hosted-Schritt und führe <code ${CODE}>andon serve</code> aus — das Board bleibt auf deinem eigenen Rechner und Netzwerk, nichts verlässt es. Oder betreib dein eigenes Relay. Es ist in beiden Fällen derselbe Open-Source-Code, und <code ${CODE}>andon verify</code> beweist, dass das gehostete Relay genau das ausliefert. <a href="${HOSTED}" style="color:var(--done);white-space:nowrap">Self-Hosting-Anleitung →</a>`,
     ftFine: `Open Source unter AGPL-3.0 · © 2026 wwang · cookielose Webanalyse auf dieser Website<br>„Andon" (行灯) — die Fabrik-Signalleuchte, die der Werkstatt auf einen Blick sagt, ob eine Linie läuft oder einen Menschen braucht.`,
     ftDocs: "Doku",
+    ftGuides: "Guides",
+    ftBlog: "Blog",
   },
   "fr": {
     title: "Agent Andon — tableau d'état et alertes pour Claude Code et Codex",
@@ -153,5 +165,7 @@ export const ui = {
     selfP: `Sautez l'étape hébergée et lancez <code ${CODE}>andon serve</code> — le tableau reste sur votre propre machine et réseau, rien n'en sort. Ou faites tourner votre propre relais. C'est le même code open source dans les deux cas, et <code ${CODE}>andon verify</code> prouve que le relais géré sert exactement celui-ci. <a href="${HOSTED}" style="color:var(--done);white-space:nowrap">Guide d'auto-hébergement →</a>`,
     ftFine: `Open source sous AGPL-3.0 · © 2026 wwang · mesure d'audience sans cookie sur ce site<br>« Andon » (行灯) — la lampe-signal d'usine qui dit à l'atelier, d'un coup d'œil, si une ligne tourne ou a besoin d'un humain.`,
     ftDocs: "Docs",
+    ftGuides: "Guides",
+    ftBlog: "Blog",
   },
 } satisfies Record<Locale, Record<string, string>>;
