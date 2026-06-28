@@ -9,9 +9,17 @@ export const LANG: Record<Locale, string> = {
   en: "en", "zh-cn": "zh-CN", ja: "ja", ko: "ko", es: "es", de: "de", fr: "fr",
 };
 
+// Each language named in its own language — for the landing nav's language switch (static links,
+// no auto-redirect). Doubles as cross-links between the per-locale landings (they were otherwise unlinked).
+export const LOCALE_LABELS: Record<Locale, string> = {
+  en: "English", "zh-cn": "简体中文", ja: "日本語", ko: "한국어", es: "Español", de: "Deutsch", fr: "Français",
+};
+
 const CODE = 'style="font-family:var(--mono);color:var(--text)"';
 const DEMO = '<code style="font-family:var(--mono);color:var(--muted)">npx agent-andon serve --demo</code>';
-const HOSTED = "https://github.com/tianshanghong/agent-andon/blob/main/docs/hosted.md";
+// The landing's "self-host guide" link → our own rendered docs (localized per-locale in Landing.astro),
+// not GitHub. Placeholder the layout swaps for /docs/hosted/ or /<locale>/docs/hosted/.
+const HOSTED = "%DOCS_HOSTED%";
 
 export const ui = {
   "en": {
