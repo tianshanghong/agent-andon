@@ -1,5 +1,5 @@
 ---
-import { ui, LOCALES, LANG, type Locale } from "../i18n/ui";
+import { ui, LOCALES, LANG, LOCALE_LABELS, type Locale } from "../i18n/ui";
 import Analytics from "../components/Analytics.astro";
 const { locale } = Astro.props as { locale: Locale };
 const t = ui[locale];
@@ -9,6 +9,9 @@ const canonical = urlFor(locale);
 // Footer nav points at our own rendered pages — docs + guides are localized; blog is English-only for now.
 const docsHref = locale === "en" ? "/docs/" : `/${locale}/docs/`;
 const guidesHref = locale === "en" ? "/guides/" : `/${locale}/guides/`;
+const langHref = (l: string): string => (l === "en" ? "/" : `/${l}/`);
+const hostedHref = locale === "en" ? "/docs/hosted/" : `/${locale}/docs/hosted/`;
+const selfHtml = t.selfP.replace("%DOCS_HOSTED%", hostedHref);
 ---
 <!doctype html>
 <html lang={LANG[locale]}>
@@ -85,8 +88,9 @@ const guidesHref = locale === "en" ? "/guides/" : `/${locale}/guides/`;
   .navlinks a{color:var(--muted);text-decoration:none;transition:color .2s}
   .navlinks a:hover{color:var(--text)}
   .navlinks .star{color:var(--text);border:1px solid var(--hairline);padding:7px 13px;border-radius:7px}
+  .navlinks .star svg{margin-right:5px}
   .navlinks .star:hover{border-color:var(--waiting);color:var(--waiting)}
-  @media(max-width:640px){.navlinks a:not(.star){display:none}}
+  @media(max-width:640px){.navlinks a:not(.star){display:none}.navlinks .star .stxt{display:none}.navlinks .star svg{margin-right:0}}
 
   /* ---- hero ---- */
   .hero{padding-top:78px;display:grid;grid-template-columns:1.05fr .95fr;gap:60px;align-items:center}
@@ -153,6 +157,21 @@ const guidesHref = locale === "en" ? "/guides/" : `/${locale}/guides/`;
   footer .lk{display:flex;gap:22px;font-family:var(--mono);font-size:13px}
   footer a{color:var(--muted);text-decoration:none}
   footer a:hover{color:var(--text)}
+  /* language switch — nav dropdown (native <details>, no JS); links each locale's landing */
+  .langsel{position:relative}
+  .langsel summary{list-style:none;cursor:pointer;color:var(--muted);display:inline-flex;align-items:center;gap:5px;transition:color .2s}
+  .langsel summary::-webkit-details-marker{display:none}
+  .langsel summary:hover,.langsel[open] summary{color:var(--text)}
+  .langsel .caret{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;
+    border-top:5px solid currentColor;opacity:.7;transition:transform .2s}
+  .langsel[open] .caret{transform:rotate(180deg)}
+  .langsel ul{position:absolute;top:calc(100% + 11px);right:0;z-index:60;margin:0;padding:6px;list-style:none;
+    min-width:150px;background:var(--surface);border:1px solid var(--hairline);border-radius:10px;box-shadow:0 10px 28px rgba(0,0,0,.45)}
+  .langsel ul a,.langsel ul .cur{display:block;position:relative;padding:7px 12px 7px 28px;border-radius:6px;font-size:13px;letter-spacing:0;white-space:nowrap}
+  .langsel ul a{color:var(--muted)}
+  .langsel ul a:hover{color:var(--text);background:var(--surface-2)}
+  .langsel ul .cur{color:var(--text);font-weight:600}
+  .langsel ul .cur::before{content:"✓";position:absolute;left:11px;color:var(--done)}
   footer .fine{color:var(--faint);font-size:12.5px;margin-top:18px;font-family:var(--mono);line-height:1.7}
 </style>
 <script type="application/ld+json" is:inline>
@@ -204,7 +223,17 @@ const guidesHref = locale === "en" ? "/guides/" : `/${locale}/guides/`;
   <div class="navlinks">
     <a href="#how">{t.navHow}</a>
     <a href="#selfhost">{t.navSelf}</a>
-    <a class="star" href="https://github.com/tianshanghong/agent-andon"><svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true" style="vertical-align:-2px;margin-right:5px"><path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"/></svg>{t.navStar}</a>
+    <details class="langsel">
+      <summary>{LOCALE_LABELS[locale]}<span class="caret" aria-hidden="true"></span></summary>
+      <ul>
+        {LOCALES.map((l) => (
+          <li>{l === locale
+            ? <span class="cur" aria-current="page">{LOCALE_LABELS[l]}</span>
+            : <a href={langHref(l)} hreflang={LANG[l]} lang={LANG[l]}>{LOCALE_LABELS[l]}</a>}</li>
+        ))}
+      </ul>
+    </details>
+    <a class="star" href="https://github.com/tianshanghong/agent-andon" aria-label={t.navStar}><svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true" style="vertical-align:-2px"><path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"/></svg><span class="stxt">{t.navStar}</span></a>
   </div>
 </div></nav>
 
@@ -243,7 +272,7 @@ const guidesHref = locale === "en" ? "/guides/" : `/${locale}/guides/`;
 
 <section id="selfhost" class="wrap">
   <h2>{t.selfH2}</h2>
-  <p class="sec-lede" set:html={t.selfP}></p>
+  <p class="sec-lede" set:html={selfHtml}></p>
 </section>
 
 <footer>
