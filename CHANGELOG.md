@@ -3,6 +3,16 @@
 Notable changes to Agent Andon. Roughly follows [Keep a Changelog](https://keepachangelog.com/);
 the project is pre-1.0, so a minor version may bundle features and fixes together.
 
+## [0.3.1] — 2026-11-19
+
+### Security
+- **Relay & site container hardening.** The relay image (`ghcr.io/tianshanghong/agent-andon:0.3.1`) now applies the latest Debian `bookworm` OS security updates at build time; the site image (`ghcr.io/tianshanghong/agent-andon-site`) upgrades to `nginx:1.31-alpine` with `apk upgrade --no-cache`, Astro `7.4.11`, and Starlight `0.42.11` (0 `npm audit` vulnerabilities).
+- **Multi-arch build reliability.** Both `Dockerfile` and `Dockerfile.site` now run their Node build stages natively on `--platform=$BUILDPLATFORM` before packaging into `linux/amd64` and `linux/arm64` runtime images, eliminating QEMU `arm64` emulation bottlenecks.
+
+### Website and docs
+- Localized `/docs/` and `/guides/` across 6 languages (English, 中文, 日本語, 한국어, Español, Deutsch, Français) with canonical terminology alignment and a navigation language switcher.
+- Added 3 evergreen `/guides/` tutorials and `llms-full.txt` reference documentation.
+
 ## [0.3.0] — 2026-06-26
 
 ### Added

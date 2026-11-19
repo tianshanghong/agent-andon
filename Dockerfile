@@ -8,7 +8,7 @@
 # in BOTH stages — FROM node:22-slim@sha256:<digest> — and bump it deliberately.
 
 # ---- build (needs devDeps: typescript) ----
-FROM node:22-slim AS build
+FROM --platform=$BUILDPLATFORM node:22-slim AS build
 WORKDIR /app
 COPY package.json package-lock.json tsconfig.json ./
 RUN npm ci --ignore-scripts
@@ -30,7 +30,8 @@ COPY package.json ./
 COPY --from=build /app/dist ./dist
 COPY assets ./assets
 # non-root + a persistent data dir (hashed tokens + VAPID + subscriptions live here)
-RUN mkdir -p /data \
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/* \
+ && mkdir -p /data \
  && groupadd --system andon \
  && useradd --system --gid andon --home-dir /app andon \
  && chown -R andon:andon /app /data
