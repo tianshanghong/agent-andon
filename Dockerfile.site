@@ -6,7 +6,7 @@
 # deployments pull the image instead of copying HTML into each stack repo
 # (keeps the public repo the single source of truth — GitOps-clean).
 
-FROM node:22-alpine AS build
+FROM --platform=$BUILDPLATFORM node:22-alpine AS build
 RUN apk upgrade --no-cache
 WORKDIR /app
 COPY site/package.json site/package-lock.json ./
